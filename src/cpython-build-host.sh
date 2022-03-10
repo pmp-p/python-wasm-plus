@@ -1,13 +1,10 @@
 #!/bin/bash
 
-REBUILD=${REBUILD:-false}
-ROOT="$(pwd)"
-HOST="$ROOT/host"
+. ${CONFIG:-config}
 
-mkdir -p host build/host
+mkdir -p build/cpython-host
 
-
-export PYTHON_FOR_BUILD="${HOST}/bin/python3"
+export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD:-${HOST}/bin/python3}
 
 
 if $REBUILD
@@ -27,14 +24,14 @@ fi
 
 if $REBUILD
 then
-    pushd build/host
+    pushd build/cpython-host
     PYOPTS="--without-pymalloc --without-pydebug\
      --disable-ipv6 --with-c-locale-coercion --with-ensurepip\
      --with-decimal-contextvar --with-system-ffi --enable-shared\
      --with-computed-gotos"
 
     if CC=clang CXX=clang++ ${ROOT}/cpython/configure \
-     --prefix="$(realpath ${HOST})" $PYOPTS
+     --prefix=$HOST $PYOPTS
     then
         make -j$(nproc) install
     else
@@ -56,6 +53,5 @@ else
             PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD}
 "
 fi
-
 
 

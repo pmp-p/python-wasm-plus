@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. ${CONFIG:-config}
+
 if [ -d emsdk ]
 then
     echo "
@@ -26,6 +28,28 @@ else
     ERROR cannot find emsdk/emsdk_env.sh in $(pwd)
 "
     read
+fi
+
+if [ -f embuild.done ]
+then
+    echo "
+    * emsdk prereq ok
+"
+else
+    ALL="struct_info libfetch zlib bzip2 freetype harfbuzz"
+    ALL="$ALL libpng libjpeg sdl2_image sdl2_mixer sdl2_ttf"
+    echo "
+    * building third parties libraries for emsdk ( can take time ... )
+"
+    for one in $ALL
+    do
+    echo "
+        + $done
+"
+        embuilder --pic build $one
+        embuilder build $one
+    done
+    touch embuild.done
 fi
 
 

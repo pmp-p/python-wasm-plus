@@ -1,16 +1,17 @@
 ##!/bin/bash
 
-# same goal as  "python-wasm/fetch-python.sh"
-export REBUILD=true
+. ${CONFIG:-config}
 
+# same goal as  "python-wasm/fetch-python.sh"
 # get python from git ( actually the only one supporting emsdk without patches)
+
 if [ -d cpython ]
 then
     pushd cpython
     # put the tree back to original state so we can pull
     git restore Programs/python.c Modules/readline.c
 
-    git pull|grep -q 'Already up to date' && export REBUILD=false
+    git pull|grep -q 'Already up to date' && export REBUILD=${REBUILD:-false}
     popd
 
 else
