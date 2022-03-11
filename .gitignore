@@ -1,4 +1,6 @@
-cpython
+devices
+src
 build
 emsdk
-host
+python-wasm-plus.epj
+.eric6project

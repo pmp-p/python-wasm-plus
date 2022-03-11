@@ -19,12 +19,17 @@ discussions very welcomed here:
   https://gitter.im/Wasm-Python/community
 
 
+NOTE: as time of cpython pre-3.11a6, cython is a bit broken so pygame-wasm is not upstream
+one but my fork with some hand edited cythonized files.
+
+https://github.com/pmp-p/pygame-wasm/tree/pygame-wasm
+
 
 REQUIRED:
+    
+    1 GNU/Linux system with clang, libffi-dev, git, patch, bash
 
-    clang, libffi-dev, git, patch, bash
-
-    everything else will be downloaded. ( emsdk , cpython , pygame, various lib ... )
+    everything else will be downloaded. ( emsdk , cpython , cython, pygame, various lib ... )
 
     
 TESTING:

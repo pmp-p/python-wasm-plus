@@ -9,8 +9,11 @@ export PYTHONPYCACHEPREFIX="$(realpath build/pycache)"
 . ${CONFIG:-config}
 
 
-. src/emsdk-fetch.sh
-. src/cpython-fetch.sh
-. src/cpython-build-host.sh
-. src/cpython-build-emsdk.sh
+. scripts/emsdk-fetch.sh
+. scripts/cpython-fetch.sh
+. support/__EMSCRIPTEN__.sh
+. scripts/cpython-build-host.sh
+. scripts/cpython-build-emsdk.sh
+. scripts/pygame-all.sh
 
+echo done
