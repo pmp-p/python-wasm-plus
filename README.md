@@ -39,15 +39,16 @@ TESTING:
 ( on android kitkat please use Bromite release 81.0.4044.83 or chrome/firefox, the webview will NOT work )
 
     # (facultative you can use prebuilt) run :
-        ./python-wasm-plus.sh
+
+    ./python-wasm-plus.sh
 
     # then run :
 
-        ./buildapp.sh
+    ./buildapp.sh
 
     # navigate to http://localhost:8000 manually or :
 
-        xdg-open http://localhost:8000
+    xdg-open http://localhost:8000
 
     #type in the terminal followed  by enter at the python prompt:
     
@@ -55,12 +56,14 @@ TESTING:
 
     #enjoy a classic 
 
-manual:
+MANUAL:
+
     mouse click first out of terminal, then onto canvas.
     then move up/down with f,v keys.
 
 
-credits: touchpong.py is shareware so if you like it, send an expensive thank you
+CREDITS:
+    touchpong.py could be shareware so if you like it, send an expensive thank you
     to @blubberquark on Pygame Community discord ;)
 
 
