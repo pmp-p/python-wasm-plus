@@ -48,8 +48,8 @@ cat > $HOST/bin/python3-wasm <<END
 
 cat >${PYTHONPYCACHEPREFIX}/.numpy-site.cfg <<NUMPY
 [DEFAULT]
-library_dirs = /data/cross/pydk/wasm/apkroot-wasm/usr/lib
-include_dirs = /data/cross/pydk/wasm/apkroot-wasm/usr/include
+library_dirs = $PREFIX//lib
+include_dirs = $PREFIX/include
 NUMPY
 
 # so include dirs are good

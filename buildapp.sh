@@ -13,6 +13,7 @@ shift
 # source code + assets of app
 APK=${1:-tests/test-assets}
 APK=$(realpath $APK)
+ALWAYS=$(realpath tests/test-assets)
 shift
 
 
@@ -79,6 +80,7 @@ emcc -D__PYDK__=1 -DNDEBUG\
 emcc $FINAL_OPTS -std=gnu99 -D__PYDK__=1 \
  -s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_SDL=2 -s ASSERTIONS=1 -s ALLOW_MEMORY_GROWTH=1\
  --preload-file $ROOT/devices/emsdk/usr@/usr \
+ --preload-file ${ALWAYS}@/assets \
  --preload-file ${APK}@/assets \
  --preload-file ${SP}/@/assets/site-packages \
  -o python.html Programs/python.o ${ROOT}/prebuilt/libpython3.*.a Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a\
