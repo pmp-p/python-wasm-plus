@@ -4,7 +4,7 @@ reset
 . ${CONFIG:-config}
 
 # web application template
-TMPL=${1:-$(realpath templates/worker-gui)}
+TMPL=${1:-$(realpath templates/no-worker-gui)}
 shift
 
 # source code + assets of app
@@ -40,7 +40,7 @@ fi
 if [ -f dev ]
 then
     echo ' building DEBUG'
-    COPTS="-O0 -g3 -gsource-map --source-map-base http://localhost:8000"
+    COPTS="-O0 -g3 -gsource-map --source-map-base /"
 else
     echo ' building RELEASE'
     COPTS="-Os -g0"
@@ -54,9 +54,11 @@ if [ -d $TMPL/worker ]
 then
     FINAL_OPTS="$COPTS --proxy-to-worker -s ENVIRONMENT=web,worker"
     MODE="worker"
+    WORKER_STATUS="using worker"
 else
     FINAL_OPTS="$COPTS"
     MODE="main"
+    WORKER_STATUS="not using worker"
 fi
 
 
@@ -99,7 +101,7 @@ then
     do
         if [ -d $df ]
         then
-            ln -sf $df build/${CN}/ 2>/dev/null
+            ln -sf $(realpath $df) build/${CN}/ 2>/dev/null
         else
             [ -f $df ] && ln $df build/${CN}/ 2>/dev/null
         fi
@@ -111,6 +113,8 @@ _______________________________________________________________________________
 Now running final app from [build/${CN}] :
  - beware files in worker/main subdirs overwritten each build, changes are lost
  - others are source files (hard/softlinks), changes impact the originals
+
+Threading system: $WORKER_STATUS
 _______________________________________________________________________________
 
 

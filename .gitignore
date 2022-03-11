@@ -4,3 +4,5 @@ build
 emsdk
 python-wasm-plus.epj
 .eric6project
+tests/full
+templates/worker-gui

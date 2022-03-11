@@ -333,17 +333,22 @@ main(int argc, char **argv)
 
 EM_ASM({
     var shm_stdin = $0;
+    Module.printErr = Module.print;
     if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
         console.log("PyMain: running in a worker, setting onCustomMessage");
         function onCustomMessage(event) {
             const utf8 = unescape(encodeURIComponent(event.data.userData));
             stringToUTF8( utf8, shm_stdin, $1);
         };
-        Module.printErr = Module.print;
+        
         Module['onCustomMessage'] = onCustomMessage;
 
     } else {
         console.log("PyMain: running in main thread");
+        Module.postMessage = function custom_postMessage(data) {
+            const utf8 = unescape(encodeURIComponent(data));
+            stringToUTF8( utf8, shm_stdin, $1);
+        };
     }
 }, io_shm[io_stdin_filenum], FD_BUFFER_MAX);
 
