@@ -35,6 +35,8 @@ else
 
     pushd build/cpython-wasm
 
+#     --with-tzpath="/usr/share/zoneinfo" \    
+    
 CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten \
   emconfigure $ROOT/src/cpython/configure -C \
     --host=$PYDK_PYTHON_HOST_PLATFORM \

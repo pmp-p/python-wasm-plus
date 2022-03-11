@@ -85,7 +85,7 @@ pushd src/pygame-wasm
 
 if CC=emcc python3-wasm setup.py -config -auto -sdl2
 then
-    if CFLAGS="-DBUILD_STATIC=1 -DSDL_NO_COMPAT=1 -ferror-limit=1" CC=emcc EMCC_CFLAGS="-DPy_LIMITED_API " python3-wasm setup.py build
+    if CFLAGS="-DBUILD_STATIC=1 -DSDL_NO_COMPAT=1 -ferror-limit=1" CC=emcc EMCC_CFLAGS="" python3-wasm setup.py build
     then
         OBJS=$(find build/temp.wasm32-tot-emscripten-3.??/|grep o$)
         llvm-ar rcs ${ROOT}/prebuilt/libpygame.a $OBJS

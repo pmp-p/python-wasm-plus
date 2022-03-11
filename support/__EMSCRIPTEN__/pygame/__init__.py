@@ -109,6 +109,9 @@ mouse = clean_mod("pygame.mouse")
 import pygame_event
 event = clean_mod("pygame.event")
 
+import pygame_joystick
+joystick = clean_mod("pygame.joystick")
+
 import pygame_time
 time = clean_mod("pygame.time")
 

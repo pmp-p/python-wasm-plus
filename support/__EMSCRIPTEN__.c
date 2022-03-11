@@ -51,6 +51,7 @@ PyMODINIT_FUNC PyInit_draw(void);
 PyMODINIT_FUNC PyInit_mouse(void);
 PyMODINIT_FUNC PyInit_key(void);
 PyMODINIT_FUNC PyInit_event(void);
+PyMODINIT_FUNC PyInit_joystick(void);
 PyMODINIT_FUNC PyInit_image(void);
 PyMODINIT_FUNC PyInit_pg_mixer(void);
 PyMODINIT_FUNC PyInit_mixer_music(void);
@@ -85,6 +86,7 @@ PyMODINIT_FUNC PyInit_sdl2(void);
     PyImport_AppendInittab("pygame_mouse", PyInit_mouse);\
     PyImport_AppendInittab("pygame_key", PyInit_key);\
     PyImport_AppendInittab("pygame_event", PyInit_event);\
+    PyImport_AppendInittab("pygame_joystick", PyInit_joystick);\
     PyImport_AppendInittab("pygame_time", PyInit_pg_time);\
     PyImport_AppendInittab("pygame__sdl2_sdl2", PyInit_sdl2);\
 }
@@ -230,7 +232,8 @@ main_iteration(void) {
                     }
                     rewind(file);
                     //int res = PyRun_InteractiveLoop( file, "<stdin>");
-                    int res = PyRun_SimpleFile( file, "<stdin>");
+                    //int res = 
+                    PyRun_SimpleFile( file, "<stdin>");
                 } else {
                     line = 0;
                     while( !PyRun_InteractiveOne( file, "<stdin>") ) line++;
@@ -255,7 +258,7 @@ main_iteration(void) {
         }
     } else {
 
-panic:
+//panic:
         pymain_free();
         emscripten_cancel_main_loop();
         puts(" ---------- done ----------");
