@@ -43,7 +43,7 @@ big_left_time = 0
 big_right_time = 0
 score_time = 0
 
-audio = False
+audio = True
 running = True
 
 

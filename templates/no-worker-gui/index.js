@@ -137,6 +137,6 @@ print(sys.version)
     clearButton.removeAttribute('disabled')
     term_reset()
 
-    setTimeout(custom_onload, 4000, terminal.xterm)
+    setTimeout(custom_onload, 0, terminal.xterm)
 }
 

@@ -15,6 +15,14 @@ EMFLAVOUR=tot
 
 PYDK_PYTHON_HOST_PLATFORM=wasm32-$EMFLAVOUR-emscripten
 
+if echo $LD_LIBRARY_PATH |grep -q ${HOST}/lib
+then
+    # config already set
+    echo -n
+else
+    export LD_LIBRARY_PATH="${HOST}/lib:$LD_LIBRARY_PATH"    
+fi
+
 if [[ ! -z ${PYDK+z} ]]
 then
     # config already set
@@ -22,9 +30,6 @@ then
 else
     mkdir -p src
     export PKG_CONFIG_PATH="${PREFIX}/lib/pkgconfig"
-    export LD_LIBRARY_PATH="${HOST}/lib:$LD_LIBRARY_PATH"
     export PATH="$HOST/bin:$PATH"
     export PYDK=minimal
 fi
-
-

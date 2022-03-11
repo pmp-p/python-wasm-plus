@@ -3,19 +3,22 @@ reset
 
 . ${CONFIG:-config}
 
+echo $LD_LIBRARY_PATH
+
 # web application template
-TMPL=${1:-$(realpath templates/no-worker-gui)}
+TMPL=${1:- templates/no-worker-gui}
+TMPL=$(realpath $TMPL)
 shift
 
 # source code + assets of app
-APK=${1:-$(realpath tests/test-assets)}
+APK=${1:-tests/test-assets}
+APK=$(realpath $APK)
 shift
 
 
 # final app name in build folder
 CN=${1:-demo}
 shift
-
 
 SP=$(realpath support/__EMSCRIPTEN__)
 

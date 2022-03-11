@@ -62,7 +62,7 @@
     </div>
 
     <div class="emscripten_border" align=center >
-        <canvas class="emscripten" id="canvas" width="640" height="480" oncontextmenu="event.preventDefault()" tabindex=0></canvas>
+        <canvas class="emscripten" id="canvas" width="640" height="480" style="width: 320px; height: 180px;" oncontextmenu="event.preventDefault()" tabindex=0></canvas>
         <div class="button-container">
             SDL2
             <button id="clear" disabled>Clear</button>
@@ -73,15 +73,19 @@
     function custom_prerun(){
         console.log("custom_prerun")
     }
-    
+
     function custom_postrun(){
         console.log("custom_postrun")
+        setTimeout(PyRun_SimpleString, 4000, 'execfile("touchpong.py")')
     }
-    
+
+
     function custom_onload(vt) {
         // your code as in window.onload
-        window.vt = vt  // that is a xterm.js instance
+
         console.log("custom_onload");
+        window.vt = vt  // that is a xterm.js instance
+
     }
 
     </script>
