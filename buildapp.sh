@@ -3,19 +3,16 @@ reset
 
 . ${CONFIG:-config}
 
-echo $LD_LIBRARY_PATH
-
 # web application template
-TMPL=${1:- templates/no-worker-gui}
+TMPL=${1:- templates/no-worker-xterm}
 TMPL=$(realpath $TMPL)
 shift
 
 # source code + assets of app
-APK=${1:-tests/test-assets}
+APK=${1:-demo/1-touchpong}
 APK=$(realpath $APK)
 ALWAYS=$(realpath tests/test-assets)
 shift
-
 
 # final app name in build folder
 CN=${1:-demo}
@@ -28,7 +25,6 @@ TMPL=${TMPL}
 APK=${APK}
 site-packages=${SP}
 "
-
 
 if [[ ! -z ${EMSDK+z} ]]
 then
