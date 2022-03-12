@@ -53,18 +53,54 @@ fi
 # to trigger emscripten worker
 # whose init is in Programs/python.c have a "worker" folder in the template
 # directory
-
-if [ -d $TMPL/worker ]
+if [ -f $TMPL/worker ]
 then
     FINAL_OPTS="$COPTS --proxy-to-worker -s ENVIRONMENT=web,worker"
     MODE="worker"
     WORKER_STATUS="using worker"
+    mkdir -p build/$CN/worker
 else
     FINAL_OPTS="$COPTS"
     MODE="main"
     WORKER_STATUS="not using worker"
 fi
+    
+if [ -d build/$CN ]
+then
+    echo "
+    * not regenerating projects files in build/$CN
+"    
+else 
 
+    # create the folder that will receive wasm+emsdk files.    
+    mkdir -p build/${CN}/${MODE}/
+
+    # copy libs found in "worker" or "main" text file
+    # order matters as they can owerwrite themselves
+    for lib in $(cat $TMPL/$MODE)
+    do
+        echo "      added lib $(basename $lib)"
+        /bin/cp -rf $lib/. build/${CN}/
+    done
+
+    # copy the test server
+    cp -v support/server.py build/${CN}/
+
+    # hardlink the projects files
+    # but symlinks the subfolders
+    # so editing build is same as editing the template
+    # this is to avoid loosing changes
+    
+    for df in ${TMPL}/*
+    do
+        if [ -d $df ]
+        then
+            ln -sf $(realpath $df) build/${CN}/ 2>/dev/null
+        else
+            [ -f $df ] && ln $df build/${CN}/ 2>/dev/null
+        fi
+    done
+fi
 
 pushd build/cpython-wasm
 
@@ -88,30 +124,12 @@ emcc $FINAL_OPTS -std=gnu99 -D__PYDK__=1 \
 
 popd
 
-mkdir -p build/${CN}/${MODE}/
-
 [ -f build/${CN}/${MODE}/python.js ] && rm build/${CN}/${MODE}/python.*
 
 mv -vf build/cpython-wasm/python.* build/${CN}/${MODE}/
 
 if [ -f build/${CN}/${MODE}/python.html ]
 then
-
-    # copy the test server
-    cp -vf support/server.py build/${CN}/
-
-    # hardlink the files
-    # but symlinks the subfolders
-    for df in ${TMPL}/*
-    do
-        if [ -d $df ]
-        then
-            ln -sf $(realpath $df) build/${CN}/ 2>/dev/null
-        else
-            [ -f $df ] && ln $df build/${CN}/ 2>/dev/null
-        fi
-    done
-
     echo "
 _______________________________________________________________________________
 

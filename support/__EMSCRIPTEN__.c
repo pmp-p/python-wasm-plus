@@ -13,14 +13,16 @@ TODO:
         osmesa / tinygl / tinygles / angle
         sixel and/or https://nick-black.com/dankwiki/index.php/Notcurses
         
-        
-        
     audio:
         https://developers.google.com/web/updates/2017/12/audio-worklet
+        https://github.com/mackron/miniaudio
         
     net:
         https://hacks.mozilla.org/2017/06/introducing-humblenet-a-cross-platform-networking-library-that-works-in-the-browser/
-
+        https://github.com/HumbleNet/HumbleNet
+        https://github.com/dmotz/trystero
+        https://github.com/aiortc/aiortc
+        
     webusb:
         https://mpy-usb.zoic.org/
     
@@ -35,6 +37,16 @@ TODO:
         https://github.com/pyodide/pyodide/issues/1503
     vs:
         https://github.com/joemarshall/unthrow
+        
+    fpcast:
+        https://github.com/pyodide/pyodide/pull/2019
+
+    webos:
+        https://github.com/shmuelhizmi/web-desktop-environment
+        https://qooxdoo.org/qxl.demobrowser/#widget~Desktop.html
+    
+    tools:
+        https://stemkoski.github.io/Three.js/Gamepad-Test.html
         
 bookmarks:
     https://github.com/sunfishcode/wasm-reference-manual/blob/master/WebAssembly.md
@@ -380,7 +392,7 @@ EM_ASM({
 }, io_shm[io_stdin_filenum], FD_BUFFER_MAX);
 
 
-    PyRun_SimpleString("import sys, embed, builtins;");
+    PyRun_SimpleString("import sys, embed, builtins, os, time;");
 
 if (1)
     {

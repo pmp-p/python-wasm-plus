@@ -43,7 +43,7 @@ big_left_time = 0
 big_right_time = 0
 score_time = 0
 
-audio = True
+audio = False
 running = True
 
 
@@ -86,8 +86,25 @@ def step():
         running = False
 
     for event in pg.event.get():
-        #print(event.type)
-        pass
+        st = repr(event)
+        if st.find('-MouseMotion')>0:
+            # works fine actually
+            pass
+        elif st.find('-MouseButton')>0:
+            # works fine actually
+            pass
+        elif st.find('-KeyDown')>0:
+            # works fine actually
+            pass
+        elif st.find('-KeyUp')>0:
+            # works fine actually
+            pass
+        elif st.find('-TextInput')>0:
+            # works fine actually
+            pass
+        else:
+            print(st)
+
 
     keys = pg.key.get_pressed()
 
@@ -124,6 +141,12 @@ def step():
             left_paddle.centery -= 3
         if keys[pg.K_v]:
             left_paddle.centery += 3
+
+        if keys[pg.K_UP]:
+            right_paddle.centery -= 3
+        if keys[pg.K_DOWN]:
+            right_paddle.centery += 3
+
 
         if left_paddle.bottom > 360:
             left_paddle.bottom = 360
