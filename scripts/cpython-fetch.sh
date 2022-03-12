@@ -7,13 +7,19 @@
 
 pushd src
 
-if [ -d src/cpython ]
+if [ -d cpython ]
 then
     pushd cpython
     # put the tree back to original state so we can pull
-    git restore Programs/python.c Modules/readline.c
+    # Programs/python.c Modules/readline.c
+    git restore .
 
-    git pull|grep -q 'Already up to date' && export REBUILD=${REBUILD:-false}
+    if git pull|grep -q 'Already up to date'
+    then
+        export REBUILD=${REBUILD:-false}
+    else
+        export REBUILD=true
+    fi
     popd
 else
     git clone https://github.com/python/cpython.git
