@@ -8,12 +8,36 @@ TODO:
     virtual kbd
         https://github.com/emscripten-ports/SDL2/issues/80
         https://www.beuc.net/tmp/ti1.html
+    
+    display:
+        osmesa / tinygl / tinygles / angle
+        sixel and/or https://nick-black.com/dankwiki/index.php/Notcurses
+        
+        
+        
+    audio:
+        https://developers.google.com/web/updates/2017/12/audio-worklet
+        
+    net:
+        https://hacks.mozilla.org/2017/06/introducing-humblenet-a-cross-platform-networking-library-that-works-in-the-browser/
 
+    webusb:
+        https://mpy-usb.zoic.org/
+    
+    advanced lexeme text compression stored via unicode PUA:
+        https://www.wikidata.org/wiki/Q18514
 
-
-
-
-
+    asyncify:
+        https://web.dev/asyncify/
+        IO in a webworker without asyncio?
+            https://github.com/pyodide/pyodide/issues/1219
+            
+        https://github.com/pyodide/pyodide/issues/1503
+    vs:
+        https://github.com/joemarshall/unthrow
+        
+bookmarks:
+    https://github.com/sunfishcode/wasm-reference-manual/blob/master/WebAssembly.md
 */
 
 #if __EMSCRIPTEN__
