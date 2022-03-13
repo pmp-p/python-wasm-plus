@@ -1,0 +1,17 @@
+# https://toml.io/en/
+
+
+# a section for Mys
+[package]
+name = "touchpong"
+version = "0.1"
+authors = ["blubberquark"]
+description = "Pong game with Multitouch"
+
+
+# packing instruction for vfs
+[fs]
+memfs = [ "main.py",  ]
+
+
+

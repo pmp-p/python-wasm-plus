@@ -197,35 +197,25 @@ em_callback_func
 main_iteration(void) {
     static int i = 0;
 
-
     if (!wa_panic) {
 
-        // first pass
+        // first pass coming back from js, if anything js was planned from main() it should be done now.
         if (!i++) {
-            //PyRun_SimpleString("print('execfile(\"touchpong.py\")');execfile('/assets/touchpong.py')");
+            // repl banner
+            PyRun_SimpleString(
+                "print('CPython',sys.version, '\\n>>>', chr(4), file=sys.stderr);"
+                "sys.stdout.flush();sys.stderr.flush();"
+            );
         } else {
-/*
-            SDL_Event event;
-            if (SDL_PollEvent(&event)) {
-                switch (event.type) {
-                    case SDL_KEYDOWN:
-                      printf("KEYDOWN: %s (%d)\n", SDL_GetKeyName(event.key.keysym.sym), event.key.keysym.sym);
-                      break;
-                    case SDL_KEYUP:
-                      printf("KEYUP: %s (%d)\n", SDL_GetKeyName(event.key.keysym.sym), event.key.keysym.sym);
-                      break;
-                }
-
-            }
-*/
-
+            // run a frame.
             PyRun_SimpleString("aio.step()");
         }
+        
+// REPL + PyRun_SimpleString asked from wasm vm host .
+
         gettimeofday(&time_current, NULL);
-
         timersub(&time_current, &time_last, &time_lapse);
-
-
+        
 //TODO put a user-def value to get slow func
         if (time_lapse.tv_usec>1) {
 
@@ -396,10 +386,10 @@ EM_ASM({
 
 if (1)
     {
-        // display a nice six logo in xterm.js
+        // display a nice six logo python-powered in xterm.js
         #define MAX 132
         char buf[MAX];
-        FILE *six = fopen("/assets/py.six","r");
+        FILE *six = fopen("/assets/cpython.six","r");
         while (six) {
             fgets(buf, MAX, six);
             if (!buf[0]) {
@@ -415,14 +405,8 @@ if (1)
     }
     else {
         // same but with python
-        PyRun_SimpleString("print(open('/assets/py.six').read());");
+        PyRun_SimpleString("print(open('/assets/cpython.six').read());");
     }
-
-    // repl banner
-    PyRun_SimpleString(
-        "print('CPython',sys.version, '\\n>>>', chr(4), file=sys.stderr);"
-        "sys.stdout.flush();sys.stderr.flush();"
-    );
 
 
     // SDL2 basic init
@@ -452,6 +436,8 @@ if (1)
         "sys.path.append('/assets/site-packages');"
         "import __EMSCRIPTEN__;builtins.__EMSCRIPTEN__ = __EMSCRIPTEN__;"
     );
+
+
 
 
     emscripten_set_main_loop( (em_callback_func)main_iteration, 0, 1);
