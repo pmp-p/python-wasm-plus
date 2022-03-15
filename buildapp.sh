@@ -11,8 +11,6 @@ shift
 # source code + assets of app
 APK=${1:-demo/1-touchpong}
 APK=$(realpath $APK)
-ALWAYS_ASSETS=$(realpath tests/test-assets)
-ALWAYS_CODE=$(realpath demo/tests)
 shift
 
 # final app name in build folder
@@ -26,6 +24,9 @@ TMPL=${TMPL}
 APK=${APK}
 site-packages=${SP}
 "
+
+
+
 
 if [[ ! -z ${EMSDK+z} ]]
 then
@@ -42,10 +43,22 @@ if [ -f dev ]
 then
     echo ' building DEBUG'
     COPTS="-O0 -g3 -gsource-map --source-map-base /"
+    ALWAYS_ASSETS=$(realpath tests/assets)
+    ALWAYS_CODE=$(realpath tests/code)
+    ALWAYS_FS="--preload-file ${ALWAYS_ASSETS}@/assets --preload-file ${ALWAYS_CODE}@/assets"
+    
 else
     echo ' building RELEASE'
     COPTS="-Os -g0"
+    ALWAYS_CODE=$(realpath tests/code)
+    ALWAYS_FS="--preload-file ${ALWAYS_CODE}@/assets"
 fi
+
+echo "
+    
+    ALWAYS_FS=$ALWAYS_FS
+    
+"
 
 # to trigger emscripten worker
 # whose init is in Programs/python.c have a "worker" folder in the template
@@ -109,13 +122,10 @@ emcc -D__PYDK__=1 -DNDEBUG\
  -I$ROOT/src/cpython/Include/internal -IObjects -IInclude -IPython -I. -I$ROOT/src/cpython/Include -DPy_BUILD_CORE\
  -o Programs/python.o $ROOT/src/cpython/Programs/python.c
 
-
 emcc $FINAL_OPTS -std=gnu99 -D__PYDK__=1 \
  -s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_SDL=2 -s ASSERTIONS=1 -s ALLOW_MEMORY_GROWTH=1\
- --preload-file $ROOT/devices/emsdk/usr@/usr \
---preload-file ${ALWAYS_ASSETS}@/assets --preload-file ${ALWAYS_CODE}@/assets \
- --preload-file ${APK}@/assets \
- --preload-file ${SP}/@/assets/site-packages \
+ --preload-file $ROOT/devices/emsdk/usr@/usr  --preload-file ${SP}/@/assets/site-packages \
+ $ALWAYS_FS --preload-file ${APK}@/assets \
  -o python.html Programs/python.o ${ROOT}/prebuilt/libpython3.*.a Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a\
  ${ROOT}/prebuilt/libpygame.a -ldl -lz -lm -lSDL2 -lSDL2_mixer -lSDL2_ttf -lfreetype -lharfbuzz
 

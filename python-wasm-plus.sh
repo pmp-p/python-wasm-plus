@@ -11,6 +11,7 @@ export PYTHONPYCACHEPREFIX="$(realpath build/pycache)"
 
 . scripts/emsdk-fetch.sh
 . scripts/cpython-fetch.sh
+. scripts/cython-all.sh
 . support/__EMSCRIPTEN__.sh
 . scripts/cpython-build-host.sh
 . scripts/cpython-build-emsdk.sh

@@ -81,7 +81,11 @@ fi
 
 pushd src/pygame-wasm
 
-# -s USE_FREETYPE=1 -s USE_SDL=2
+# remove old lib
+rm ${ROOT}/prebuilt/libpygame.a
+
+# regen cython files
+python3 setup.py cython config
 
 if CC=emcc python3-wasm setup.py -config -auto -sdl2
 then

@@ -2,7 +2,8 @@ devices
 src
 build
 emsdk
+wasm32-tot-emscripten-shell.sh
 python-wasm-plus.epj
 .eric6project
-tests/full
+demos
 templates/worker-gui

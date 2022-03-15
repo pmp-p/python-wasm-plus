@@ -8,24 +8,24 @@ TODO:
     virtual kbd
         https://github.com/emscripten-ports/SDL2/issues/80
         https://www.beuc.net/tmp/ti1.html
-    
+
     display:
         osmesa / tinygl / tinygles / angle
         sixel and/or https://nick-black.com/dankwiki/index.php/Notcurses
-        
+
     audio:
         https://developers.google.com/web/updates/2017/12/audio-worklet
         https://github.com/mackron/miniaudio
-        
+
     net:
         https://hacks.mozilla.org/2017/06/introducing-humblenet-a-cross-platform-networking-library-that-works-in-the-browser/
         https://github.com/HumbleNet/HumbleNet
         https://github.com/dmotz/trystero
         https://github.com/aiortc/aiortc
-        
+
     webusb:
         https://mpy-usb.zoic.org/
-    
+
     advanced lexeme text compression stored via unicode PUA:
         https://www.wikidata.org/wiki/Q18514
 
@@ -33,21 +33,21 @@ TODO:
         https://web.dev/asyncify/
         IO in a webworker without asyncio?
             https://github.com/pyodide/pyodide/issues/1219
-            
+
         https://github.com/pyodide/pyodide/issues/1503
     vs:
         https://github.com/joemarshall/unthrow
-        
+
     fpcast:
         https://github.com/pyodide/pyodide/pull/2019
 
     webos:
         https://github.com/shmuelhizmi/web-desktop-environment
         https://qooxdoo.org/qxl.demobrowser/#widget~Desktop.html
-    
+
     tools:
-        https://stemkoski.github.io/Three.js/Gamepad-Test.html
-        
+        https://greggman.github.io/html5-gamepad-test/
+
 bookmarks:
     https://github.com/sunfishcode/wasm-reference-manual/blob/master/WebAssembly.md
 */
@@ -89,14 +89,17 @@ PyMODINIT_FUNC PyInit_key(void);
 PyMODINIT_FUNC PyInit_event(void);
 PyMODINIT_FUNC PyInit_joystick(void);
 PyMODINIT_FUNC PyInit_image(void);
-PyMODINIT_FUNC PyInit_pg_mixer(void);
+
 PyMODINIT_FUNC PyInit_mixer_music(void);
+PyMODINIT_FUNC PyInit_mixer(void);
 
 PyMODINIT_FUNC PyInit_pg_math(void);
 PyMODINIT_FUNC PyInit_pg_time(void);
 
 
 PyMODINIT_FUNC PyInit_sdl2(void);
+PyMODINIT_FUNC PyInit_sdl2_mixer(void);
+PyMODINIT_FUNC PyInit_controller(void);
 
 //PyMODINIT_FUNC PyInit_audio(void);
 //PyMODINIT_FUNC PyInit_video(void);
@@ -117,14 +120,16 @@ PyMODINIT_FUNC PyInit_sdl2(void);
     PyImport_AppendInittab("pygame_font", PyInit_font);\
     PyImport_AppendInittab("pygame_draw", PyInit_draw);\
     PyImport_AppendInittab("pygame_image", PyInit_image);\
-    PyImport_AppendInittab("pygame_mixer", PyInit_pg_mixer);\
     PyImport_AppendInittab("pygame_mixer_music", PyInit_mixer_music);\
+    PyImport_AppendInittab("pygame_mixer", PyInit_mixer);\
     PyImport_AppendInittab("pygame_mouse", PyInit_mouse);\
     PyImport_AppendInittab("pygame_key", PyInit_key);\
     PyImport_AppendInittab("pygame_event", PyInit_event);\
     PyImport_AppendInittab("pygame_joystick", PyInit_joystick);\
     PyImport_AppendInittab("pygame_time", PyInit_pg_time);\
     PyImport_AppendInittab("pygame__sdl2_sdl2", PyInit_sdl2);\
+    PyImport_AppendInittab("pygame__sdl2_sdl2_mixer", PyInit_sdl2_mixer);\
+    PyImport_AppendInittab("pygame__sdl2_controller", PyInit_controller);\
 }
 
 
@@ -210,12 +215,12 @@ main_iteration(void) {
             // run a frame.
             PyRun_SimpleString("aio.step()");
         }
-        
+
 // REPL + PyRun_SimpleString asked from wasm vm host .
 
         gettimeofday(&time_current, NULL);
         timersub(&time_current, &time_last, &time_lapse);
-        
+
 //TODO put a user-def value to get slow func
         if (time_lapse.tv_usec>1) {
 
@@ -258,7 +263,7 @@ main_iteration(void) {
                     }
                     rewind(file);
                     //int res = PyRun_InteractiveLoop( file, "<stdin>");
-                    //int res = 
+                    //int res =
                     PyRun_SimpleFile( file, "<stdin>");
                 } else {
                     line = 0;
@@ -311,7 +316,7 @@ main(int argc, char **argv)
     gettimeofday(&time_last, NULL);
     //LOG_V("---------- SDL2 on #canvas + pygame ---------");
     setenv("PYTHONHOME","/usr", 1);
-    
+
     _PyArgv args = {
         .argc = argc,
         .use_bytes_argv = 1,
@@ -369,7 +374,7 @@ EM_ASM({
             const utf8 = unescape(encodeURIComponent(event.data.userData));
             stringToUTF8( utf8, shm_stdin, $1);
         };
-        
+
         Module['onCustomMessage'] = onCustomMessage;
 
     } else {
