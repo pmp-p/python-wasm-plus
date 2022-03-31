@@ -9,7 +9,7 @@ TMPL=$(realpath $TMPL)
 shift
 
 # source code + assets of app
-APK=${1:-demo/1-touchpong}
+APK=${1:-demos/1-touchpong}
 APK=$(realpath $APK)
 shift
 
@@ -46,7 +46,7 @@ then
     ALWAYS_ASSETS=$(realpath tests/assets)
     ALWAYS_CODE=$(realpath tests/code)
     ALWAYS_FS="--preload-file ${ALWAYS_ASSETS}@/assets --preload-file ${ALWAYS_CODE}@/assets"
-    
+
 else
     echo ' building RELEASE'
     COPTS="-Os -g0"
@@ -55,9 +55,9 @@ else
 fi
 
 echo "
-    
+
     ALWAYS_FS=$ALWAYS_FS
-    
+
 "
 
 # to trigger emscripten worker
@@ -74,15 +74,15 @@ else
     MODE="main"
     WORKER_STATUS="not using worker"
 fi
-    
+
 if [ -d build/$CN ]
 then
     echo "
     * not regenerating projects files in build/$CN
-"    
-else 
+"
+else
 
-    # create the folder that will receive wasm+emsdk files.    
+    # create the folder that will receive wasm+emsdk files.
     mkdir -p build/${CN}/${MODE}/
 
     # copy libs found in "worker" or "main" text file
@@ -100,7 +100,7 @@ else
     # but symlinks the subfolders
     # so editing build is same as editing the template
     # this is to avoid loosing changes
-    
+
     for df in ${TMPL}/*
     do
         if [ -d $df ]
@@ -118,7 +118,7 @@ pushd build/cpython-wasm
 [ -f Programs/python.o ] && rm Programs/python.o
 
 emcc -D__PYDK__=1 -DNDEBUG\
- -c -g -fwrapv -Wall -fPIC $COPTS -std=gnu99 -Werror=implicit-function-declaration -fvisibility=hidden\
+ -c -fwrapv -Wall -fPIC $COPTS -std=gnu99 -Werror=implicit-function-declaration -fvisibility=hidden\
  -I$ROOT/src/cpython/Include/internal -IObjects -IInclude -IPython -I. -I$ROOT/src/cpython/Include -DPy_BUILD_CORE\
  -o Programs/python.o $ROOT/src/cpython/Programs/python.c
 
@@ -151,7 +151,7 @@ _______________________________________________________________________________
 "
 
     pushd build/${CN}
-    $HOST/bin/python3 server.py $@
+    ${HOST_PREFIX}/bin/python3 server.py $@
     popd
 
 else

@@ -43,7 +43,7 @@ big_left_time = 0
 big_right_time = 0
 score_time = 0
 
-audio = False
+audio = True
 running = True
 
 
@@ -57,9 +57,9 @@ def step():
 
     if audio:
         pg.mixer.init()
-        pg.mixer_music.set_volume(0.5)
-        pg.mixer_music.load("Eisenfunk - Pong.ogg")
-        pg.mixer_music.play()
+        pg.music.set_volume(0.5)
+        pg.music.load("Eisenfunk - Pong.ogg")
+        pg.music.play()
         audio = False
 
     pg.event.pump()

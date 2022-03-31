@@ -35,8 +35,11 @@ else
 
     pushd build/cpython-wasm
 
-#     --with-tzpath="/usr/share/zoneinfo" \    
-    
+#     --with-tzpath="/usr/share/zoneinfo" \
+
+#TODO: check if export PATH=${HOST_PREFIX}/bin:$PATH is really set to avoid system python with different bytecode
+
+
 CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten \
   emconfigure $ROOT/src/cpython/configure -C \
     --host=$PYDK_PYTHON_HOST_PLATFORM \
@@ -45,9 +48,12 @@ CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten \
     --prefix=$PREFIX \
     --with-build-python=${PYTHON_FOR_BUILD}
 
-    emmake make -j$(nproc) install
+    EMCC_CFLAGS="-s USE_ZLIB=1 -s USE_BZIP2=1" emmake make -j$(nproc) install
     popd
-    cp -vf build/cpython-wasm/build/lib.emscripten-wasm32-*/_sysconfigdata_*_.py devices/x86_64/usr/lib/python3.??/
+    cp -vf build/cpython-wasm/build/lib.emscripten-wasm32-*/_sysconfigdata_*.py devices/x86_64/usr/lib/python3.??/
+    cp -vf build/cpython-wasm/build/lib.emscripten-wasm32-*/_sysconfigdata_*.py $(echo -n devices/x86_64/usr/lib/python3.??/)_sysconfigdata__emscripten_.py
+    cp -vf build/cpython-wasm/build/lib.emscripten-wasm32-*/_sysconfigdata_*.py $(echo -n devices/emsdk/usr/lib/python3.??/)_sysconfigdata__emscripten_.py
+    mkdir -p prebuilt
     cp -vf build/cpython-wasm/libpython3.*.a prebuilt/
     rmdir  $PREFIX/lib/python3.??/lib-dynload
 fi

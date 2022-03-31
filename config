@@ -3,10 +3,10 @@
 REBUILD=${REBUILD:-false}
 
 ROOT=${ROOT:-$(pwd)}
-HOST=${HOST:-$ROOT/devices/$(arch)/usr}
+HOST_PREFIX=${HOST_PREFIX:-$ROOT/devices/$(arch)/usr}
 PREFIX=${PREFIX:-${ROOT}/devices/emsdk/usr}
 
-PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD:-${HOST}/bin/python3}
+PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD:-${HOST_PREFIX}/bin/python3}
 
 #stable
 EMFLAVOUR=latest
@@ -20,7 +20,7 @@ then
     # config already set
     echo -n
 else
-    export LD_LIBRARY_PATH="${HOST}/lib:$LD_LIBRARY_PATH"    
+    export LD_LIBRARY_PATH="${HOST_PREFIX}/lib:$LD_LIBRARY_PATH"
 fi
 
 if [[ ! -z ${PYDK+z} ]]
@@ -30,6 +30,6 @@ then
 else
     mkdir -p src
     export PKG_CONFIG_PATH="${PREFIX}/lib/pkgconfig"
-    export PATH="$HOST/bin:$PATH"
+    export PATH="${HOST_PREFIX}/bin:$PATH"
     export PYDK=minimal
 fi

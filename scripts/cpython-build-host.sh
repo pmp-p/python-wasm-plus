@@ -31,7 +31,7 @@ then
      --with-computed-gotos"
 
     if CC=clang CXX=clang++ ${ROOT}/src/cpython/configure \
-     --prefix=$HOST $PYOPTS
+     --prefix=$HOST_PREFIX $PYOPTS
     then
         make -j$(nproc) install
     else

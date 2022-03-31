@@ -99,12 +99,13 @@
         const clearButton  = document.getElementById('clearvt')
 
         replButton.addEventListener('click', (e) => {
-            term_reset()
+            xterm.reset()
             Module.PyRun_SimpleString(`
 print(chr(27),"[2J",chr(27),"[H",sep='',end='')
-print(open('/assets/py.six').read())
+print(open('/assets/cpython.six').read())
+print()
 print(sys.version)
-    `)
+`) // Keep the newline or linenumbering will activate
 
             })
 

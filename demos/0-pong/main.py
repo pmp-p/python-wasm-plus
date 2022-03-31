@@ -35,7 +35,7 @@ class App:
     def init(self):
         self.swidth = 800
         self.sheight = 600
-        self.audio = False
+        self.audio = True
 
         if __ANDROID__ or __EMSCRIPTEN__:
             self.flags = pg.SCALED | pg.FULLSCREEN
@@ -65,16 +65,16 @@ class App:
 
             #on transition to menu
             if status(self) in ["Main Menu", "Test"]:
-                if not __EMSCRIPTEN__ and not self.audio:
+                print("WebAudio not supported by worker thread (yet)")
+                if self.audio:
                     pg.mixer.init()
-                    pg.mixer_music.set_volume(0.5)
-                    pg.mixer_music.load("Eisenfunk - Pong.ogg")
-                    pg.mixer_music.play()
-                else:
-                    print("WebAudio not supported by worker thread (yet)")
+                    pg.music.set_volume(0.5)
+                    pg.music.load("Eisenfunk - Pong.ogg")
+                    pg.music.play()
+
 
                 # no replay again
-                self.audio = True
+                self.audio = False
 
 
             if self.state == "Main Menu":

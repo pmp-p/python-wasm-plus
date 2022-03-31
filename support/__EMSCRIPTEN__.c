@@ -50,6 +50,7 @@ TODO:
 
 bookmarks:
     https://github.com/sunfishcode/wasm-reference-manual/blob/master/WebAssembly.md
+
 */
 
 #if __EMSCRIPTEN__
@@ -91,14 +92,14 @@ PyMODINIT_FUNC PyInit_joystick(void);
 PyMODINIT_FUNC PyInit_image(void);
 
 PyMODINIT_FUNC PyInit_mixer_music(void);
-PyMODINIT_FUNC PyInit_mixer(void);
+PyMODINIT_FUNC PyInit_pg_mixer(void);
 
 PyMODINIT_FUNC PyInit_pg_math(void);
 PyMODINIT_FUNC PyInit_pg_time(void);
 
 
 PyMODINIT_FUNC PyInit_sdl2(void);
-PyMODINIT_FUNC PyInit_sdl2_mixer(void);
+PyMODINIT_FUNC PyInit_mixer(void);
 PyMODINIT_FUNC PyInit_controller(void);
 
 //PyMODINIT_FUNC PyInit_audio(void);
@@ -121,14 +122,14 @@ PyMODINIT_FUNC PyInit_controller(void);
     PyImport_AppendInittab("pygame_draw", PyInit_draw);\
     PyImport_AppendInittab("pygame_image", PyInit_image);\
     PyImport_AppendInittab("pygame_mixer_music", PyInit_mixer_music);\
-    PyImport_AppendInittab("pygame_mixer", PyInit_mixer);\
+    PyImport_AppendInittab("pygame_mixer", PyInit_pg_mixer);\
     PyImport_AppendInittab("pygame_mouse", PyInit_mouse);\
     PyImport_AppendInittab("pygame_key", PyInit_key);\
     PyImport_AppendInittab("pygame_event", PyInit_event);\
     PyImport_AppendInittab("pygame_joystick", PyInit_joystick);\
     PyImport_AppendInittab("pygame_time", PyInit_pg_time);\
     PyImport_AppendInittab("pygame__sdl2_sdl2", PyInit_sdl2);\
-    PyImport_AppendInittab("pygame__sdl2_sdl2_mixer", PyInit_sdl2_mixer);\
+    PyImport_AppendInittab("pygame__sdl2_sdl2_mixer", PyInit_mixer);\
     PyImport_AppendInittab("pygame__sdl2_controller", PyInit_controller);\
 }
 
@@ -262,8 +263,6 @@ main_iteration(void) {
                         fprintf( stderr, "%d: %s", line, buf );
                     }
                     rewind(file);
-                    //int res = PyRun_InteractiveLoop( file, "<stdin>");
-                    //int res =
                     PyRun_SimpleFile( file, "<stdin>");
                 } else {
                     line = 0;
@@ -272,7 +271,12 @@ main_iteration(void) {
 
                 if (line) {
                     fprintf( stderr, ">>> ");
-                    PyRun_SimpleString("print(chr(4),file=sys.__stdout__);print(chr(4),file=sys.__stderr__);sys.__stdout__.flush();sys.__stderr__.flush()\n");
+                    PyRun_SimpleString(
+                        "print(chr(4),file=sys.__stdout__);"
+                        "print(chr(4),file=sys.__stderr__);"
+                        "sys.__stdout__.flush();"
+                        "sys.__stderr__.flush()\n"
+                    );
                 }
 
                 // reset stdin
@@ -315,7 +319,6 @@ main(int argc, char **argv)
 {
     gettimeofday(&time_last, NULL);
     //LOG_V("---------- SDL2 on #canvas + pygame ---------");
-    setenv("PYTHONHOME","/usr", 1);
 
     _PyArgv args = {
         .argc = argc,
@@ -326,6 +329,10 @@ main(int argc, char **argv)
 
     __PyImport_AppendInittab__;
 
+    puts("pymain_init");
+
+    setenv("PYTHONHOME","/usr", 1);
+
     status = pymain_init(&args);
 
     if (_PyStatus_IS_EXIT(status)) {
@@ -335,6 +342,7 @@ main(int argc, char **argv)
 
     if (_PyStatus_EXCEPTION(status)) {
         puts(" ---------- pymain_exit_error ----------");
+        Py_ExitStatusException(status);
         pymain_free();
         return 1;
     }
@@ -423,7 +431,10 @@ if (1)
         const char *target = "1";
         SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, target);
 
+
+
 /* note for self : typical sdl2 init ( emscripten samples are sdl1 )
+            SDL_CreateWindow("default", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, 0);
     window = SDL_CreateWindow("CheckKeys Test",
                               SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                               800, 600, 0);

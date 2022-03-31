@@ -23,6 +23,10 @@ then
     popd
 else
     git clone https://github.com/python/cpython.git
+    cd cpython
+    #git checkout b36d222110d0d6d84dc8e973ca87d976c2423f5d # OK
+    # FAIL git checkout a00518d9ad9a8f408a9699191019d75dd8406c32 # bpo-47120: Replace the JUMP_ABSOLUTE opcode by the relative JUMP_BACKWARD
+    cd ..
 fi
 
 popd

@@ -14,7 +14,7 @@ echo "
 
 cat > $ROOT/${PYDK_PYTHON_HOST_PLATFORM}-shell.sh <<END
 #!/bin/bash
-export PATH=$HOST/bin:$PATH
+export PATH=${HOST_PREFIX}/bin:$PATH
 export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
 export HOME=${PYTHONPYCACHEPREFIX}
@@ -39,12 +39,12 @@ else
 fi
 END
 
-cat > $HOST/bin/python3-wasm <<END
+cat > $HOST_PREFIX/bin/python3-wasm <<END
 #!/bin/bash
 . $ROOT/${PYDK_PYTHON_HOST_PLATFORM}-shell.sh
 
 # to fix non interactive startup
-#touch $HOST/__main__.py
+#touch $HOST_PREFIX/__main__.py
 
 cat >${PYTHONPYCACHEPREFIX}/.numpy-site.cfg <<NUMPY
 [DEFAULT]
@@ -56,17 +56,18 @@ NUMPY
 export PYTHONHOME=$PREFIX
 
 # but still can load dynload and setuptools
-export PYTHONPATH=$(echo -n $HOST/lib/python3.??/lib-dynload):$(echo -n $HOST/lib/python3.??/site-packages)
+export PYTHONPATH=$(echo -n ${HOST_PREFIX}/lib/python3.??/lib-dynload):$(echo -n ${HOST_PREFIX}/lib/python3.??/site-packages)
 
 #probably useless
 export _PYTHON_HOST_PLATFORM=${PYDK_PYTHON_HOST_PLATFORM}
 export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD}
 
-$HOST/bin/python3 -u -B \$@
+$HOST_PREFIX/bin/python3 -u -B \$@
 END
 
-chmod +x $HOST/bin/python3-wasm
+chmod +x $HOST_PREFIX/bin/python3-wasm
 
+mkdir -p prebuilt
 
 if [ -d src/pygame-wasm ]
 then
@@ -87,9 +88,16 @@ rm ${ROOT}/prebuilt/libpygame.a
 # regen cython files
 python3 setup.py cython config
 
-if CC=emcc python3-wasm setup.py -config -auto -sdl2
+# NB: EMCC_CFLAGS="-s USE_SDL=2 is required to prevent '-iwithsysroot/include/SDL'
+# from ./emscripten/tools/ports/__init__.py
+
+
+
+if python3-wasm setup.py -config -auto -sdl2
 then
-    if CFLAGS="-DBUILD_STATIC=1 -DSDL_NO_COMPAT=1 -ferror-limit=1" CC=emcc EMCC_CFLAGS="" python3-wasm setup.py build
+    if CC=emcc CFLAGS="-DBUILD_STATIC -DSDL_NO_COMPAT -ferror-limit=1"\
+ EMCC_CFLAGS="-s USE_SDL=2 -s USE_LIBPNG=1 -s USE_LIBJPEG=1"\
+ python3-wasm setup.py build
     then
         OBJS=$(find build/temp.wasm32-tot-emscripten-3.??/|grep o$)
         llvm-ar rcs ${ROOT}/prebuilt/libpygame.a $OBJS

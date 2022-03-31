@@ -43,7 +43,7 @@ else
 "
     for one in $ALL
     do
-    echo "
+        echo "
         + $done
 "
         embuilder --pic build $one
@@ -54,7 +54,7 @@ fi
 
 if echo $PATH|grep -q $EMSDK/upstream/emscripten/system/bin
 then
-    # emsdk env does not set it, it's needed for eg sdl2-config
+    # emsdk env does not set it, but it's required for eg sdl2-config
     echo -n
 else
     export PATH=$EMSDK/upstream/emscripten/system/bin:$PATH
