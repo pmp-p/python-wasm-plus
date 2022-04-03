@@ -83,6 +83,7 @@
     function custom_postrun(){
         console.log(__FILE__, "custom_postrun")
         setTimeout(Module.PyRun_SimpleString, 500, '(os.path.isfile("main.py") and execfile("main.py")) or None')
+
     }
 
 

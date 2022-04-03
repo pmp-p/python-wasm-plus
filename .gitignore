@@ -6,4 +6,4 @@ wasm32-tot-emscripten-shell.sh
 python-wasm-plus.epj
 .eric6project
 demos
-templates/worker-gui
+tests/code

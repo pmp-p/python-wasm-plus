@@ -25,10 +25,16 @@ fi
 if $REBUILD
 then
     pushd build/cpython-host
+
+    unset PYTHON_FOR_BUILD
+
     PYOPTS="--without-pymalloc --without-pydebug\
      --disable-ipv6 --with-c-locale-coercion --with-ensurepip\
      --with-decimal-contextvar --with-system-ffi --enable-shared\
      --with-computed-gotos"
+
+    # Prevent freezing bytecode with a different magic
+    rm -f $HOST_PREFIX/bin/python3*
 
     if CC=clang CXX=clang++ ${ROOT}/src/cpython/configure \
      --prefix=$HOST_PREFIX $PYOPTS
@@ -44,6 +50,8 @@ then
     "
         read
     fi
+
+    export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD:-${HOST}/bin/python3}
 
     popd
 else

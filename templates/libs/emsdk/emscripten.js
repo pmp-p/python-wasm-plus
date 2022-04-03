@@ -1,4 +1,20 @@
-var readline_history = []
+window.__defineGetter__('__FILE__', function() {
+  return (new Error).stack.split('/').slice(-1).join().split(':')[0] +": ";
+});
+
+
+window.readline = { last_cx : -1 , index : 0 }
+
+readline.history = ["os.listdir('/data/data')","preload()","test()"]
+
+readline.complete = function (line) {
+    if ( readline.history[ readline.history.length -1 ] != line )
+        readline.history.push(line);
+    readline.index = 0;
+
+    PyRun_SimpleString(line + "\n")
+}
+
 
 function PyRun_SimpleString(code) {
     if (window.worker) {
@@ -7,7 +23,6 @@ function PyRun_SimpleString(code) {
         Module.postMessage(code);
     }
 }
-
 
 function emscripten(canvasid, wasmterm) {
     const canvas = document.getElementById(canvasid || "canvas");
@@ -30,7 +45,10 @@ function emscripten(canvasid, wasmterm) {
 
     var Module = {
 
-        arguments : ["-i","-"],
+        vt : wasmterm,
+
+        //arguments : ["-i","-"],
+        arguments : [],
 
         PyRun_SimpleString : PyRun_SimpleString,
 
@@ -139,6 +157,9 @@ function emscripten(canvasid, wasmterm) {
 
     // so python.js can always find it
     window.Module = Module
+
+    Module.readline_history = []
+
     // there's no point stacking python code requests until it's really started.
     window.PyRun_SimpleString = PyRun_SimpleString
 }

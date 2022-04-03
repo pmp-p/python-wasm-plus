@@ -38,20 +38,20 @@ else
     popd
 fi
 
+ALWAYS_ASSETS=$(realpath tests/assets)
+ALWAYS_CODE=$(realpath tests/code)
+
 # O0/g3 is much faster to build and easier to debug
+
 if [ -f dev ]
 then
     echo ' building DEBUG'
     COPTS="-O0 -g3 -gsource-map --source-map-base /"
-    ALWAYS_ASSETS=$(realpath tests/assets)
-    ALWAYS_CODE=$(realpath tests/code)
     ALWAYS_FS="--preload-file ${ALWAYS_ASSETS}@/assets --preload-file ${ALWAYS_CODE}@/assets"
-
 else
     echo ' building RELEASE'
     COPTS="-Os -g0"
-    ALWAYS_CODE=$(realpath tests/code)
-    ALWAYS_FS="--preload-file ${ALWAYS_CODE}@/assets"
+    ALWAYS_FS="--preload-file ${ALWAYS_ASSETS}@/assets"
 fi
 
 echo "
@@ -90,18 +90,19 @@ else
     for lib in $(cat $TMPL/$MODE)
     do
         echo "      added lib $(basename $lib)"
-        /bin/cp -rf $lib/. build/${CN}/
+        /bin/cp -Rl $lib/. build/${CN}/
     done
 
     # copy the test server
-    cp -v support/server.py build/${CN}/
+    cp -lv support/server.py build/${CN}/
 
+    ln support/__EMSCRIPTEN__.py build/${CN}/pythonrc.py
     # hardlink the projects files
     # but symlinks the subfolders
     # so editing build is same as editing the template
     # this is to avoid loosing changes
 
-    for df in ${TMPL}/*
+    for df in ${TMPL}/* ${APK}/static/*
     do
         if [ -d $df ]
         then
@@ -110,6 +111,7 @@ else
             [ -f $df ] && ln $df build/${CN}/ 2>/dev/null
         fi
     done
+
 fi
 
 pushd build/cpython-wasm
@@ -122,12 +124,18 @@ emcc -D__PYDK__=1 -DNDEBUG\
  -I$ROOT/src/cpython/Include/internal -IObjects -IInclude -IPython -I. -I$ROOT/src/cpython/Include -DPy_BUILD_CORE\
  -o Programs/python.o $ROOT/src/cpython/Programs/python.c
 
+#  --preload-file ${APK}/@/assets
+
 emcc $FINAL_OPTS -std=gnu99 -D__PYDK__=1 \
- -s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_SDL=2 -s ASSERTIONS=1 -s ALLOW_MEMORY_GROWTH=1\
- --preload-file $ROOT/devices/emsdk/usr@/usr  --preload-file ${SP}/@/assets/site-packages \
- $ALWAYS_FS --preload-file ${APK}@/assets \
- -o python.html Programs/python.o ${ROOT}/prebuilt/libpython3.*.a Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a\
- ${ROOT}/prebuilt/libpygame.a -ldl -lz -lm -lSDL2 -lSDL2_mixer -lSDL2_ttf -lfreetype -lharfbuzz
+ -s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_SDL=2 -s ASSERTIONS=1 -s ALLOW_MEMORY_GROWTH=1 \
+ --use-preload-plugins \
+ --preload-file $ROOT/devices/emsdk/usr/lib/python3.11@/usr/lib/python3.11 \
+ --preload-file ${SP}/@/assets/site-packages \
+ $ALWAYS_FS \
+ -o python.html Programs/python.o ${ROOT}/prebuilt/libpython3.*.a Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a \
+ ${ROOT}/prebuilt/libpygame.a -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lfreetype -lharfbuzz \
+ -ljpeg -lpng -ldl -lz -lm
+
 
 popd
 

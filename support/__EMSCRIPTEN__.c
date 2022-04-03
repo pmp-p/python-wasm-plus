@@ -29,12 +29,21 @@ TODO:
     advanced lexeme text compression stored via unicode PUA:
         https://www.wikidata.org/wiki/Q18514
 
+    serial
+        https://github.com/goblinhack/c-plus-plus-serializer
+        https://github.com/grpc/grpc
+
     asyncify:
         https://web.dev/asyncify/
         IO in a webworker without asyncio?
             https://github.com/pyodide/pyodide/issues/1219
 
         https://github.com/pyodide/pyodide/issues/1503
+
+    dlopen:
+        https://github.com/pyodide/pyodide/blob/main/src/js/load-package.ts#L227
+        https://github.com/ethanhs/python-wasm/issues/68
+
     vs:
         https://github.com/joemarshall/unthrow
 
@@ -44,12 +53,16 @@ TODO:
     webos:
         https://github.com/shmuelhizmi/web-desktop-environment
         https://qooxdoo.org/qxl.demobrowser/#widget~Desktop.html
+        https://github.com/DustinBrett/daedalOS
 
     tools:
+        https://github.com/petersalomonsen/wasm-git
+
         https://greggman.github.io/html5-gamepad-test/
 
-bookmarks:
-    https://github.com/sunfishcode/wasm-reference-manual/blob/master/WebAssembly.md
+
+    bookmarks:
+        https://github.com/sunfishcode/wasm-reference-manual/blob/master/WebAssembly.md
 
 */
 
@@ -70,43 +83,12 @@ bookmarks:
 
 
 
-PyMODINIT_FUNC PyInit_base(void);
-PyMODINIT_FUNC PyInit_color(void);
-PyMODINIT_FUNC PyInit_constants(void);
-PyMODINIT_FUNC PyInit_version(void);
-PyMODINIT_FUNC PyInit_rect(void);
-PyMODINIT_FUNC PyInit_surflock(void);
-PyMODINIT_FUNC PyInit_rwobject(void);
-PyMODINIT_FUNC PyInit_bufferproxy(void);
-
-PyMODINIT_FUNC PyInit_surface(void);
-PyMODINIT_FUNC PyInit_display(void);
-PyMODINIT_FUNC PyInit__freetype(void);
-PyMODINIT_FUNC PyInit_font(void);
-
-PyMODINIT_FUNC PyInit_draw(void);
-PyMODINIT_FUNC PyInit_mouse(void);
-PyMODINIT_FUNC PyInit_key(void);
-PyMODINIT_FUNC PyInit_event(void);
-PyMODINIT_FUNC PyInit_joystick(void);
-PyMODINIT_FUNC PyInit_image(void);
-
-PyMODINIT_FUNC PyInit_mixer_music(void);
-PyMODINIT_FUNC PyInit_pg_mixer(void);
-
-PyMODINIT_FUNC PyInit_pg_math(void);
-PyMODINIT_FUNC PyInit_pg_time(void);
-
-
-PyMODINIT_FUNC PyInit_sdl2(void);
-PyMODINIT_FUNC PyInit_mixer(void);
-PyMODINIT_FUNC PyInit_controller(void);
+extern void PyGame_static_init();
 
 //PyMODINIT_FUNC PyInit_audio(void);
 //PyMODINIT_FUNC PyInit_video(void);
 
-#define __PyImport_AppendInittab__ {\
-    PyImport_AppendInittab("embed", init_embed);\
+/*
     PyImport_AppendInittab("pygame_base", PyInit_base);\
     PyImport_AppendInittab("pygame_color", PyInit_color);\
     PyImport_AppendInittab("pygame_constants", PyInit_constants);\
@@ -121,6 +103,7 @@ PyMODINIT_FUNC PyInit_controller(void);
     PyImport_AppendInittab("pygame_font", PyInit_font);\
     PyImport_AppendInittab("pygame_draw", PyInit_draw);\
     PyImport_AppendInittab("pygame_image", PyInit_image);\
+    PyImport_AppendInittab("pygame_imageext", PyInit_imageext);\
     PyImport_AppendInittab("pygame_mixer_music", PyInit_mixer_music);\
     PyImport_AppendInittab("pygame_mixer", PyInit_pg_mixer);\
     PyImport_AppendInittab("pygame_mouse", PyInit_mouse);\
@@ -131,7 +114,7 @@ PyMODINIT_FUNC PyInit_controller(void);
     PyImport_AppendInittab("pygame__sdl2_sdl2", PyInit_sdl2);\
     PyImport_AppendInittab("pygame__sdl2_sdl2_mixer", PyInit_mixer);\
     PyImport_AppendInittab("pygame__sdl2_controller", PyInit_controller);\
-}
+*/
 
 
 /*    PyImport_AppendInittab("pygame__sdl2_audio", PyInit_audio);*/\
@@ -142,7 +125,7 @@ PyMODINIT_FUNC PyInit_controller(void);
 
 
 static PyObject *
-embed_test(PyObject *self, PyObject *args, PyObject *kwds) //, PyObject *buff)
+embed_test(PyObject *self, PyObject *args, PyObject *kwds)
 {
     SDL_version v;
 
@@ -153,9 +136,70 @@ embed_test(PyObject *self, PyObject *args, PyObject *kwds) //, PyObject *buff)
 }
 
 
+void
+embed_preload_cb_onload(const char *fn) {
+    //printf(__FILE__": preloaded [%s] ok\n", fn );
+    remove(fn);
+}
+
+void
+embed_preload_cb_onerror(const char *fn) {
+    printf(__FILE__": preload [%s] ERROR\n", "" );
+}
+
+// TODO: use PyUnicode_FSConverter()
+static int embed_preload_assets_count = 0;
+static PyObject *
+embed_preload(PyObject *self, PyObject *argv) {
+    char *url=NULL;
+    char *parent = NULL;
+    char *name = NULL;
+    if (!PyArg_ParseTuple(argv, "s|ss", &url, &parent, &name)) {
+        return NULL;
+    }
+    emscripten_run_preload_plugins(
+        url, (em_str_callback_func)embed_preload_cb_onload, (em_str_callback_func)embed_preload_cb_onerror
+    );
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+embed_symlink(PyObject *self, PyObject *argv) {
+    char *src = NULL;
+    char *dst = NULL;
+
+    if (!PyArg_ParseTuple(argv, "ss", &src, &dst)) {
+        return NULL;
+    }
+    EM_ASM({
+        FS.symlink( UTF8ToString($0), UTF8ToString($1));
+    }, src,dst );
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+embed_run_script(PyObject *self, PyObject *argv) {
+    char *code = NULL;
+    int delay = 0;
+
+    if (!PyArg_ParseTuple(argv, "s|i", &code, &delay)) {
+        return NULL;
+    }
+
+    if (delay) {
+        emscripten_async_run_script(code, delay);
+        Py_RETURN_NONE;
+    }
+
+    return Py_BuildValue("s", emscripten_run_script_string(code) );
+}
+
 static PyMethodDef mod_embed_methods[] = {
     //{"get_sdl_version", embed_get_sdl_version, METH_VARARGS, "get_sdl_version"},
     {"test", (PyCFunction)embed_test, METH_VARARGS | METH_KEYWORDS, "test"},
+    {"preload", (PyCFunction)embed_preload,  METH_VARARGS, "emscripten_run_preload_plugins"},
+    {"symlink", (PyCFunction)embed_symlink,  METH_VARARGS, "FS.symlink"},
+    {"run_script", (PyCFunction)embed_run_script,  METH_VARARGS, "run js"},
     // {"get_sdl_version", embed_get_sdl_version, METH_NOARGS, "get_sdl_version"}, + (PyObject *self, PyObject *args, PyObject *kwds) == FAIL
     {NULL, NULL, 0, NULL}
 };
@@ -198,6 +242,7 @@ int wa_panic = 0;
 #define wa_break { wa_panic=1;goto panic; }
 
 
+#define stdin_cstr io_shm[io_stdin_filenum]
 
 em_callback_func
 main_iteration(void) {
@@ -205,12 +250,14 @@ main_iteration(void) {
 
     if (!wa_panic) {
 
+
+
+
         // first pass coming back from js, if anything js was planned from main() it should be done now.
         if (!i++) {
             // repl banner
             PyRun_SimpleString(
-                "print('CPython',sys.version, '\\n>>>', chr(4), file=sys.stderr);"
-                "sys.stdout.flush();sys.stderr.flush();"
+                "print('CPython',sys.version, '\\n', file=sys.stderr);"
             );
         } else {
             // run a frame.
@@ -227,16 +274,19 @@ main_iteration(void) {
 
             gettimeofday(&time_last, NULL);
 
-#define stdin_cstr io_shm[io_stdin_filenum]
 
             if ( stdin_cstr[0] ) {
 
 #define file io_fd[0]
+                int silent = 0;
 
                 if ( stdin_cstr[0] == '#' ) {
+                    silent = stdin_cstr[1] == '!' ;
                     // special message display it on console
-                    puts(stdin_cstr);
+                    if (!silent)
+                        puts(stdin_cstr);
                 }
+
                 fprintf( file ,"%s", stdin_cstr );
 
                 if ( !fseek(file, 0L, SEEK_END) ) {
@@ -260,7 +310,8 @@ main_iteration(void) {
                     line=0;
                     while( fgets(&buf[0], FD_BUFFER_MAX, file) ) {
                         line++;
-                        fprintf( stderr, "%d: %s", line, buf );
+                        if (!silent)
+                            fprintf( stderr, "%d: %s", line, buf );
                     }
                     rewind(file);
                     PyRun_SimpleFile( file, "<stdin>");
@@ -281,11 +332,11 @@ main_iteration(void) {
 
                 // reset stdin
                 stdin_cstr[0] = 0;
+                stdin_cstr[1] = 0;
                 rewind(file);
                 // ? no op ?
                 ftruncate(io_stdin_filenum, 0);
-#undef file
-#undef stdin_cstr
+
             }
 
 //            if (i>20)
@@ -300,6 +351,11 @@ main_iteration(void) {
     }
     HOST_RETURN(0);
 }
+
+#undef file
+#undef stdin_cstr
+
+
 
 PyStatus status;
 
@@ -327,7 +383,8 @@ main(int argc, char **argv)
         .wchar_argv = NULL
     };
 
-    __PyImport_AppendInittab__;
+    PyImport_AppendInittab("embed", init_embed);
+    PyGame_static_init();
 
     puts("pymain_init");
 
@@ -376,7 +433,18 @@ main(int argc, char **argv)
 EM_ASM({
     var shm_stdin = $0;
     Module.printErr = Module.print;
-    if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
+    const is_worker = (typeof WorkerGlobalScope !== 'undefined') && self instanceof WorkerGlobalScope;
+
+    function jswasm_load(script, aio) {
+        if (!aio) aio=false;
+        const jswasmloader=document.createElement("script");
+        jswasmloader.setAttribute("type","text/javascript");
+        jswasmloader.setAttribute("src", script);
+        jswasmloader.setAttribute('async', aio);
+        document.getElementsByTagName("head")[0].appendChild(jswasmloader);
+    };
+
+    if (is_worker) {
         console.log("PyMain: running in a worker, setting onCustomMessage");
         function onCustomMessage(event) {
             const utf8 = unescape(encodeURIComponent(event.data.userData));
@@ -392,6 +460,16 @@ EM_ASM({
             stringToUTF8( utf8, shm_stdin, $1);
         };
     }
+
+    if (BrowserFS) {
+        console.log("PyMain: found BrowserFS");
+        if (is_worker)
+            jswasm_load("fshandler.js");
+
+    } else {
+        console.log("PyMain: BrowserFS not found");
+    }
+
 }, io_shm[io_stdin_filenum], FD_BUFFER_MAX);
 
 
@@ -424,7 +502,7 @@ if (1)
 
     // SDL2 basic init
     {
-        SDL_Init(SDL_INIT_VIDEO);
+        SDL_Init(SDL_INIT_EVERYTHING); //SDL_INIT_VIDEO | SDL_INIT_TIMER);
 
         if (TTF_Init())
             puts("TTF_Init error");
@@ -450,6 +528,7 @@ if (1)
     chdir("/assets");
     PyRun_SimpleString(
         "sys.path.append('/assets/site-packages');"
+        "sys.path.append('/data/data');"
         "import __EMSCRIPTEN__;builtins.__EMSCRIPTEN__ = __EMSCRIPTEN__;"
     );
 

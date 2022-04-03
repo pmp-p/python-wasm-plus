@@ -18,12 +18,11 @@ constants = clean_mod("pygame.constants")
 
 from pygame.version import *
 
+import pygame_rect
 from pygame_rect import Rect
-
-rect = clean_mod("pygame_rect")
+rect = clean_mod("pygame.rect")
 
 from pygame_rwobject import encode_string, encode_file_path
-
 rwobject = clean_mod("pygame.rwobject")
 
 
@@ -64,8 +63,6 @@ if get_sdl_version() < (2, 0, 0):
         cdrom = MissingModule("cdrom", urgent=1)
 
 
-
-
 import pygame_display
 display = clean_mod("pygame.display")
 
@@ -97,8 +94,14 @@ import pygame.transform
 
 """
 
+
 import pygame_surface
 surface = clean_mod("pygame.surface")
+
+
+import pygame_transform
+transform = clean_mod("pygame.transform")
+
 
 import pygame_key
 key = clean_mod("pygame.key")
@@ -108,6 +111,12 @@ mouse = clean_mod("pygame.mouse")
 
 import pygame_event
 event = clean_mod("pygame.event")
+
+import pygame_imageext
+imageext = clean_mod("pygame.imageext")
+
+import pygame_image
+image = clean_mod("pygame.image")
 
 import pygame_joystick
 joystick = clean_mod("pygame.joystick")
