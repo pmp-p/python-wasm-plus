@@ -96,6 +96,7 @@ import pygame.transform
 
 
 import pygame_surface
+Surface = pygame_surface.Surface
 surface = clean_mod("pygame.surface")
 
 
@@ -115,6 +116,9 @@ event = clean_mod("pygame.event")
 import pygame_imageext
 imageext = clean_mod("pygame.imageext")
 
+import pygame_mask
+mask = clean_mod("pygame.mask")
+
 import pygame_image
 image = clean_mod("pygame.image")
 
@@ -130,6 +134,7 @@ mixer = clean_mod("pygame.mixer")
 import pygame_mixer_music
 music = clean_mod("pygame.mixer_music")
 
+mixer.music = music
 ################################
 
 del clean_mod

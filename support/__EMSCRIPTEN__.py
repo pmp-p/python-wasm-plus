@@ -1,10 +1,13 @@
 #!pythonrc.py
-import os, sys, json
+import os, sys, json, builtins
 
-Python = json.loads(Python)
+PyConfig = json.loads(PyConfig)
+sys.executable = PyConfig["sys"]["executable"]
 
-sys.executable = Python["sys"]["executable"]
-os.chdir(f"/data/data/{sys.argv[0]}")
+try:
+    pdb
+except:
+    pdb = print
 
 import shutil
 
@@ -12,10 +15,14 @@ preloadedWasm = "so"
 preloadedImages = "png jpeg jpg gif"
 preloadedAudios = "wav ogg mp4"
 
-
 def preload(p=None):
     global preload, prelist
-    os.chdir(p or f"/data/data/{sys.argv[0]}")
+    ROOTDIR = p or f"/data/data/{sys.argv[0]}"
+    if  os.path.isdir(ROOTDIR):
+        os.chdir(ROOTDIR)
+    else:
+        pdb(f"cannot chdir to {ROOTDIR=}")
+        return
 
     ROOTDIR = os.getcwd()
     LSRC = len(ROOTDIR) + 1
@@ -58,41 +65,41 @@ def preload(p=None):
 
     explore(ROOTDIR, "assets")
     os.chdir(f"{ROOTDIR}/assets")
+    sys.path.insert(0, os.getcwd())
+    return True
+
+if preload():
+
+    def fix_preload_table():
+        global prelist
+        for (
+            src,
+            dst,
+        ) in prelist.items():
+            ext = dst.rsplit(".", 1)[-1]
+            if ext in preloadedImages:
+                ptype = "preloadedImages"
+            elif ext in preloadedAudios:
+                ptype = "preloadedAudios"
+            elif ext == "so":
+                ptype = "preloadedWasm"
+
+            src = f"{ptype}[{repr(src)}]"
+            dst = f"{ptype}[{repr(dst)}]"
+            swap = f"({src}={dst}) && delete {dst}"
+            embed.js(swap, -1)
+            #print(swap)
+
+        if os.path.isfile("main.py"):
+            aio.defer( execfile, ["main.py"] )
+            print(f"running {sys.argv[0]}.py as main")
+
     # TODO: call that from C after last callback reached instead.
-    embed.js(
-        """setTimeout(Module.PyRun_SimpleString, 500, "fix_preload_table()")""", 500
-    )
+    aio.defer(fix_preload_table, deadline=60)
+else:
+    def fix_preload_table():
+        pdb("no assets preloaded")
 
-    # del preload
+    import pygame
+    import pygame as pg
 
-
-preload()
-
-import pygame
-import pygame as pg
-
-
-def fix_preload_table():
-    global prelist
-
-    for (
-        src,
-        dst,
-    ) in prelist.items():
-        ext = dst.rsplit(".", 1)[-1]
-        if ext in preloadedImages:
-            ptype = "preloadedImages"
-        elif ext in preloadedAudios:
-            ptype = "preloadedAudios"
-        elif ext == "so":
-            ptype = "preloadedWasm"
-        src = f"{ptype}[{repr(src)}]"
-        dst = f"{ptype}[{repr(dst)}]"
-        swap = f"({src}={dst}) && delete {dst}"
-        embed.js(swap, -1)
-
-    print(f"running {sys.argv[0]}.py as main")
-    embed.js(
-        """setTimeout(Module.PyRun_SimpleString, 500, '(os.path.isfile("main.py") and execfile("main.py")) or None')""",
-        1,
-    )

@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en-us">
+<!-- no-worker, xterm, fs -->
+<head>
+    <title>CPython</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- <link rel="icon" type="image/png" href="favicon.png" sizes="16x16"> -->
+
+    <link rel="stylesheet" href="./styles.css"/>
+
+    <link rel="stylesheet" href="./xtermjsixel/xterm.css" />
+    <link rel="stylesheet" href="./xtermjsixel/style.css"/>
+    <style>
+        #status {
+            display: inline-block;
+            vertical-align: top;
+            margin-top: 20px;
+            margin-left: 30px;
+            font-weight: bold;
+            color: rgb(120, 120, 120);
+        }
+
+        #progress {
+            height: 20px;
+            width: 300px;
+        }
+
+        div.emscripten { text-align: center; }
+        div.emscripten_border { border: 1px solid black; }
+        div.thick_border { border: 4px solid black; }
+
+        /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
+        canvas.emscripten { border: 0px none; background-color: blue; }
+
+        body {
+            font-family: arial;
+            margin: 0;
+            padding: none;
+        }
+    </style>
+
+    <script src="./xtermjsixel/xterm.js"></script>
+    <script src="./xtermjsixel/xterm-addon-image.js"></script>
+
+    <script src="./browserfs.min.js"></script>
+
+    <!-- <script type="application/javascript" src="python311/main.js"></script> -->
+
+    <!-- contains xterm wrapper must be ready first -->
+    <script type="module" src="index.js"></script>
+
+
+    <script type="module" src="python311.js" async defer></script>
+
+
+</head>
+
+<body>
+    <div class="spinner" id='spinner'></div>
+    <div class="emscripten" id="status">Downloading...</div>
+    <div class="emscripten">
+      <progress value="0" max="100" id="progress" hidden=1></progress>
+    </div>
+
+    <!-- <div class="thick_border" align=center > -->
+        <div class="emscripten_border" align=center >
+            <canvas class="emscripten" id="canvas" width="640" height="480" style="width: 640px; height: 480px;" oncontextmenu="event.preventDefault()" tabindex=0></canvas>
+            <div class="button-container">
+                Canvas2D/3D (SDL2)
+                <button id="aiopaused_true" disabled>AIO ■</button>
+                <button id="aiopaused_false" disabled>AIO ▶</button>
+                <button id="pygame_music_pause" disabled>Music ■</button>
+            </div>
+
+        </div>
+
+        <div class="emscripten_border">
+            <div id="terminal" tabIndex=1><p></div>
+            <div class="button-container">
+              VT340
+              <button id="repl" disabled>Start REPL</button>
+              <button id="clearvt" disabled>Clear</button>
+            </div>
+        </div>
+    <!--    </div> -->
+
+
+    <script type="application/javascript">
+    config = { xtermjs : 1 }
+
+    function custom_prerun(){
+        // no python main and no (MEMFS + VFS) yet.
+        console.log(__FILE__, "custom_prerun")
+    }
+
+    function custom_postrun(){
+        // python main and no VFS filesystem yet.
+        console.log(__FILE__, "custom_prerun")
+    }
+
+
+    async function custom_site(vfs) {
+        // python and all filesystems are ready.
+        console.log(__FILE__, "custom_site Begin")
+
+        async function _rcp(url, store) {
+            const content = await fetch(url)
+            store = store || ( "/data/data/" + url )
+            console.info(__FILE__,`rcp ${url} => ${store}`)
+            if (content.ok) {
+                const text= await content.text()
+                return await FS.writeFile( store, text);
+            } else {
+                console.error(__FILE__,`can't rcp ${url} to ${store}`)
+                return false;
+            }
+        }
+
+        await _rcp("pythonrc.py")
+
+        var runsite = `#!
+PyConfig = """${JSON.stringify(python.PyConfig)}"""
+execfile("/data/data/pythonrc.py")
+`
+
+        // FIXME: sometimes runtime is called without overlayfs ready.
+
+        if (python.APK) {
+            await _rcp(`${python.APK}.py`, `/data/data/${python.APK}/assets/main.py`)
+
+            setTimeout(python.setStatus, 1000, "hide")
+            on_click("aiopaused_true","aio.paused=True")
+            on_click("aiopaused_false","aio.paused=False")
+            on_click("pygame_music_pause","pygame.music.pause()")
+            // hide the top status bar (emscripten loader)
+
+            python.PyRun_SimpleString(runsite)
+
+        } else {
+            console.log(__FILE__, "not script to run")
+        }
+    }
+
+    function on_click(button_id, pycode, jsfunc) {
+        const wdg = document.getElementById(button_id)
+        if (wdg) {
+            if (pycode) {
+                wdg.addEventListener('click', (e) => {
+                    // #! turns echo off
+                    Module.PyRun_SimpleString(`#!
+${pycode}
+`) // Keep the newline or linenumbering will activate
+
+                })
+            }
+            if (jsfunc)
+                jsfunc()
+            wdg.removeAttribute('disabled')
+        } else
+            console.error(__FILE__, `cannot bind code to id=${button_id}`)
+
+    }
+
+    window.onload = function () {
+        // nothing is ready.
+
+        var wasmterm
+
+        if (!config.xtermjs) {
+            // xterm js placeholder
+            wasmterm = { print : console.log, sixel : function(){}}
+        } else {
+            // it uses  document.getElementById('terminal') to get its host
+            wasmterm = new WasmTerminal( document.getElementById('terminal') )
+
+            window.xterm = wasmterm.xterm
+
+            const replButton = document.getElementById('repl')
+            const clearButton  = document.getElementById('clearvt')
+
+            on_click('repl',`
+print(chr(27),"[2J",chr(27),"[H",sep='',end='')
+print(open('/assets/cpython.six').read())
+print()
+print(sys.version)
+`, () => { xterm.reset() } )
+
+            on_click('clearvt',"", ()=>{xterm.clear()} )
+
+            clearButton.removeAttribute('disabled')
+
+        }
+
+
+        pythonvm("canvas", wasmterm )
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </script>
+</body>
+</html>

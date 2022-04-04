@@ -84,26 +84,7 @@
 
         console.log(__FILE__, "custom_prerun")
 
-        var argv = window.location.href.split('?',2)
-        var e;
-        Python = JSON.parse(`
-{
-    "sys" :
-        {
-            "executable" : "${argv.shift()}"
-        }
-}
-`)
 
-        while (e=argv.shift())
-            arguments_.push(e)
-        argv = arguments_.pop().split('&')
-        while (e=argv.shift())
-            arguments_.push(e)
-
-        console.log(__FILE__, arguments_)
-
-        Module.APK = arguments_[0]
     }
 
     function custom_postrun(){
@@ -112,17 +93,17 @@
 
     }
 
-    async function _rcp(url, store) {
-        const content = await fetch(url)
-        FS.writeFile( store || ( "/data/data/" + url ), await content.text());
-    }
 
     async function custom_site(vfs) {
+
+        async function _rcp(url, store) {
+            const content = await fetch(url)
+            FS.writeFile( store || ( "/data/data/" + url ), await content.text());
+        }
 
         console.log(__FILE__, "custom_site Begin")
         // python and external filesystem are ready.
         await _rcp("pythonrc.py")
-
 
 
         var runsite = `#!

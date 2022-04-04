@@ -21,6 +21,7 @@ export HOME=${PYTHONPYCACHEPREFIX}
 export PLATFORM_TRIPLET=${PYDK_PYTHON_HOST_PLATFORM}
 export PREFIX=$PREFIX
 
+export PYTHONDONTWRITEBYTECODE=1
 export PYTHONSTARTUP="${ROOT}/support/__EMSCRIPTEN__.py"
 > ${PYTHONPYCACHEPREFIX}/.pythonrc.py
 
@@ -91,7 +92,7 @@ python3 setup.py cython config
 # NB: EMCC_CFLAGS="-s USE_SDL=2 is required to prevent '-iwithsysroot/include/SDL'
 # from ./emscripten/tools/ports/__init__.py
 
-
+# 2>&1 | grep --line-buffered -v DOC_
 
 if python3-wasm setup.py -config -auto -sdl2
 then

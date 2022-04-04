@@ -3,6 +3,8 @@ reset
 
 . ${CONFIG:-config}
 
+EXE=python311
+
 # web application template
 TMPL=${1:- templates/no-worker-xterm}
 TMPL=$(realpath $TMPL)
@@ -43,22 +45,26 @@ ALWAYS_CODE=$(realpath tests/code)
 
 # O0/g3 is much faster to build and easier to debug
 
+
 if [ -f dev ]
 then
     echo ' building DEBUG'
-    COPTS="-O0 -g3 -gsource-map --source-map-base /"
+    COPTS="-O0 -g3 -s ASSERTIONS=1 -gsource-map --source-map-base /"
     ALWAYS_FS="--preload-file ${ALWAYS_ASSETS}@/assets --preload-file ${ALWAYS_CODE}@/assets"
 else
     echo ' building RELEASE'
-    COPTS="-Os -g0"
+    COPTS="-Os -g0 -s ASSERTIONS=1"
     ALWAYS_FS="--preload-file ${ALWAYS_ASSETS}@/assets"
 fi
+# option -sSINGLE_FILE ?
+
 
 echo "
 
     ALWAYS_FS=$ALWAYS_FS
 
 "
+
 
 # to trigger emscripten worker
 # whose init is in Programs/python.c have a "worker" folder in the template
@@ -68,12 +74,22 @@ then
     FINAL_OPTS="$COPTS --proxy-to-worker -s ENVIRONMENT=web,worker"
     MODE="worker"
     WORKER_STATUS="using worker"
-    mkdir -p build/$CN/worker
 else
+# https://github.com/emscripten-core/emscripten/issues/10086
+#       EXPORT_NAME does not affect generated html
+#
     FINAL_OPTS="$COPTS"
     MODE="main"
     WORKER_STATUS="not using worker"
 fi
+
+if false
+then
+    FINAL_OPTS="$FINAL_OPTS -s MODULARIZE=1"
+    FINAL_OPTS="$FINAL_OPTS -s EXPORT_NAME=\"${EXE}\""
+    FINAL_OPTS="$FINAL_OPTS -s EXPORTED_RUNTIME_METHODS=[\"FS\"]"
+fi
+
 
 if [ -d build/$CN ]
 then
@@ -83,14 +99,14 @@ then
 else
 
     # create the folder that will receive wasm+emsdk files.
-    mkdir -p build/${CN}/${MODE}/
+    mkdir -p build/${CN}/${EXE}/
 
     # copy libs found in "worker" or "main" text file
     # order matters as they can owerwrite themselves
     for lib in $(cat $TMPL/$MODE)
     do
         echo "      added lib $(basename $lib)"
-        /bin/cp -Rl $lib/. build/${CN}/
+        /bin/cp -Rfl $lib/. build/${CN}/
     done
 
     # copy the test server
@@ -116,34 +132,36 @@ fi
 
 pushd build/cpython-wasm
 
-[ -f python.html ] && rm python.*
-[ -f Programs/python.o ] && rm Programs/python.o
+[ -f ${MODE}.js ] && rm ${MODE}.*
+[ -f Programs/${MODE}.o ] && rm Programs/${MODE}.o
 
 emcc -D__PYDK__=1 -DNDEBUG\
  -c -fwrapv -Wall -fPIC $COPTS -std=gnu99 -Werror=implicit-function-declaration -fvisibility=hidden\
  -I$ROOT/src/cpython/Include/internal -IObjects -IInclude -IPython -I. -I$ROOT/src/cpython/Include -DPy_BUILD_CORE\
- -o Programs/python.o $ROOT/src/cpython/Programs/python.c
+ -o Programs/${MODE}.o $ROOT/src/cpython/Programs/python.c
 
 #  --preload-file ${APK}/@/assets
 
-emcc $FINAL_OPTS -std=gnu99 -D__PYDK__=1 \
- -s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_SDL=2 -s ASSERTIONS=1 -s ALLOW_MEMORY_GROWTH=1 \
+emcc $FINAL_OPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
+ -s TOTAL_MEMORY=512MB -s ALLOW_TABLE_GROWTH \
+ -s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_SDL=2\
  --use-preload-plugins \
  --preload-file $ROOT/devices/emsdk/usr/lib/python3.11@/usr/lib/python3.11 \
  --preload-file ${SP}/@/assets/site-packages \
  $ALWAYS_FS \
- -o python.html Programs/python.o ${ROOT}/prebuilt/libpython3.*.a Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a \
+ -o ${MODE}.js Programs/${MODE}.o ${ROOT}/prebuilt/libpython3.*.a Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a \
  ${ROOT}/prebuilt/libpygame.a -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lfreetype -lharfbuzz \
  -ljpeg -lpng -ldl -lz -lm
 
 
 popd
 
-[ -f build/${CN}/${MODE}/python.js ] && rm build/${CN}/${MODE}/python.*
+[ -f build/${CN}/${EXE}/${MODE}.js ] && rm build/${CN}/${EXE}/${MODE}.*
 
-mv -vf build/cpython-wasm/python.* build/${CN}/${MODE}/
-
-if [ -f build/${CN}/${MODE}/python.html ]
+mv -vf build/cpython-wasm/${MODE}.* build/${CN}/${EXE}/
+#mv build/${CN}/${EXE}/*.map build/${CN}/
+#mv build/${CN}/${EXE}/*.data build/${CN}/
+if [ -f build/${CN}/${EXE}/${MODE}.js ]
 then
     echo "
 _______________________________________________________________________________

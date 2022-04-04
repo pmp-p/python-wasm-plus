@@ -1,4 +1,5 @@
 #!/bin/bash
+export PYTHONDONTWRITEBYTECODE=1
 
 REBUILD=${REBUILD:-false}
 
@@ -7,6 +8,8 @@ HOST_PREFIX=${HOST_PREFIX:-$ROOT/devices/$(arch)/usr}
 PREFIX=${PREFIX:-${ROOT}/devices/emsdk/usr}
 
 PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD:-${HOST_PREFIX}/bin/python3}
+
+PYTHONPYCACHEPREFIX="$(realpath ${ROOT}/build/pycache)"
 
 #stable
 EMFLAVOUR=latest

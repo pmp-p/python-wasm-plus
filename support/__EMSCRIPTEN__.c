@@ -81,47 +81,10 @@ TODO:
     #error "wasi unsupported yet"
 #endif
 
-
-
 extern void PyGame_static_init();
-
-//PyMODINIT_FUNC PyInit_audio(void);
-//PyMODINIT_FUNC PyInit_video(void);
-
-/*
-    PyImport_AppendInittab("pygame_base", PyInit_base);\
-    PyImport_AppendInittab("pygame_color", PyInit_color);\
-    PyImport_AppendInittab("pygame_constants", PyInit_constants);\
-    PyImport_AppendInittab("pygame_rect", PyInit_rect);\
-    PyImport_AppendInittab("pygame_surflock", PyInit_surflock);\
-    PyImport_AppendInittab("pygame_rwobject", PyInit_rwobject);\
-    PyImport_AppendInittab("pygame_bufferproxy", PyInit_bufferproxy);\
-    PyImport_AppendInittab("pygame_math", PyInit_pg_math);\
-    PyImport_AppendInittab("pygame_surface", PyInit_surface);\
-    PyImport_AppendInittab("pygame_display", PyInit_display);\
-    PyImport_AppendInittab("pygame__freetype", PyInit__freetype);\
-    PyImport_AppendInittab("pygame_font", PyInit_font);\
-    PyImport_AppendInittab("pygame_draw", PyInit_draw);\
-    PyImport_AppendInittab("pygame_image", PyInit_image);\
-    PyImport_AppendInittab("pygame_imageext", PyInit_imageext);\
-    PyImport_AppendInittab("pygame_mixer_music", PyInit_mixer_music);\
-    PyImport_AppendInittab("pygame_mixer", PyInit_pg_mixer);\
-    PyImport_AppendInittab("pygame_mouse", PyInit_mouse);\
-    PyImport_AppendInittab("pygame_key", PyInit_key);\
-    PyImport_AppendInittab("pygame_event", PyInit_event);\
-    PyImport_AppendInittab("pygame_joystick", PyInit_joystick);\
-    PyImport_AppendInittab("pygame_time", PyInit_pg_time);\
-    PyImport_AppendInittab("pygame__sdl2_sdl2", PyInit_sdl2);\
-    PyImport_AppendInittab("pygame__sdl2_sdl2_mixer", PyInit_mixer);\
-    PyImport_AppendInittab("pygame__sdl2_controller", PyInit_controller);\
-*/
-
 
 /*    PyImport_AppendInittab("pygame__sdl2_audio", PyInit_audio);*/\
 /*    PyImport_AppendInittab("pygame__sdl2_video", PyInit_video);*/\
-
-
-
 
 
 static PyObject *
@@ -135,16 +98,15 @@ embed_test(PyObject *self, PyObject *args, PyObject *kwds)
 
 }
 
-
 void
 embed_preload_cb_onload(const char *fn) {
-    //printf(__FILE__": preloaded [%s] ok\n", fn );
+    //fprintf(stderr, __FILE__": preloaded [%s] ok\n", fn );
     remove(fn);
 }
 
 void
 embed_preload_cb_onerror(const char *fn) {
-    printf(__FILE__": preload [%s] ERROR\n", "" );
+    fprintf(stderr, __FILE__": preload [%s] ERROR\n", "" );
 }
 
 // TODO: use PyUnicode_FSConverter()
@@ -194,12 +156,25 @@ embed_run_script(PyObject *self, PyObject *argv) {
     return Py_BuildValue("s", emscripten_run_script_string(code) );
 }
 
+static PyObject *
+embed_eval(PyObject *self, PyObject *argv) {
+    char *code = NULL;
+    if (!PyArg_ParseTuple(argv, "s", &code)) {
+        return NULL;
+    }
+    EM_ASM({ eval(UTF8ToString($0)); }, code);
+    Py_RETURN_NONE;
+}
+
+
 static PyMethodDef mod_embed_methods[] = {
     //{"get_sdl_version", embed_get_sdl_version, METH_VARARGS, "get_sdl_version"},
     {"test", (PyCFunction)embed_test, METH_VARARGS | METH_KEYWORDS, "test"},
     {"preload", (PyCFunction)embed_preload,  METH_VARARGS, "emscripten_run_preload_plugins"},
     {"symlink", (PyCFunction)embed_symlink,  METH_VARARGS, "FS.symlink"},
     {"run_script", (PyCFunction)embed_run_script,  METH_VARARGS, "run js"},
+    {"eval", (PyCFunction)embed_eval,  METH_VARARGS, "run js eval()"},
+
     // {"get_sdl_version", embed_get_sdl_version, METH_NOARGS, "get_sdl_version"}, + (PyObject *self, PyObject *args, PyObject *kwds) == FAIL
     {NULL, NULL, 0, NULL}
 };
@@ -240,18 +215,19 @@ int wa_panic = 0;
 
 #define LOG_V puts
 #define wa_break { wa_panic=1;goto panic; }
-
-
 #define stdin_cstr io_shm[io_stdin_filenum]
+
+/*
+    io_shm  is a raw keyboard buffer
+    io_fd is the readline/file/socket interface
+*/
+
 
 em_callback_func
 main_iteration(void) {
     static int i = 0;
 
     if (!wa_panic) {
-
-
-
 
         // first pass coming back from js, if anything js was planned from main() it should be done now.
         if (!i++) {
@@ -274,18 +250,20 @@ main_iteration(void) {
 
             gettimeofday(&time_last, NULL);
 
-
             if ( stdin_cstr[0] ) {
 
 #define file io_fd[0]
                 int silent = 0;
 
                 if ( stdin_cstr[0] == '#' ) {
-                    silent = stdin_cstr[1] == '!' ;
+                    silent = (stdin_cstr[1] == '!') ;
                     // special message display it on console
                     if (!silent)
                         puts(stdin_cstr);
                 }
+
+// TODO: only redirect keyboard buffer to fd if \n found.
+// and implement getch for raw mode.
 
                 fprintf( file ,"%s", stdin_cstr );
 
@@ -321,13 +299,9 @@ main_iteration(void) {
                 }
 
                 if (line) {
-                    fprintf( stderr, ">>> ");
-                    PyRun_SimpleString(
-                        "print(chr(4),file=sys.__stdout__);"
-                        "print(chr(4),file=sys.__stderr__);"
-                        "sys.__stdout__.flush();"
-                        "sys.__stderr__.flush()\n"
-                    );
+                    fprintf( stdout, "%c", 4);
+                    if (!silent)
+                        fprintf( stderr, ">>> %c", 4);
                 }
 
                 // reset stdin
@@ -338,6 +312,20 @@ main_iteration(void) {
                 ftruncate(io_stdin_filenum, 0);
 
             }
+
+// TODO: raw mode auto flush
+        //fprintf( stdout, "%c", 4);
+        //fprintf( stderr, "%c", 4);
+
+/*
+            PyRun_SimpleString(
+                "print(chr(4),file=sys.__stdout__);"
+                "print(chr(4),file=sys.__stderr__);"
+                "sys.__stdout__.flush();"
+                "sys.__stderr__.flush()\n"
+            );
+
+*/
 
 //            if (i>20)
   //              wa_break;
@@ -355,11 +343,7 @@ main_iteration(void) {
 #undef file
 #undef stdin_cstr
 
-
-
 PyStatus status;
-
-
 
 EM_BOOL
 on_keyboard_event(int type, const EmscriptenKeyboardEvent *event, void *user_data) {
@@ -389,6 +373,10 @@ main(int argc, char **argv)
     puts("pymain_init");
 
     setenv("PYTHONHOME","/usr", 1);
+    setenv("PYTHONUNBUFFERED", "1", 1);
+    setenv("PYTHONINSPECT","1",1);
+    setenv("PYTHONDONTWRITEBYTECODE","1",1);
+
 
     status = pymain_init(&args);
 
@@ -461,10 +449,10 @@ EM_ASM({
         };
     }
 
-    if (BrowserFS) {
+    if (!is_worker && window.BrowserFS) {
         console.log("PyMain: found BrowserFS");
-        if (is_worker)
-            jswasm_load("fshandler.js");
+        //if (is_worker)
+        //    jswasm_load("fshandler.js");
 
     } else {
         console.log("PyMain: BrowserFS not found");
