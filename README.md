@@ -25,6 +25,10 @@ one but my fork with some hand edited cythonized files.
 
 https://github.com/pmp-p/pygame-wasm/tree/pygame-wasm
 
+devlog:
+https://github.com/pygame/pygame/issues/718
+
+
 
 REQUIRED:
     
