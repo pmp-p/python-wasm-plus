@@ -26,17 +26,35 @@ then
     pushd build/cpython-host
 
 
-
-    PYOPTS="--without-pymalloc --without-pydebug\
-     --disable-ipv6 --with-c-locale-coercion --with-ensurepip\
+    PYOPTS="--disable-ipv6 --with-c-locale-coercion --without-pymalloc --without-pydebug \
+     --with-ensurepip\
      --with-decimal-contextvar --with-system-ffi --enable-shared\
      --with-computed-gotos"
 
     # Prevent freezing bytecode with a different magic
     rm -f $HOST_PREFIX/bin/python3*
 
+    if which python3.11|grep -q python
+    then
+        echo "
+
+
+
+    ===================================================================================
+
+            it's not safe to have a python3.11 in the path while in pre-release cycle
+            _sre.MAGIC / bytecode weird errors etc ...
+
+    ===================================================================================
+
+"
+        sleep 3
+    fi
+
+    # CFLAGS="-DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1"
+
     if \
-    CC=clang CXX=clang++ CFLAGS="-DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1" \
+    CC=clang CXX=clang++ \
     ${ROOT}/src/cpython/configure \
      --prefix=$HOST_PREFIX $PYOPTS
     then

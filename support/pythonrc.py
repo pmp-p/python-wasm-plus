@@ -4,6 +4,9 @@ import os, sys, json, builtins
 
 import crossplatforms
 
+# to be able to access crossplatforms.sim
+builtins.crossplatforms = crossplatforms
+
 # the sim does not preload assets and cannot access currentline
 # unless using https://github.com/pmp-p/aioprompt/blob/master/aioprompt/__init__.py
 
@@ -52,7 +55,7 @@ except:
             tmpl = []
 
             for l in f.readlines():
-                testglob = l.split('#')[0].strip()
+                testglob = l.split('#')[0].strip(" \r\n,\t")
                 if testglob in ['global loop','global setup']:
                     tmpl.append( [len(__prepro),l.find('g')] )
                     __prepro.append("#globals")
@@ -74,7 +77,18 @@ except:
                     continue
 
                 #maybe found a global assign
-                varname =l.split('=',1)[0].strip()
+                varname = l.split('=',1)[0].strip()
+
+                if varname.find(' ')>0:
+                    continue
+
+                #it's a comment on an assign !
+                if varname.find('#')>=0:
+                    continue
+
+                #skip attr assign
+                if varname.find('.')>0:
+                    continue
 
                 # not a tuple assign
                 if varname.find('(')>0:
@@ -94,18 +108,25 @@ except:
             for mark, indent in tmpl:
                 __prepro[mark] = ' '*indent + myglob
 
-            #for l in "".join(__prepro):
-            #    print(l,end='')
+            if crossplatforms.sim:
+                for i,l in enumerate(__prepro):
+                    print(str(i).zfill(5),l , end='')
+
 
             # use of globals() is only valid in __main__ scope
             # we really want the module __main__ dict here.
 
             __main__dict = __import__("__main__").__dict__
-            __main__dict['__file__']= "${__FILE__}"
-
-            del myglob, tmpl, l, mark, indent
-
-            exec( compile("".join(__prepro), "${__FILE__}", "exec"), __main__dict, __main__dict )
+            __main__dict['__file__']= filename
+            try:
+                code = compile("".join(__prepro), filename, "exec")
+            except SyntaxError:
+                if not crossplatforms.sim:
+                    for i,l in enumerate(__prepro):
+                        print(str(i).zfill(5),l , end='')
+                code=None
+            if code:
+                exec( code, __main__dict, __main__dict )
             return __import__("__main__")
 
 

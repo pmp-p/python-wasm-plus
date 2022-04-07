@@ -13,9 +13,11 @@ if not defined('__WASM__'):
 
 
 if __import__('sys').platform in ['emscripten']:
+    redef = False
     try:
         if not defined('__EMSCRIPTEN__'):
             import __EMSCRIPTEN__ as platform
+            redef = True
         import embed
 
     except Exception as e:
@@ -33,7 +35,9 @@ if __import__('sys').platform in ['emscripten']:
         sys.modules.setdefault('embed', platform)
         define('embed', platform)
 
-    define('__EMSCRIPTEN__', platform)
+    if not redef:
+        define('__EMSCRIPTEN__', platform)
+    del redef
 
 
 

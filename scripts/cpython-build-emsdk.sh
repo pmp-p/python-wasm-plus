@@ -41,7 +41,7 @@ else
 
     export EMCC_CFLAGS="-Os -g0 -fPIC"
 
-     CFLAGS="-Os -g0 -fPIC -DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1"\
+     CFLAGS="-Os -g0 -fPIC"\
       emconfigure $ROOT/src/libffi/configure --host=wasm32-tot-linux\
       --prefix=$PREFIX --enable-static --disable-shared --disable-dependency-tracking\
       --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs\
