@@ -6,7 +6,7 @@ reset
 EXE=python311
 
 # web application template
-TMPL=${1:- templates/no-worker-xterm}
+TMPL=${1:- templates/no-worker-fs}
 TMPL=$(realpath $TMPL)
 shift
 
@@ -19,7 +19,11 @@ shift
 CN=${1:-demo}
 shift
 
+# plat stdlib
 SP=$(realpath support/__EMSCRIPTEN__)
+
+# crosstools and simulator
+XC=$(realpath support/sim)
 
 echo "
 TMPL=${TMPL}
@@ -43,19 +47,26 @@ fi
 ALWAYS_ASSETS=$(realpath tests/assets)
 ALWAYS_CODE=$(realpath tests/code)
 
+COPTS="-s MAIN_MODULE=1"
+EMCC_CFLAGS="-fPIC"
+
 # O0/g3 is much faster to build and easier to debug
 
 
 if [ -f dev ]
 then
     echo ' building DEBUG'
-    COPTS="-O0 -g3 -s ASSERTIONS=1 -gsource-map --source-map-base /"
-    ALWAYS_FS="--preload-file ${ALWAYS_ASSETS}@/assets --preload-file ${ALWAYS_CODE}@/assets"
+    COPTS="$COPTS -O0 -g3 -s ASSERTIONS=1 -gsource-map --source-map-base /"
+    ALWAYS_FS="--preload-file ${ALWAYS_CODE}@/data/data/org.python/assets"
 else
     echo ' building RELEASE'
-    COPTS="-Os -g0 -s ASSERTIONS=1"
-    ALWAYS_FS="--preload-file ${ALWAYS_ASSETS}@/assets"
+    COPTS="$COPTS -Os -g0 -s ASSERTIONS=1"
+    ALWAYS_FS=""
 fi
+
+ALWAYS_FS="$ALWAYS_FS --preload-file ${ALWAYS_ASSETS}@/data/data/org.python/assets"
+
+
 # option -sSINGLE_FILE ?
 
 
@@ -141,17 +152,20 @@ emcc -D__PYDK__=1 -DNDEBUG\
  -o Programs/${MODE}.o $ROOT/src/cpython/Programs/python.c
 
 #  --preload-file ${APK}/@/assets
+#  -sALLOW_MEMORY_GROWTH=1
 
 emcc $FINAL_OPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  -s TOTAL_MEMORY=512MB -s ALLOW_TABLE_GROWTH \
  -s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_SDL=2\
  --use-preload-plugins \
  --preload-file $ROOT/devices/emsdk/usr/lib/python3.11@/usr/lib/python3.11 \
- --preload-file ${SP}/@/assets/site-packages \
+ --preload-file ${XC}@/data/data/org.python/assets/site-packages \
+ --preload-file ${SP}@/data/data/org.python/assets/site-packages \
  $ALWAYS_FS \
  -o ${MODE}.js Programs/${MODE}.o ${ROOT}/prebuilt/libpython3.*.a Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a \
- ${ROOT}/prebuilt/libpygame.a -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lfreetype -lharfbuzz \
- -ljpeg -lpng -ldl -lz -lm
+ ${ROOT}/prebuilt/libpygame.a -lffi -lSDL2_gfx -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lfreetype -lharfbuzz \
+ -ljpeg -lpng -ldl -lm
+# -lSDL2  -lz
 
 
 popd
@@ -159,7 +173,7 @@ popd
 [ -f build/${CN}/${EXE}/${MODE}.js ] && rm build/${CN}/${EXE}/${MODE}.*
 
 mv -vf build/cpython-wasm/${MODE}.* build/${CN}/${EXE}/
-#mv build/${CN}/${EXE}/*.map build/${CN}/
+mv build/${CN}/${EXE}/*.map build/${CN}/
 #mv build/${CN}/${EXE}/*.data build/${CN}/
 if [ -f build/${CN}/${EXE}/${MODE}.js ]
 then

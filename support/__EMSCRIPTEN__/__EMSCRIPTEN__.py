@@ -8,6 +8,7 @@ import sys, os, builtins
 #are they not ?
 builtins.builtins = builtins
 
+
 # aio must be in __main__ or step/defer may lose access to globals
 class aio:
     paused = False
@@ -15,6 +16,10 @@ class aio:
     oneshots = []
     ticks = 0
     protect = []
+
+    @classmethod
+    def breakpointhook(cls, *argv, **kw):
+        cls.paused = True
 
     @classmethod
     def step(cls):
@@ -50,83 +55,9 @@ class aio:
         # FIXME: set ticks + deadline for alarm
         cls.oneshots.append( [cls.ticks+deadline, fn,argv,kw,] )
 
+sys.breakpointhook = aio.breakpointhook
+
 builtins.aio = aio
-
-
-
-try:
-    # mpy already has execfile
-    execfile
-except:
-    import tokenize
-    def execfile(filename):
-
-        with tokenize.open(filename) as f:
-            prepro = []
-            myglobs = []
-            tmpl = []
-
-            for l in f.readlines():
-
-                if l.strip().find('global loop')>=0:
-                    tmpl.append( [len(prepro),l.find('g')] )
-                    prepro.append("#globals")
-                    continue
-
-                prepro.append(l)
-
-                if l[0] in ("""\n\r\t'" """):
-                    continue
-
-                if not l.find('=')>0:
-                    continue
-
-                l = l.strip()
-
-                if l.startswith('def '):
-                    continue
-                if l.startswith('class '):
-                    continue
-
-                #maybe found a global assign
-                varname =l.split('=',1)[0].strip()
-
-                # not a tuple assign
-                if varname.find('(')>0:
-                    continue
-
-                # not a list assign
-                if varname.find('[')>0:
-                    continue
-
-                #TODO handle (a,)=(0,) case types
-
-                if not varname in myglobs:
-                    myglobs.append(varname)
-
-
-
-            myglob = f"global {', '.join(myglobs)}\n"
-
-
-            for mark, indent in tmpl:
-                prepro[mark] = ' '*indent + myglob
-
-#            os.system('reset')
-#            print(myglob)
-#            for i,line in enumerate(prepro):
-#                print(str(i).zfill(4),line,end='')
-#
-#            print()
-#            print()
-
-            code = compile("".join(prepro), filename, "exec")
-            main = __import__("__main__").__dict__
-#            print(ROOTDIR)
-#            os.chdir(ROOTDIR)
-            exec(code, main, main)
-
-    builtins.execfile = execfile
 
 
 this = __import__(__name__)
@@ -271,33 +202,124 @@ if __EMSCRIPTEN__ and hasattr(embed,"run_script"):
 
     embed.js = js
 
-try:
-    # check it the embedding module was finished for that platform.
-    embed.log
-except:
-    pdb("CRITICAL: embed softrt/syslog functions not found ( and also not in __main__ )")
-    embed.enable_irq = print
-    embed.disable_irq = print
-    embed.log = print
+    def PyConfig_InitPythonConfig(PyConfig):
+        if PyConfig.get("executable",None) is None:
+            # running in sim
+            return False
+
+        sys.executable = PyConfig["executable"]
+
+        import shutil
+        global preloadedWasm, preloadedImages, preloadedAudios
+
+        preloadedWasm = "so"
+        preloadedImages = "png jpeg jpg gif"
+        preloadedAudios = "wav ogg mp4"
+        pdb("PyConfig_InitPythonConfig done")
+
+
+        def preload(p=None):
+            global preload, prelist, ROOTDIR, preloadedWasm, preloadedImages, preloadedAudios
+            ROOTDIR = p or f"/data/data/{sys.argv[0]}"
+            if  os.path.isdir(ROOTDIR):
+                os.chdir(ROOTDIR)
+            else:
+                pdb(f"cannot chdir to {ROOTDIR=}")
+                return
+
+            ROOTDIR = os.getcwd()
+            LSRC = len(ROOTDIR) + 1
+            counter = 0
+            prelist = {}
+
+            def explore(pushpopd, newpath):
+                global prelist, preloadedWasm, preloadedImages, preloadedAudios
+                nonlocal counter
+
+                if newpath.endswith(".git"):
+                    return
+
+                for dirname, dirnames, filenames in os.walk(newpath):
+                    try:
+                        os.chdir(dirname)
+                        #print(f"\nNow in {os.getcwd()[LSRC:] or '.'}")
+
+                    except:
+                        print("Invalid Folder :", pushpopd, newpath)
+
+                    for f in filenames:
+                        if not os.path.isfile(f):
+                            continue
+
+                        ext = f.rsplit(".", 1)[-1].lower()
+
+                        if ext.lower() not in f"{preloadedImages} {preloadedAudios} {preloadedWasm}":
+                            continue
+
+                        src = os.path.join(os.getcwd(), f)
+                        dst = "/tmp/pre" + str(counter).zfill(4) + "." + ext
+                        shutil.copyfile(src, dst)
+                        prelist[src] = dst
+                        embed.preload(dst)
+                        counter += 1
+
+                    for subdir in dirnames:
+                        explore(os.getcwd(), subdir)
+
+                os.chdir(pushpopd)
+
+            if os.path.isdir('assets'):
+                explore(ROOTDIR, "assets")
+                os.chdir(f"{ROOTDIR}/assets")
+            else:
+                #print("no assets found")
+                embed.prompt()
+
+
+            sys.path.insert(0, os.getcwd())
+            return True
 
 
 
+        if preload():
 
+            def fix_preload_table():
+                global prelist, preloadedWasm, preloadedImages, preloadedAudios
+                for (
+                    src,
+                    dst,
+                ) in prelist.items():
+                    ext = dst.rsplit(".", 1)[-1]
+                    if ext in preloadedImages:
+                        ptype = "preloadedImages"
+                    elif ext in preloadedAudios:
+                        ptype = "preloadedAudios"
+                    elif ext == "so":
+                        ptype = "preloadedWasm"
 
+                    src = f"{ptype}[{repr(src)}]"
+                    dst = f"{ptype}[{repr(dst)}]"
+                    swap = f"({src}={dst}) && delete {dst}"
+                    embed.js(swap, -1)
+                    #print(swap)
 
+                if os.path.isfile("main.py"):
 
+                    def runmain(py):
+                        __main__ = execfile(py)
+                        __main__.setup()
+                        aio.steps.append(__main__.loop)
 
+                    print(f"running {sys.argv[0]}.py as main")
+                    aio.defer( runmain, ["main.py"] )
+                else:
+                    pdb(f"no main found for {sys.argv[0]}")
 
-
-
-
-
-
-
-
-
-
-
+            # C should unlock aio loop when preload count reach 0.
+            aio.defer(fix_preload_table, deadline=60)
+        else:
+            def fix_preload_table():
+                pdb("no assets preloaded")
 
 
 

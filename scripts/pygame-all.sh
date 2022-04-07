@@ -12,6 +12,11 @@ echo "
     * emsdk ready in $EMSDK
 "
 
+cat > ${PYTHONPYCACHEPREFIX}/.nanorc <<END
+set tabsize 4
+set tabstospaces
+END
+
 cat > $ROOT/${PYDK_PYTHON_HOST_PLATFORM}-shell.sh <<END
 #!/bin/bash
 export PATH=${HOST_PREFIX}/bin:$PATH
@@ -101,7 +106,7 @@ then
  python3-wasm setup.py build
     then
         OBJS=$(find build/temp.wasm32-tot-emscripten-3.??/|grep o$)
-        llvm-ar rcs ${ROOT}/prebuilt/libpygame.a $OBJS
+        emar rcs ${ROOT}/prebuilt/libpygame.a $OBJS
         for obj in $OBJS
         do
             echo $obj

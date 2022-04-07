@@ -20,6 +20,7 @@ then
     else
         export REBUILD=true
     fi
+    cat $ROOT/support/compilenone.py > ./Lib/compileall.py
     popd
 else
     git clone https://github.com/python/cpython.git

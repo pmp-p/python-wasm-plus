@@ -143,7 +143,7 @@ del clean_mod
 # Thanks for supporting pygame. Without support now, there won't be pygame later.
 if "PYGAME_HIDE_SUPPORT_PROMPT" not in os.environ:
     print("\n\n")
-    print(open('/assets/pygame.six').read())
+    print(open('/data/data/org.python/assets/pygame.six').read())
 
 
     print(

@@ -2,10 +2,9 @@
 
 . ${CONFIG:-config}
 
+export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD:-${HOST_PREFIX}/bin/python3}
+
 mkdir -p build/cpython-host
-
-export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD:-${HOST}/bin/python3}
-
 
 if $REBUILD
 then
@@ -26,7 +25,7 @@ if $REBUILD
 then
     pushd build/cpython-host
 
-    unset PYTHON_FOR_BUILD
+
 
     PYOPTS="--without-pymalloc --without-pydebug\
      --disable-ipv6 --with-c-locale-coercion --with-ensurepip\
@@ -36,7 +35,9 @@ then
     # Prevent freezing bytecode with a different magic
     rm -f $HOST_PREFIX/bin/python3*
 
-    if CC=clang CXX=clang++ ${ROOT}/src/cpython/configure \
+    if \
+    CC=clang CXX=clang++ CFLAGS="-DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1" \
+    ${ROOT}/src/cpython/configure \
      --prefix=$HOST_PREFIX $PYOPTS
     then
         make -j$(nproc) install
@@ -51,7 +52,7 @@ then
         read
     fi
 
-    export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD:-${HOST}/bin/python3}
+
 
     popd
 else
@@ -63,3 +64,4 @@ else
 fi
 
 
+unset PYTHON_FOR_BUILD

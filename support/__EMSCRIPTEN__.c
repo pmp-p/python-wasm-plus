@@ -44,6 +44,9 @@ TODO:
         https://github.com/pyodide/pyodide/blob/main/src/js/load-package.ts#L227
         https://github.com/ethanhs/python-wasm/issues/68
 
+    size:
+        keep .py but remove docstrings. use only minimal files in .data
+
     vs:
         https://github.com/joemarshall/unthrow
 
@@ -83,8 +86,15 @@ TODO:
 
 extern void PyGame_static_init();
 
-/*    PyImport_AppendInittab("pygame__sdl2_audio", PyInit_audio);*/\
-/*    PyImport_AppendInittab("pygame__sdl2_video", PyInit_video);*/\
+static long long embed = 0;
+
+static PyObject *
+embed_run(PyObject *self, PyObject *argv,  PyObject *kwds)
+{
+    if (!embed)
+        embed++;
+    return Py_BuildValue("L", embed);
+}
 
 
 static PyObject *
@@ -102,6 +112,7 @@ void
 embed_preload_cb_onload(const char *fn) {
     //fprintf(stderr, __FILE__": preloaded [%s] ok\n", fn );
     remove(fn);
+    embed ++ ;
 }
 
 void
@@ -119,11 +130,13 @@ embed_preload(PyObject *self, PyObject *argv) {
     if (!PyArg_ParseTuple(argv, "s|ss", &url, &parent, &name)) {
         return NULL;
     }
+    embed -- ;
     emscripten_run_preload_plugins(
         url, (em_str_callback_func)embed_preload_cb_onload, (em_str_callback_func)embed_preload_cb_onerror
     );
     Py_RETURN_NONE;
 }
+
 
 static PyObject *
 embed_symlink(PyObject *self, PyObject *argv) {
@@ -166,16 +179,45 @@ embed_eval(PyObject *self, PyObject *argv) {
     Py_RETURN_NONE;
 }
 
+static PyObject *
+embed_readline(PyObject *self, PyObject *_null); //forward
+
+static PyObject *
+embed_flush(PyObject *self, PyObject *_null) {
+    fprintf( stdout, "%c", 4);
+    fprintf( stderr, "%c", 4);
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+embed_prompt(PyObject *self, PyObject *_null) {
+    fprintf( stderr, ">>> ");
+    embed_flush(self,_null);
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+embed_get_sdl_version(PyObject *self, PyObject *_null)
+{
+    SDL_version v;
+
+    SDL_GetVersion(&v);
+    return Py_BuildValue("iii", v.major, v.minor, v.patch);
+}
+
 
 static PyMethodDef mod_embed_methods[] = {
     //{"get_sdl_version", embed_get_sdl_version, METH_VARARGS, "get_sdl_version"},
+    {"run", (PyCFunction)embed_run, METH_VARARGS | METH_KEYWORDS, "start aio stepping"},
     {"test", (PyCFunction)embed_test, METH_VARARGS | METH_KEYWORDS, "test"},
     {"preload", (PyCFunction)embed_preload,  METH_VARARGS, "emscripten_run_preload_plugins"},
     {"symlink", (PyCFunction)embed_symlink,  METH_VARARGS, "FS.symlink"},
     {"run_script", (PyCFunction)embed_run_script,  METH_VARARGS, "run js"},
     {"eval", (PyCFunction)embed_eval,  METH_VARARGS, "run js eval()"},
-
-    // {"get_sdl_version", embed_get_sdl_version, METH_NOARGS, "get_sdl_version"}, + (PyObject *self, PyObject *args, PyObject *kwds) == FAIL
+    {"readline", (PyCFunction)embed_readline,  METH_NOARGS, "get current line"},
+    {"flush", (PyCFunction)embed_flush,  METH_NOARGS, "flush stdio+stderr"},
+    {"prompt", (PyCFunction)embed_prompt,  METH_NOARGS, "output >>> "},
+    {"get_sdl_version", embed_get_sdl_version, METH_NOARGS, "get_sdl_version"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -196,8 +238,6 @@ PyMODINIT_FUNC init_embed(void) {
     PyDict_SetItemString(embed_dict, "js2py", PyUnicode_FromString("{}"));
     return embed_mod;
 }
-
-
 
 
 struct timeval time_last, time_current, time_lapse;
@@ -221,21 +261,19 @@ int wa_panic = 0;
     io_shm  is a raw keyboard buffer
     io_fd is the readline/file/socket interface
 */
-
+static PyObject *
+embed_readline(PyObject *self, PyObject *_null) {
+    return Py_BuildValue("s", io_shm[io_stdin_filenum] );
+}
 
 em_callback_func
 main_iteration(void) {
-    static int i = 0;
+
 
     if (!wa_panic) {
 
         // first pass coming back from js, if anything js was planned from main() it should be done now.
-        if (!i++) {
-            // repl banner
-            PyRun_SimpleString(
-                "print('CPython',sys.version, '\\n', file=sys.stderr);"
-            );
-        } else {
+        if (embed && embed++) {
             // run a frame.
             PyRun_SimpleString("aio.step()");
         }
@@ -463,8 +501,7 @@ EM_ASM({
 
     PyRun_SimpleString("import sys, embed, builtins, os, time;");
 
-if (1)
-    {
+    if (1) {
         // display a nice six logo python-powered in xterm.js
         #define MAX 132
         char buf[MAX];
@@ -480,13 +517,19 @@ if (1)
             buf[0]=0;
         }
 
-
-    }
-    else {
+    } else {
         // same but with python
-        PyRun_SimpleString("print(open('/assets/cpython.six').read());");
+        // repl banner
+        PyRun_SimpleString(
+"print(open('/assets/cpython.six').read());"
+        );
     }
 
+    PyRun_SimpleString(
+"print('CPython',sys.version, '\\n', file=sys.stderr);"
+    );
+
+    embed_flush(NULL,NULL);
 
     // SDL2 basic init
     {
@@ -513,13 +556,13 @@ if (1)
 
     }
 
-    chdir("/assets");
-    PyRun_SimpleString(
-        "sys.path.append('/assets/site-packages');"
-        "sys.path.append('/data/data');"
-        "import __EMSCRIPTEN__;builtins.__EMSCRIPTEN__ = __EMSCRIPTEN__;"
-    );
+    chdir("/");
 
+/*
+    sys.path.append('/assets/site-packages')
+    exec(open("/data/data/pythonrc.py").read(), globals(), globals())
+    "import __EMSCRIPTEN__;builtins.__EMSCRIPTEN__ = __EMSCRIPTEN__;"
+*/
 
 
 
