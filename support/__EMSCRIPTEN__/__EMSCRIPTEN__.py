@@ -127,8 +127,6 @@ else:
     sys.print_exception = print_exception
     del print_exception
 
-    # fix const without writing const in that .py because of micropython parser.
-    exec("__import__('builtins').const = lambda x:x", globals(), globals())
     try:
         from . import uasyncio_cpy as uasyncio
     except:

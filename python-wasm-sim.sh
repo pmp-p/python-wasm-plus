@@ -17,7 +17,5 @@ unset PYTHONHOME
 export PYTHONPATH=$ROOT/support/sim.links:$ROOT/devices/$(arch)/usr/lib/python3.11/lib-dynload
 export LD_LIBRARY_PATH=$ROOT/devices/$(arch)/usr/lib
 
-ldd $ROOT/devices/$(arch)/usr/bin/python3.11
-
-$ROOT/devices/$(arch)/usr/bin/python3.11
+$ROOT/devices/$(arch)/usr/bin/python3.11 -i -u -B
 

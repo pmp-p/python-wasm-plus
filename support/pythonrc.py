@@ -32,6 +32,14 @@ if not defined('undefined'):
     del sentinel
 
 
+    define('false', False)
+    define('true', True)
+
+    # fix const without writing const in that .py because of faulty micropython parser.
+    exec("__import__('builtins').const = lambda x:x", globals(), globals())
+
+
+
 def overloaded(i, *attrs):
     for attr in attrs:
         if attr in i.__class__.__dict__:
@@ -51,7 +59,7 @@ except:
     def execfile(filename):
         with __import__('tokenize').open(filename) as f:
             __prepro = []
-            myglobs = []
+            myglobs = ['setup','loop']
             tmpl = []
 
             for l in f.readlines():
@@ -108,10 +116,18 @@ except:
             for mark, indent in tmpl:
                 __prepro[mark] = ' '*indent + myglob
 
-            if crossplatforms.sim:
+
+            def dump_code():
+                nonlocal __prepro
+                print()
+                print("_"*70)
                 for i,l in enumerate(__prepro):
                     print(str(i).zfill(5),l , end='')
+                print("_"*70)
+                print()
 
+            if crossplatforms.sim:
+                dump_code()
 
             # use of globals() is only valid in __main__ scope
             # we really want the module __main__ dict here.
@@ -120,14 +136,15 @@ except:
             __main__dict['__file__']= filename
             try:
                 code = compile("".join(__prepro), filename, "exec")
-            except SyntaxError:
+            except SyntaxError as e:
                 if not crossplatforms.sim:
-                    for i,l in enumerate(__prepro):
-                        print(str(i).zfill(5),l , end='')
+                    dump_code()
+                sys.print_exception(e)
                 code=None
+
             if code:
                 exec( code, __main__dict, __main__dict )
-            return __import__("__main__")
+        return __import__("__main__")
 
 
     define('execfile', execfile)
