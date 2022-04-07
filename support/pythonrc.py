@@ -2,10 +2,10 @@
 
 import os, sys, json, builtins
 
-import crossplatforms
+# to be able to access aio.cross.sim
+import aio
+import aio.cross
 
-# to be able to access crossplatforms.sim
-builtins.crossplatforms = crossplatforms
 
 # the sim does not preload assets and cannot access currentline
 # unless using https://github.com/pmp-p/aioprompt/blob/master/aioprompt/__init__.py
@@ -49,7 +49,6 @@ def overloaded(i, *attrs):
 
 
 builtins.overloaded = overloaded
-
 
 
 try:
@@ -126,7 +125,7 @@ except:
                 print("_"*70)
                 print()
 
-            if crossplatforms.sim:
+            if aio.cross.sim:
                 dump_code()
 
             # use of globals() is only valid in __main__ scope
@@ -137,7 +136,7 @@ except:
             try:
                 code = compile("".join(__prepro), filename, "exec")
             except SyntaxError as e:
-                if not crossplatforms.sim:
+                if not aio.cross.sim:
                     dump_code()
                 sys.print_exception(e)
                 code=None
@@ -152,7 +151,7 @@ except:
 if hasattr(embed,'readline'):
 
     class shell:
-        if crossplatforms.sim:
+        if aio.cross.sim:
             ROOT = os.getcwd()
             HOME = os.getcwd()
         else:
@@ -234,16 +233,16 @@ if hasattr(embed,'readline'):
 
 try:
     PyConfig
-    crossplatforms.sim = ( __EMSCRIPTEN__ or __WASI__ or __WASM__).PyConfig_InitPythonConfig( PyConfig )
+    aio.cross.sim = ( __EMSCRIPTEN__ or __wasi__ or __WASM__).PyConfig_InitPythonConfig( PyConfig )
 except NameError:
 #   TODO: get a pyconfig from C here
 #    <vstinner> pmp-p: JSON au C : connais les API secrète _PyConfig_FromDict(), _PyInterpreterState_SetConfig() et _testinternalcapi.set_config()?
 #    <vstinner> pmp-p: j'utilise du JSON pour les tests unitaires sur PyConfig dans test_embed
 
-
     PyConfig = {}
     print(" - running in simulator - ")
-    crossplatforms.sim = True
+    aio.cross.sim = True
+
 
 
 

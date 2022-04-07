@@ -1,12 +1,19 @@
 print("= ${__FILE__} in websim  for  ${PLATFORM} =")
 
-import sys,builtins
+import sys, os, builtins
 
 sys.path.append("${PLATFORM}")
 
-import xctools
+import aio.prepro
+import aio.cross
 
+import inspect
+
+# fake it
 sys.platform = 'emscripten'
+define('__WASM__', True)
+
+
 
 class __EMSCRIPTEN__:
     @classmethod
@@ -16,6 +23,8 @@ define('__EMSCRIPTEN__', __EMSCRIPTEN__)
 
 exec( open("${PYTHONRC}").read() , globals(), globals())
 
+
+import aio
 
 scheduled = None
 scheduler = None
@@ -27,7 +36,7 @@ loop = None
 #TODO: all readline replacement with accurate timeframes
 #TODO: droid integrate application lifecycle
 
-if sys.platform not in ('bionic','wasm','emscripten','wasi','android') or crossplatforms.sim:
+if sys.platform not in ('bionic','wasm','emscripten','wasi','android') or aio.cross.sim:
     import sys
     import builtins
 
@@ -133,5 +142,11 @@ if __name__ == '__main__':
         while True:
             loop()
     else:
-        aio.run( loop(), debug = step )
+        coro = loop
+        if not inspect.iscoroutinefunction(coro):
+            del coro
+            async def coro():
+                loop()
+
+        aio.run( coro(), debug = step )
         print("launched")

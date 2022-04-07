@@ -22,15 +22,14 @@ shift
 # plat stdlib
 SP=$(realpath support/__EMSCRIPTEN__)
 
-# crosstools and simulator
-XC=$(realpath support/sim)
+# crosstools, aio and simulator
+XC=$(realpath support/aio)
 
 echo "
 TMPL=${TMPL}
 APK=${APK}
 site-packages=${SP}
 "
-
 
 
 

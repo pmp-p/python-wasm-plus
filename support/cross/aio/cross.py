@@ -1,5 +1,4 @@
-import sys, xctools
-
+import sys, aio.prepro
 
 
 if not defined('__WASM__'):
@@ -41,13 +40,13 @@ if __import__('sys').platform in ['emscripten']:
 
 
 
-if not defined('__WASI__'):
+if not defined('__wasi__'):
     if __import__('sys').platform in ['wasi']:
-        import __WASI__
+        import __wasi__
     else:
-        __WASI__ = False
+        __wasi__ = False
 
-    define('__WASI__', __WASI__)
+    define('__wasi__', __wasi__)
 
 
 
