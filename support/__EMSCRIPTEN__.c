@@ -96,6 +96,13 @@ embed_run(PyObject *self, PyObject *argv,  PyObject *kwds)
     return Py_BuildValue("L", embed);
 }
 
+static PyObject *
+embed_counter(PyObject *self, PyObject *argv,  PyObject *kwds)
+{
+    return Py_BuildValue("L", embed);
+}
+
+
 
 static PyObject *
 embed_test(PyObject *self, PyObject *args, PyObject *kwds)
@@ -113,6 +120,8 @@ embed_preload_cb_onload(const char *fn) {
     //fprintf(stderr, __FILE__": preloaded [%s] ok\n", fn );
     remove(fn);
     embed ++ ;
+    if (embed<0)
+        fprintf(stderr, "INFO: %lli assets remaining in queue\n", -embed );
 }
 
 void
@@ -131,6 +140,7 @@ embed_preload(PyObject *self, PyObject *argv) {
         return NULL;
     }
     embed -- ;
+
     emscripten_run_preload_plugins(
         url, (em_str_callback_func)embed_preload_cb_onload, (em_str_callback_func)embed_preload_cb_onerror
     );
@@ -209,6 +219,7 @@ embed_get_sdl_version(PyObject *self, PyObject *_null)
 static PyMethodDef mod_embed_methods[] = {
     //{"get_sdl_version", embed_get_sdl_version, METH_VARARGS, "get_sdl_version"},
     {"run", (PyCFunction)embed_run, METH_VARARGS | METH_KEYWORDS, "start aio stepping"},
+    {"counter", (PyCFunction)embed_counter, METH_VARARGS | METH_KEYWORDS, "read aio loop pass counter"},
     {"test", (PyCFunction)embed_test, METH_VARARGS | METH_KEYWORDS, "test"},
     {"preload", (PyCFunction)embed_preload,  METH_VARARGS, "emscripten_run_preload_plugins"},
     {"symlink", (PyCFunction)embed_symlink,  METH_VARARGS, "FS.symlink"},

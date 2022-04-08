@@ -270,9 +270,9 @@ if __EMSCRIPTEN__ and hasattr(embed,"run_script"):
                 explore(ROOTDIR, "assets")
                 os.chdir(f"{ROOTDIR}/assets")
             else:
-                #print("no assets found")
-                embed.prompt()
 
+                embed.prompt()
+            print(f"assets found :",counter)
 
             sys.path.insert(0, os.getcwd())
             return True
@@ -283,6 +283,13 @@ if __EMSCRIPTEN__ and hasattr(embed,"run_script"):
 
             def fix_preload_table():
                 global prelist, preloadedWasm, preloadedImages, preloadedAudios
+
+                if embed.counter()<0:
+                    pdb("asset manager not ready 0>",embed.counter())
+                    aio.defer(fix_preload_table, deadline=60)
+                else:
+                    pdb("all assets were ready at",embed.counter())
+
                 for (
                     src,
                     dst,

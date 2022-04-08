@@ -20,7 +20,7 @@ CN=${1:-demo}
 shift
 
 # plat stdlib
-SITEP=$(realpath support/__EMSCRIPTEN__)
+PLATFORM=$(realpath support/__EMSCRIPTEN__)
 
 # crosstools, aio and simulator
 CROSS=$(realpath support/cross)
@@ -28,7 +28,7 @@ CROSS=$(realpath support/cross)
 echo "
 TMPL=${TMPL}
 APK=${APK}
-site-packages=${SITEP}
+site-packages=${PLATFORM}
 crosstoosl=${CROSS}
 "
 
@@ -123,7 +123,7 @@ else
     # copy the test server
     cp -lv support/server.py build/${CN}/
 
-    ln support/__EMSCRIPTEN__.py build/${CN}/pythonrc.py
+    ln support/pythonrc.py build/${CN}/pythonrc.py
     # hardlink the projects files
     # but symlinks the subfolders
     # so editing build is same as editing the template
@@ -143,10 +143,8 @@ fi
 
 pushd build/cpython-wasm
 
-cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/.\
- $ROOT/devices/$(arch)/usr/lib/python3.??/
-cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/.\
- $ROOT/devices/emsdk/usr/lib/python3.??/
+/bin/cp -Rfv $PLATFORM.patches/. $ROOT/devices/$(arch)/usr/lib/python3.??/
+/bin/cp -Rf $PLATFORM.patches/. $ROOT/devices/emsdk/usr/lib/python3.??/
 
 
 [ -f ${MODE}.js ] && rm ${MODE}.*
@@ -168,7 +166,7 @@ emcc $FINAL_OPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  --use-preload-plugins \
  --preload-file $ROOT/devices/emsdk/usr/lib/python3.11@/usr/lib/python3.11 \
  --preload-file ${CROSS}@/data/data/org.python/assets/site-packages \
- --preload-file ${SITEP}@/data/data/org.python/assets/site-packages \
+ --preload-file ${PLATFORM}@/data/data/org.python/assets/site-packages \
  $ALWAYS_FS \
  -o ${MODE}.js Programs/${MODE}.o ${ROOT}/prebuilt/libpython3.*.a Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a \
  ${ROOT}/prebuilt/libpygame.a -lffi -lSDL2_gfx -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lfreetype -lharfbuzz \
