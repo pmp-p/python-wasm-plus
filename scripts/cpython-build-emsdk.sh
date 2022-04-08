@@ -2,6 +2,12 @@
 
 . ${CONFIG:-config}
 
+# TODO:
+# fix /pip/_internal/operations/install/wheel.py
+# for allowing to avoid pyc creation
+
+
+
  PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD:-${HOST_PREFIX}/bin/python3}
 
 if [ -d $EMSDK ]
@@ -47,7 +53,6 @@ else
       --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs\
 
     emmake make install
-
     popd
 
     cp -fv  ${PREFIX}/lib/libffi.a $EMSDK/upstream/emscripten/cache/sysroot/lib/wasm32-emscripten/pic/
@@ -73,6 +78,9 @@ CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten \
 
     EMCC_CFLAGS="$EMCC_CFLAGS -s USE_ZLIB=1 -s USE_BZIP2=1" emmake make -j$(nproc) install
     popd
+
+    cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/. $HOST_PREFIX/lib/python3.??/
+
     cp -vf build/cpython-wasm/build/lib.emscripten-wasm32-*/_sysconfigdata_*.py devices/x86_64/usr/lib/python3.??/
     cp -vf build/cpython-wasm/build/lib.emscripten-wasm32-*/_sysconfigdata_*.py $(echo -n devices/x86_64/usr/lib/python3.??/)_sysconfigdata__emscripten_.py
     cp -vf build/cpython-wasm/build/lib.emscripten-wasm32-*/_sysconfigdata_*.py $(echo -n devices/emsdk/usr/lib/python3.??/)_sysconfigdata__emscripten_.py

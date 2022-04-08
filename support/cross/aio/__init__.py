@@ -42,12 +42,14 @@ ticks = 0
 protect = []
 
 
-def _step():
+def step():
     global paused, loop
     if not paused:
         loop.call_soon(loop.stop)
         loop.run_forever()
 
+async def sleep_ms(ms=0):
+    await sleep(float(ms)/1000)
 
 
 def _set_task_name(task, name):

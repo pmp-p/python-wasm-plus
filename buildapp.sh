@@ -20,15 +20,16 @@ CN=${1:-demo}
 shift
 
 # plat stdlib
-SP=$(realpath support/__EMSCRIPTEN__)
+SITEP=$(realpath support/__EMSCRIPTEN__)
 
 # crosstools, aio and simulator
-XC=$(realpath support/aio)
+CROSS=$(realpath support/cross)
 
 echo "
 TMPL=${TMPL}
 APK=${APK}
-site-packages=${SP}
+site-packages=${SITEP}
+crosstoosl=${CROSS}
 "
 
 
@@ -142,8 +143,16 @@ fi
 
 pushd build/cpython-wasm
 
+cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/.\
+ $ROOT/devices/$(arch)/usr/lib/python3.??/
+cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/.\
+ $ROOT/devices/emsdk/usr/lib/python3.??/
+
+
 [ -f ${MODE}.js ] && rm ${MODE}.*
 [ -f Programs/${MODE}.o ] && rm Programs/${MODE}.o
+
+# gnu99 not c99 for EM_ASM() js calls functions.
 
 emcc -D__PYDK__=1 -DNDEBUG\
  -c -fwrapv -Wall -fPIC $COPTS -std=gnu99 -Werror=implicit-function-declaration -fvisibility=hidden\
@@ -158,8 +167,8 @@ emcc $FINAL_OPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  -s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_SDL=2\
  --use-preload-plugins \
  --preload-file $ROOT/devices/emsdk/usr/lib/python3.11@/usr/lib/python3.11 \
- --preload-file ${XC}@/data/data/org.python/assets/site-packages \
- --preload-file ${SP}@/data/data/org.python/assets/site-packages \
+ --preload-file ${CROSS}@/data/data/org.python/assets/site-packages \
+ --preload-file ${SITEP}@/data/data/org.python/assets/site-packages \
  $ALWAYS_FS \
  -o ${MODE}.js Programs/${MODE}.o ${ROOT}/prebuilt/libpython3.*.a Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a \
  ${ROOT}/prebuilt/libpygame.a -lffi -lSDL2_gfx -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lfreetype -lharfbuzz \

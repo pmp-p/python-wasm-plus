@@ -20,7 +20,8 @@ then
     else
         export REBUILD=true
     fi
-    cat $ROOT/support/compilenone.py > ./Lib/compileall.py
+    #not here or pip won't install properly anymore its wheels
+    #cat $ROOT/support/compilenone.py > ./Lib/compileall.py
     popd
 else
     git clone https://github.com/python/cpython.git

@@ -108,7 +108,7 @@ def step(arg):
         sys.__stdout__.write(f"\n:async: stopped\n{sys.ps1}")
         return
 
-    aio._step()
+    aio.step()
 
     if arg:
         schedule(step, arg)

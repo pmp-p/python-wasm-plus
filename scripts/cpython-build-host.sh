@@ -25,8 +25,9 @@ if $REBUILD
 then
     pushd build/cpython-host
 
-
-    PYOPTS="--disable-ipv6 --with-c-locale-coercion --without-pymalloc --without-pydebug \
+#--with-c-locale-coercion
+#--without-pymalloc --without-pydebug
+    PYOPTS="--disable-ipv6  \
      --with-ensurepip\
      --with-decimal-contextvar --with-system-ffi --enable-shared\
      --with-computed-gotos"
@@ -59,6 +60,7 @@ then
      --prefix=$HOST_PREFIX $PYOPTS
     then
         make -j$(nproc) install
+        cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/. $HOST_PREFIX/lib/python3.??/
     else
         echo "
 ==========================================================================

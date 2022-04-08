@@ -1,5 +1,31 @@
 
+
+if false
+then
+    # pcpp   https://pypi.org/project/pcpp/
+    # A C99 preprocessor written in pure Python
+    python3 -mpip install pcpp --user
+fi
+
+# cython 3 ( not out yet )
+if python3 -m cython -V 2>&1|grep -q 'version 3.0.'
+then
+    echo  found cython 3+
+else
+    echo "
+
+
+    You need cython 3.0.0a10 or + in your system Python
+
+
+"
+    read
+fi
+
+
 . ${CONFIG:-config}
+
+
 
 if [[ ! -z ${EMSDK+z} ]]
 then
@@ -82,17 +108,25 @@ then
 "
 else
     pushd src
-    git clone -b pygame-wasm https://github.com/pmp-p/pygame-wasm pygame-wasm
+    git clone -b pygame-wasm-upstream https://github.com/pmp-p/pygame-wasm pygame-wasm
     popd
 fi
 
-pushd src/pygame-wasm
 
 # remove old lib
 rm ${ROOT}/prebuilt/libpygame.a
 
+
+pushd src/pygame-wasm
+
 # regen cython files
-python3 setup.py cython config
+
+# TODO: use python for build when cython 3 is out
+
+/usr/bin/python3 setup.py cython config
+
+
+#../../scripts/static-merger.sh
 
 # NB: EMCC_CFLAGS="-s USE_SDL=2 is required to prevent '-iwithsysroot/include/SDL'
 # from ./emscripten/tools/ports/__init__.py
