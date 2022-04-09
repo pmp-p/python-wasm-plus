@@ -21,10 +21,10 @@ jobs:
             grep "^Pkg.Revision =" ${ANDROID_HOME}/ndk-bundle/source.properties
             sudo apt-get update
             sudo apt-get install bash wget
-            cd /home/runner/work/python-wasm-plus
+            cd /home/runner/work/python-wasm-plus/python-wasm-plus
             echo emscripten support
             git clone https://github.com/emscripten-core/emsdk.git
-            cd emsdk && ./emsdk update-tags && ./emsdk install --embedded tot && ./emsdk activate --embedded tot
+            cd emsdk && ./emsdk install tot && ./emsdk activate tot
             echo
             echo " === Building  ===="
             time bash ./python-wasm-plus.sh
