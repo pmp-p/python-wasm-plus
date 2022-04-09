@@ -25,11 +25,12 @@ if $REBUILD
 then
     pushd build/cpython-host
 
-#--with-c-locale-coercion
-#--without-pymalloc --without-pydebug
-    PYOPTS="--disable-ipv6  \
+#
+#
+    PYOPTS="--with-c-locale-coercion --disable-ipv6 \
+     --without-pymalloc --without-pydebug \
      --with-ensurepip\
-     --with-decimal-contextvar --with-system-ffi --enable-shared\
+     --with-decimal-contextvar --with-system-ffi --enable-shared \
      --with-computed-gotos"
 
     # Prevent freezing bytecode with a different magic

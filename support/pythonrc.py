@@ -2,7 +2,7 @@
 
 import os, sys, json, builtins
 
-# to be able to access aio.cross.sim
+# to be able to access aio.cross.simulator
 import aio
 import aio.cross
 
@@ -125,8 +125,8 @@ except:
                 print("_"*70)
                 print()
 
-            if aio.cross.sim:
-                dump_code()
+            #if aio.cross.simulator:
+            #    dump_code()
 
             # use of globals() is only valid in __main__ scope
             # we really want the module __main__ dict here.
@@ -136,8 +136,8 @@ except:
             try:
                 code = compile("".join(__prepro), filename, "exec")
             except SyntaxError as e:
-                if not aio.cross.sim:
-                    dump_code()
+                #if not aio.cross.simulator:
+                dump_code()
                 sys.print_exception(e)
                 code=None
 
@@ -148,15 +148,15 @@ except:
 
     define('execfile', execfile)
 
-if hasattr(embed,'readline'):
+if defined('embed') and hasattr(embed,'readline'):
 
     class shell:
-        if aio.cross.sim:
+        if aio.cross.simulator:
             ROOT = os.getcwd()
             HOME = os.getcwd()
         else:
             ROOT = f"/data/data/{sys.argv[0]}"
-            HOME = f"{ROOT}/assets"
+            HOME = f"/data/data/{sys.argv[0]}/assets"
 
 
         @classmethod
@@ -233,7 +233,7 @@ if hasattr(embed,'readline'):
 
 try:
     PyConfig
-    aio.cross.sim = ( __EMSCRIPTEN__ or __wasi__ or __WASM__).PyConfig_InitPythonConfig( PyConfig )
+    aio.cross.simulator = ( __EMSCRIPTEN__ or __wasi__ or __WASM__).PyConfig_InitPythonConfig( PyConfig )
 except NameError:
 #   TODO: get a pyconfig from C here
 #    <vstinner> pmp-p: JSON au C : connais les API secrète _PyConfig_FromDict(), _PyInterpreterState_SetConfig() et _testinternalcapi.set_config()?
@@ -241,7 +241,7 @@ except NameError:
 
     PyConfig = {}
     print(" - running in simulator - ")
-    aio.cross.sim = True
+    aio.cross.simulator = True
 
 
 

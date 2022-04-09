@@ -1,44 +1,26 @@
 print("= ${__FILE__} in websim  for  ${PLATFORM} =")
 
+
+#===============================================
 import sys, os, builtins
 
-sys.path.append("${PLATFORM}")
-
-import aio.prepro
-import aio.cross
-
-import inspect
-
-# fake it
-sys.platform = 'emscripten'
-define('__WASM__', True)
-
-
-
-class __EMSCRIPTEN__:
-    @classmethod
-    def PyConfig_InitPythonConfig(*argv):pass
-
-define('__EMSCRIPTEN__', __EMSCRIPTEN__)
-
-exec( open("${PYTHONRC}").read() , globals(), globals())
-
-
-import aio
+# aioprompt ======== have asyncio loop runs interleaved with repl ============
+# from https://github.com/pmp-p/aioprompt
 
 scheduled = None
 scheduler = None
 wrapper_ref = None
 loop = None
 
-# ======== have asyncio loop runs interleaved with repl
+unsupported=('bionic','wasm','emscripten','wasi','android')
 
 #TODO: all readline replacement with accurate timeframes
 #TODO: droid integrate application lifecycle
 
-if sys.platform not in ('bionic','wasm','emscripten','wasi','android') or aio.cross.sim:
+if sys.platform not in unsupported:
     import sys
     import builtins
+    import ctypes
 
     if not sys.flags.inspect:
         print("Error: interpreter must be run with -i or PYTHONINSPECT must be set for using", __name__)
@@ -85,8 +67,6 @@ if sys.platform not in ('bionic','wasm','emscripten','wasi','android') or aio.cr
         # now the init code is useless
         del sys.modules[__name__].init
 
-
-
     def schedule(fn, a):
         global scheduled
         if scheduled is None:
@@ -94,59 +74,113 @@ if sys.platform not in ('bionic','wasm','emscripten','wasi','android') or aio.cr
         scheduled.append((fn, a))
 
 else:
+    pdb("aiorepl no possible on", sys.platform, "expect main to block")
     schedule = None
 
-# ========== asyncio stepping ================
+#=====================================================
 
-def step(arg):
-    global aio
-    if aio.paused is None:
-        aio.loop.close()
-        return
+sys.path.append("${PLATFORM}")
 
-    if aio.loop.is_closed():
-        sys.__stdout__.write(f"\n:async: stopped\n{sys.ps1}")
-        return
-
-    aio.step()
-
-    if arg:
-        schedule(step, arg)
-
-
-async def asleep_ms(ms=0):
-    await aio.sleep(float(ms)/1000)
+import aio
+import aio.prepro
+import aio.cross
+aio.cross.simulator = True
 
 
 
+# cannot fake a cpu __WASM__ will be False
 
-async def asleep_ms(ms=0):
-    await aio.sleep(float(ms)/1000)
+# but fake the platform AND the module
+sys.platform = 'emscripten'
 
+class __EMSCRIPTEN__:
+    @classmethod
+    def PyConfig_InitPythonConfig(*argv):pass
+    @classmethod
+    def init_platform(*argv):pass
+    @classmethod
+    def flush(cls):
+        sys.stdout.flush()
+        sys.stderr.flush()
+
+sys.modules['__EMSCRIPTEN__'] = __EMSCRIPTEN__
+
+
+exec( open("${PYTHONRC}").read() , globals(), globals())
+
+
+
+#===============================================================================
+
+import aio.clock
+
+
+#===============================================================================
+import inspect
+import asyncio
+
+DEBUG = 1
 
 if __name__ == '__main__':
+    aio.DEBUG = DEBUG
+
+    print("main may block depending on your platform readline implementation")
+
+    if schedule:
+        aio.cross.scheduler = schedule
+
+    #asyncio.create_task( aio.clock.loop() )
+    aio.clock.start()
+
     __main__ = execfile("${__FILE__}")
+    # on not arduino style, expect user to run main with asyncio.run( main() )
+    # should be already called at this point.
+
+
     setup = __main__.__dict__.get('setup',None)
-    loop  = __main__.__dict__.get('loop',None)
+    loop = __main__.__dict__.get('loop',None)
+
+    # arduino naming is just wrong anyway
+    if loop is None:
+        loop  = __main__.__dict__.get('step', None )
 
     if loop and setup:
-        print("starting setup+loop")
-    else:
-        pdb("wrong setup/loop code configuration")
-        raise SystemEXit
+        print("found setup, loop")
+        if setup:
+            setup()
+    if loop:
+        if not inspect.iscoroutinefunction(loop):
+            if loop and setup:
+                print("loop is not a coroutine, running arduino style")
+                aio.steps.append( loop )
+            # TODO : use a wrapper for non readline systems.
 
-    setup()
-
-    if schedule is None:
-        print("aiorepl no possible on",sys.platform)
-        while True:
-            loop()
-    else:
-        coro = loop
-        if not inspect.iscoroutinefunction(coro):
-            del coro
             async def coro():
                 loop()
+        else:
+            coro = loop
 
-        aio.run( coro(), debug = step )
-        print("launched")
+        if not aio.started:
+            aio.started = True
+            if DEBUG:pdb("200: starting aio scheduler")
+            aio.cross.scheduler( aio.step, 1)
+
+    print(" -> asyncio.run passed")
+    sys.stdout.flush()
+    sys.stderr.flush()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#

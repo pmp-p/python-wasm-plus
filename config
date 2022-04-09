@@ -4,7 +4,7 @@ export REBUILD=${REBUILD:-false}
 export ROOT=${ROOT:-$(pwd)}
 export HOST_PREFIX=${HOST_PREFIX:-$ROOT/devices/$(arch)/usr}
 export PREFIX=${PREFIX:-${ROOT}/devices/emsdk/usr}
-export PYTHONPYCACHEPREFIX="$(realpath ${ROOT}/build/pycache)"
+export PYTHONPYCACHEPREFIX=$(realpath ${ROOT}/build/pycache)
 
 export PYTHON=$(echo -n ${HOST_PREFIX}/bin/python3.??)
 

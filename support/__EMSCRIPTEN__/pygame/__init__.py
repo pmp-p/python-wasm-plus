@@ -127,6 +127,10 @@ joystick = clean_mod("pygame.joystick")
 
 import pygame_time
 time = clean_mod("pygame.time")
+time._internal_mod_init() # FIXME: won't work
+# while ./emscripten/src/library_sdl.js:  SDL_CreateMutex: function() { return 0 },
+
+import pygame.cursors as cursors
 
 import pygame_mixer
 mixer = clean_mod("pygame.mixer")

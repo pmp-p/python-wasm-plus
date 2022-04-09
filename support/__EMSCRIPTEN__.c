@@ -510,7 +510,9 @@ EM_ASM({
 }, io_shm[io_stdin_filenum], FD_BUFFER_MAX);
 
 
-    PyRun_SimpleString("import sys, embed, builtins, os, time;");
+    PyRun_SimpleString("import sys, os, json, builtins, shutil, time;");
+    //# zipimport, tomlib
+
 
     if (1) {
         // display a nice six logo python-powered in xterm.js

@@ -1,5 +1,12 @@
-import sys, aio.prepro
+import sys
 
+DEBUG = False
+
+import aio.prepro
+
+aio.prepro.DEBUG = DEBUG
+
+# that sym cannot be overloaded in a simulator
 
 if not defined('__WASM__'):
     if __import__('os').uname().machine.startswith("wasm"):
@@ -10,33 +17,58 @@ if not defined('__WASM__'):
     define('__WASM__', __WASM__)
 
 
+# those can
 
-if __import__('sys').platform in ['emscripten']:
-    redef = False
-    try:
-        if not defined('__EMSCRIPTEN__'):
+
+if sys.platform == 'emscripten':
+    platform = defined('__EMSCRIPTEN__')
+    if not platform:
+        print("importing platform __EMSCRIPTEN__")
+        try:
             import __EMSCRIPTEN__ as platform
-            redef = True
-        import embed
+        except Exception as e:
+            if hasattr(sys,'print_exception'):
+                sys.print_exception(e)
+            else:
+                __import__('traceback').print_exc()
 
-    except Exception as e:
-        pdb("__EMSCRIPTEN__ module not found, assuming simulator instead of error :")
-        pdb(e)
-        # fake it
-        class platform:
-            sim = True
-        # FIXME truth
+            pdb("__EMSCRIPTEN__ faild to load, assuming simulator instead of error :")
+            del platform
+
+            # fake it
+            platform == __import__('__main__')
+        define('__EMSCRIPTEN__', platform)
+
+    driver = defined('embed')
+    try:
+        if not driver:
+            import embed as driver
+            print("platform embedding module driver :", driver)
+    except:
+        # use the simulator defined platform value as the embed.
+        driver = platform
+
+    # just in case it was not a module
+    sys.modules.setdefault('embed', driver)
 
     try:
-        embed
+        # check it the embedding module was finished for that platform.
+        # the least shoulbe syslog ( js console / adb logcat )
+        driver.log
     except:
-        # use the simulator defined value as a platform module.
-        sys.modules.setdefault('embed', platform)
-        define('embed', platform)
+        pdb("""
+CRITICAL: embed softrt/syslog functions not found
+    also not in __main__ or simulator provided platform module
+    wip ?
+""")
+        driver.enable_irq = print
+        driver.disable_irq = print
+        driver.log = print
 
-    if not redef:
-        define('__EMSCRIPTEN__', platform)
-    del redef
+    define('embed', driver)
+
+    platform.init_platform(driver)
+
 
 
 
@@ -50,5 +82,44 @@ if not defined('__wasi__'):
 
 
 
-sim = '?'
+    # setup exception display with same syntax as upy
+    import traceback
+    def print_exception(e, out=sys.stderr, **kw):
+        kw["file"] = out
+        traceback.print_exc(**kw)
 
+    sys.print_exception = print_exception
+    del print_exception
+
+
+
+#================== leverage known python implementations ====================
+
+# always come down to upy choices because cpython syntax can more easily be adapted
+
+
+if not defined('__UPY__'):
+    define("__UPY__", hasattr(sys.implementation, "mpy"))
+
+
+
+if not __UPY__:
+    # setup exception display with same syntax as upy
+    import traceback
+    def print_exception(e, out=sys.stderr, **kw):
+        kw["file"] = out
+        traceback.print_exc(**kw)
+
+    sys.print_exception = print_exception
+    del print_exception
+
+
+
+
+
+
+
+
+
+scheduler = None
+simulator = None
