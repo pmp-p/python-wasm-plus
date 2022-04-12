@@ -24,7 +24,6 @@ String.prototype.startswith = function(prefix) {
 function defined(e,o){
     if (typeof o === 'undefined' || o === null)
         o = window;
-    //else console.log('domain '+o)
     try {
         e = o[e];
     } catch (x) { return false }
@@ -497,15 +496,6 @@ function pythonvm(canvasid, vterm) {
 
     function pre1(VM){
         function stdin() {
-            /*
-                      if (i < res.length) {
-                        var code = input.charCodeAt(i);
-                        ++i;
-                        return code;
-                      } else {
-                        return null;
-                      }
-            */
             return null
         }
 

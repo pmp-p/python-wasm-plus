@@ -244,7 +244,8 @@ try:
     aio.cross.simulator = ( __EMSCRIPTEN__ or __wasi__ or __WASM__).PyConfig_InitPythonConfig( PyConfig )
 except NameError:
 #   TODO: get a pyconfig from C here
-#    <vstinner> pmp-p: JSON au C : connais les API secrète _PyConfig_FromDict(), _PyInterpreterState_SetConfig() et _testinternalcapi.set_config()?
+#    <vstinner> pmp-p: JSON au C : connais les API secrète
+# _PyConfig_FromDict(), _PyInterpreterState_SetConfig() et _testinternalcapi.set_config()?
 #    <vstinner> pmp-p: j'utilise du JSON pour les tests unitaires sur PyConfig dans test_embed
 
     PyConfig = {}
@@ -275,7 +276,7 @@ if __WASM__ and 0:
 
 
 
-
+#sys.stdout.reconfigure(encoding='utf-16')
 
 
 

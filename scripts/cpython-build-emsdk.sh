@@ -42,7 +42,6 @@ else
     #and no loder lib-dynload in the way.
 
         export EMCC_CFLAGS="-Os -g0 -fPIC"
-        OPT="-DNDEBUG -g0 -fwrapv -Os -Wno-everything"
 
          CFLAGS="-Os -g0 -fPIC"\
           emconfigure $ROOT/src/libffi/configure --host=wasm32-tot-linux\
@@ -62,7 +61,10 @@ else
 
 #     --with-tzpath="/usr/share/zoneinfo" \
 
-CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten  OPT="$OPT" \
+
+    export OPT="-DNDEBUG -g0 -fwrapv -Os"
+
+    CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten OPT="$OPT" \
   emconfigure $ROOT/src/cpython/configure  -C --without-pymalloc --disable-ipv6 \
     --cache-file=${PYTHONPYCACHEPREFIX}/config.cache \
     --enable-wasm-dynamic-linking \
@@ -73,7 +75,7 @@ CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten  OPT="$OP
     --with-build-python=${PYTHON_FOR_BUILD}
 
 
-    EMCC_CFLAGS="$EMCC_CFLAGS -s USE_ZLIB=1 -s USE_BZIP2=1" emmake make OPT="$OPT" -j$(nproc) install
+    EMCC_CFLAGS="$EMCC_CFLAGS -s USE_ZLIB=1 -s USE_BZIP2=1" emmake make -j$(nproc) install
     popd
 
     cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/. $HOST_PREFIX/lib/python3.??/
@@ -87,11 +89,8 @@ CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten  OPT="$OP
 fi
 
 
-
 # python setup.py install --single-version-externally-managed --root=/
 # pip3 install .
-
-
 
 
 

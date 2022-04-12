@@ -2,7 +2,6 @@ import sys
 import time
 import asyncio
 
-
 class tui:
     # use direct access, it is absolute addressing on raw terminal.
     out = sys.__stdout__.write

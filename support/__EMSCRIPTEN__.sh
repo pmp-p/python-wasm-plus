@@ -4,6 +4,24 @@ then
     echo __EMSCRIPTEN__ support already added
 else
     pushd src/cpython
+
+    patch -p1 <<END
+diff --git a/Parser/pegen_errors.c b/Parser/pegen_errors.c
+index 489699679633e..78266f712c05c 100644
+--- a/Parser/pegen_errors.c
++++ b/Parser/pegen_errors.c
+@@ -245,7 +245,7 @@ get_error_line_from_tokenizer_buffers(Parser *p, Py_ssize_t lineno)
+      * (multi-line) statement are stored in p->tok->interactive_src_start.
+      * If not, we're parsing from a string, which means that the whole source
+      * is stored in p->tok->str. */
+-    assert((p->tok->fp == NULL && p->tok->str != NULL) || p->tok->fp == stdin);
++    assert((p->tok->fp == NULL && p->tok->str != NULL) || p->tok->fp != NULL);
+
+     char *cur_line = p->tok->fp_interactive ? p->tok->interactive_src_start : p->tok->str;
+     if (cur_line == NULL) {
+END
+
+
     # fix the main startup to it gets a minimal kernel for wasm
     cat > Programs/python.c <<END
 /* Minimal main program -- everything is loaded from the library */

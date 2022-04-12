@@ -80,6 +80,15 @@ NOTES:
     window.location.replace() method if you want to want to redirect to a new page and don't allow the user to navigate to the original page using the back button.
 
 
+
+
+aio.clock.
+https://github.com/python/cpython/blob/f33e2c87a83917b5139d97fd8ef7cba7223ebef5/Parser/pegen_errors.c#L248
+
+
+
+
+
 */
 
 #if __EMSCRIPTEN__
@@ -497,8 +506,7 @@ EM_ASM({
     if (is_worker) {
         console.log("PyMain: running in a worker, setting onCustomMessage");
         function onCustomMessage(event) {
-            const utf8 = unescape(encodeURIComponent(event.data.userData));
-            stringToUTF8( utf8, shm_stdin, $1);
+            stringToUTF8( utf8encode(data), shm_stdin, $1);
         };
 
         Module['onCustomMessage'] = onCustomMessage;
@@ -510,11 +518,6 @@ EM_ASM({
         };
         window.main_chook = true;
     }
-
-/*
-                //const utf8 = unescape(encodeURIComponent(data));
-            //stringToUTF8( utf8, shm_stdin, $1);
-*/
 
     if (!is_worker && window.BrowserFS) {
         console.log("PyMain: found BrowserFS");
