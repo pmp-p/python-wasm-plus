@@ -12,6 +12,7 @@ TODO:
     display:
         osmesa / tinygl / tinygles / angle
         sixel and/or https://nick-black.com/dankwiki/index.php/Notcurses
+        ***********> https://github.com/gfx-rs/wgpu + https://pypi.org/project/wgpu/ <*********
 
     audio:
         https://developers.google.com/web/updates/2017/12/audio-worklet
@@ -67,6 +68,18 @@ TODO:
     bookmarks:
         https://github.com/sunfishcode/wasm-reference-manual/blob/master/WebAssembly.md
 
+        https://cors-anywhere.herokuapp.com/corsdemo
+
+        https://stackoverflow.com/questions/28921507/how-switch-full-screen-in-a-pygame-surface-window
+
+        https://itch.io/search?q=pygame
+
+NOTES:
+    window.location.href loads page from browser's cache and does not always send the request to the server. So, if you have an old version of the page available in the cache then it will redirect to there instead of loading a fresh page from the server.
+    window.location.assign() method for redirection if you want to allow the user to use the back button to go back to the original document.
+    window.location.replace() method if you want to want to redirect to a new page and don't allow the user to navigate to the original page using the back button.
+
+
 */
 
 #if __EMSCRIPTEN__
@@ -120,8 +133,8 @@ embed_preload_cb_onload(const char *fn) {
     //fprintf(stderr, __FILE__": preloaded [%s] ok\n", fn );
     remove(fn);
     embed ++ ;
-    if (embed<0)
-        fprintf(stderr, "INFO: %lli assets remaining in queue\n", -embed );
+  //  if (embed<0)
+     //   fprintf(stderr, "INFO: %lli assets remaining in queue\n", -embed );
 }
 
 void
@@ -419,7 +432,7 @@ main(int argc, char **argv)
     PyImport_AppendInittab("embed", init_embed);
     PyGame_static_init();
 
-    puts("pymain_init");
+    //puts("pymain_init");
 
     setenv("PYTHONHOME","/usr", 1);
     setenv("PYTHONUNBUFFERED", "1", 1);
@@ -493,10 +506,15 @@ EM_ASM({
     } else {
         console.log("PyMain: running in main thread");
         Module.postMessage = function custom_postMessage(data) {
-            const utf8 = unescape(encodeURIComponent(data));
-            stringToUTF8( utf8, shm_stdin, $1);
+            stringToUTF8( data, shm_stdin, $1);
         };
+        window.main_chook = true;
     }
+
+/*
+                //const utf8 = unescape(encodeURIComponent(data));
+            //stringToUTF8( utf8, shm_stdin, $1);
+*/
 
     if (!is_worker && window.BrowserFS) {
         console.log("PyMain: found BrowserFS");

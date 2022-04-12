@@ -1,7 +1,7 @@
 print("= ${__FILE__} in websim  for  ${PLATFORM} =")
 
 
-#===============================================
+# ===============================================
 import sys, os, builtins
 
 # aioprompt ======== have asyncio loop runs interleaved with repl ============
@@ -12,10 +12,10 @@ scheduler = None
 wrapper_ref = None
 loop = None
 
-unsupported=('bionic','wasm','emscripten','wasi','android')
+unsupported = ("bionic", "wasm", "emscripten", "wasi", "android")
 
-#TODO: all readline replacement with accurate timeframes
-#TODO: droid integrate application lifecycle
+# TODO: all readline replacement with accurate timeframes
+# TODO: droid integrate application lifecycle
 
 if sys.platform not in unsupported:
     import sys
@@ -23,9 +23,11 @@ if sys.platform not in unsupported:
     import ctypes
 
     if not sys.flags.inspect:
-        print("Error: interpreter must be run with -i or PYTHONINSPECT must be set for using", __name__)
+        print(
+            "Error: interpreter must be run with -i or PYTHONINSPECT must be set for using",
+            __name__,
+        )
         raise SystemExit
-
 
     def init():
         global scheduled, scheduler, wrapper_ref
@@ -34,6 +36,7 @@ if sys.platform not in unsupported:
 
         scheduled = []
         import ctypes
+
         try:
             ctypes = ctypes.this
         except:
@@ -43,7 +46,9 @@ if sys.platform not in unsupported:
         c_void_p = ctypes.c_void_p
 
         HOOKFUNC = ctypes.CFUNCTYPE(c_char_p)
-        PyOS_InputHookFunctionPointer = c_void_p.in_dll(ctypes.pythonapi, "PyOS_InputHook")
+        PyOS_InputHookFunctionPointer = c_void_p.in_dll(
+            ctypes.pythonapi, "PyOS_InputHook"
+        )
 
         def scheduler():
             global scheduled
@@ -77,51 +82,64 @@ else:
     pdb("aiorepl no possible on", sys.platform, "expect main to block")
     schedule = None
 
-#=====================================================
+# =====================================================
 
 sys.path.append("${PLATFORM}")
 
 import aio
 import aio.prepro
 import aio.cross
-aio.cross.simulator = True
 
+aio.cross.simulator = True
 
 
 # cannot fake a cpu __WASM__ will be False
 
 # but fake the platform AND the module
-sys.platform = 'emscripten'
+sys.platform = "emscripten"
+
 
 class __EMSCRIPTEN__:
     @classmethod
-    def PyConfig_InitPythonConfig(*argv):pass
+    def PyConfig_InitPythonConfig(*argv):
+        pass
+
     @classmethod
-    def init_platform(*argv):pass
+    def init_platform(*argv):
+        pass
+
     @classmethod
     def flush(cls):
         sys.stdout.flush()
         sys.stderr.flush()
 
-sys.modules['__EMSCRIPTEN__'] = __EMSCRIPTEN__
+    @classmethod
+    def trap(cls,*argv,**kw):
+        pass
+
+    js = pdb
+    run_script = pdb
 
 
-exec( open("${PYTHONRC}").read() , globals(), globals())
+sys.modules["__EMSCRIPTEN__"] = __EMSCRIPTEN__
+sys.modules["embed"] = __EMSCRIPTEN__
 
 
+exec(open("${PYTHONRC}").read(), globals(), globals())
 
-#===============================================================================
+
+# ===============================================================================
 
 import aio.clock
 
 
-#===============================================================================
+# ===============================================================================
 import inspect
 import asyncio
 
 DEBUG = 1
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     aio.DEBUG = DEBUG
 
     print("main may block depending on your platform readline implementation")
@@ -129,20 +147,19 @@ if __name__ == '__main__':
     if schedule:
         aio.cross.scheduler = schedule
 
-    #asyncio.create_task( aio.clock.loop() )
-    aio.clock.start()
+    # asyncio.create_task( aio.clock.loop() )
+    aio.clock.start(x=80)
 
     __main__ = execfile("${__FILE__}")
     # on not arduino style, expect user to run main with asyncio.run( main() )
     # should be already called at this point.
 
-
-    setup = __main__.__dict__.get('setup',None)
-    loop = __main__.__dict__.get('loop',None)
+    setup = __main__.__dict__.get("setup", None)
+    loop = __main__.__dict__.get("loop", None)
 
     # arduino naming is just wrong anyway
     if loop is None:
-        loop  = __main__.__dict__.get('step', None )
+        loop = __main__.__dict__.get("step", None)
 
     if loop and setup:
         print("found setup, loop")
@@ -152,35 +169,24 @@ if __name__ == '__main__':
         if not inspect.iscoroutinefunction(loop):
             if loop and setup:
                 print("loop is not a coroutine, running arduino style")
-                aio.steps.append( loop )
+                aio.steps.append(loop)
             # TODO : use a wrapper for non readline systems.
 
             async def coro():
                 loop()
+
         else:
             coro = loop
 
         if not aio.started:
             aio.started = True
-            if DEBUG:pdb("200: starting aio scheduler")
-            aio.cross.scheduler( aio.step, 1)
+            if DEBUG:
+                pdb("200: starting aio scheduler")
+            aio.cross.scheduler(aio.step, 1)
 
     print(" -> asyncio.run passed")
     sys.stdout.flush()
     sys.stderr.flush()
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #

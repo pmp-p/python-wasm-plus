@@ -151,7 +151,6 @@ function _until(fn_solver){
             window.setTimeout(solve, 100);
           }
         }
-
         solve();
     });
 }
@@ -170,7 +169,10 @@ readline.complete = function (line) {
         readline.history.push(line);
     readline.index = 0;
 
+// postMessage convert utf16->8
+//    python.PyRun_SimpleString(unescape(encodeURIComponent(line)) + "\n")
     python.PyRun_SimpleString(line + "\n")
+
 }
 
 
@@ -398,7 +400,8 @@ async function fshandler(VM) {
             VM.FS.mkdir(assets);
             console.log(VM.APK, "assets will be hosted at", assets )
         } catch(y) {
-            console.warn(assets," already there ???");
+            if (VM.APK != 'org.python')
+                console.warn(assets," already there ???");
         }
 
 
@@ -478,6 +481,20 @@ function pythonvm(canvasid, vterm) {
     var flushed_stdout = false
     var flushed_stderr = false
 
+
+    const text_codec = new TextDecoder()
+
+
+    function b_utf8(s) {
+        var ary = []
+        for ( var i=0; i<s.length; i+=1 ) {
+            ary.push( s.substr(i,1).charCodeAt(0) )
+        }
+        return text_codec.decode(  new Uint8Array(ary) )
+    }
+
+    register(b_utf8)
+
     function pre1(VM){
         function stdin() {
             /*
@@ -519,7 +536,7 @@ function pythonvm(canvasid, vterm) {
                         if (buffer_stdout.startsWith("Looks like you are rendering"))
                             return;
 
-                        VM.vt.xterm.write(buffer_stdout)
+                        VM.vt.xterm.write( b_utf8(buffer_stdout) )
                     }
                     buffer_stdout = ""
                     return
@@ -693,19 +710,12 @@ function pythonvm(canvasid, vterm) {
                 //window.Module = VM
                 //window.FS = VM.FS
 
-
                 await _until(defined, "APK", VM)
-
 
                 await fshandler(VM)
 
-                await _until(defined, "postMessage", VM)
-            /*
-                if (window.custom_site)
-                    await window.custom_site(VM)
-                else
-                    console.warn("custom_site(VM) not found")
-            */
+                await _until(defined, "main_chook")
+
                 console.log(__FILE__,"custom_site End")
             }
         );
@@ -734,11 +744,19 @@ if (!modularized) {
     await _until(defined, "APK", Module)
 
     await fshandler(Module)
-    await _until(defined, "postMessage", VM)
-    if (window.custom_site)
-        await window.custom_site(VM)
-    else
-        console.warn("custom_site(VM) not found")
-    console.log(__FILE__,"custom_site End")
+
+    await _until(defined, "main_chook")
+
+    if (window.main_chook) {
+        if (window.custom_site)
+            await window.custom_site(VM)
+        else
+            console.warn("custom_site(VM) not found")
+        console.log(__FILE__,"custom_site End")
+    } else {
+        const msg="FATAL: python-wasm startup failure in main()\r\n"
+        console.error(msg)
+        Module.vt.print(msg)
+    }
 }
 

@@ -32,20 +32,16 @@ site-packages=${PLATFORM}
 crosstoosl=${CROSS}
 "
 
+# clean up untested modules
+rm -fr $PREFIX/lib/python3.??/site-packages/*
+touch $PREFIX/lib/python3.??/site-packages/README.txt
 
 
-if [[ ! -z ${EMSDK+z} ]]
-then
-    # emsdk_env already parsed
-    echo -n
-else
-    pushd $ROOT
-    . scripts/emsdk-fetch.sh
-    popd
-fi
+. scripts/emsdk-fetch.sh
 
 ALWAYS_ASSETS=$(realpath tests/assets)
 ALWAYS_CODE=$(realpath tests/code)
+
 
 COPTS="-s MAIN_MODULE=1"
 EMCC_CFLAGS="-fPIC"
@@ -60,7 +56,7 @@ then
     ALWAYS_FS="--preload-file ${ALWAYS_CODE}@/data/data/org.python/assets"
 else
     echo ' building RELEASE'
-    COPTS="$COPTS -Os -g0 -s ASSERTIONS=1"
+    COPTS="$COPTS -Os -s ASSERTIONS=0 -s LZ4=1"
     ALWAYS_FS=""
 fi
 
@@ -160,11 +156,14 @@ emcc -D__PYDK__=1 -DNDEBUG\
 #  --preload-file ${APK}/@/assets
 #  -sALLOW_MEMORY_GROWTH=1
 
+# --preload-file $ROOT/devices/emsdk/usr/lib/python3.11@/usr/lib/python3.11
+STDLIBFS="--preload-file  $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.11@/usr/lib/python3.11"
+
 emcc $FINAL_OPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  -s TOTAL_MEMORY=512MB -s ALLOW_TABLE_GROWTH \
  -s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_SDL=2\
  --use-preload-plugins \
- --preload-file $ROOT/devices/emsdk/usr/lib/python3.11@/usr/lib/python3.11 \
+ $STDLIBFS \
  --preload-file ${CROSS}@/data/data/org.python/assets/site-packages \
  --preload-file ${PLATFORM}@/data/data/org.python/assets/site-packages \
  $ALWAYS_FS \

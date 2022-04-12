@@ -58,15 +58,21 @@ except:
     def execfile(filename):
         with __import__('tokenize').open(filename) as f:
             __prepro = []
-            myglobs = ['setup','loop']
+            myglobs = ['setup', 'loop', 'main']
             tmpl = []
 
             for l in f.readlines():
                 testglob = l.split('#')[0].strip(" \r\n,\t")
-                if testglob in ['global loop','global setup']:
-                    tmpl.append( [len(__prepro),l.find('g')] )
-                    __prepro.append("#globals")
-                    continue
+                if testglob.startswith('global ') and (
+                        testglob.endswith(' setup')
+                        or
+                        testglob.endswith(' loop')
+                        or
+                        testglob.endswith(' main')
+                    ):
+                        tmpl.append( [len(__prepro),l.find('g')] )
+                        __prepro.append("#globals")
+                        continue
 
                 __prepro.append(l)
 
@@ -84,31 +90,33 @@ except:
                     continue
 
                 #maybe found a global assign
-                varname = l.split('=',1)[0].strip()
+                varname = l.split('=',1)[0].strip(" []()")
 
-                if varname.find(' ')>0:
-                    continue
+                for varname in map(str.strip, varname.split(',') ):
 
-                #it's a comment on an assign !
-                if varname.find('#')>=0:
-                    continue
+                    if varname.find(' ')>0:
+                        continue
 
-                #skip attr assign
-                if varname.find('.')>0:
-                    continue
+                    #it's a comment on an assign !
+                    if varname.find('#')>=0:
+                        continue
 
-                # not a tuple assign
-                if varname.find('(')>0:
-                    continue
+                    #skip attr assign
+                    if varname.find('.')>0:
+                        continue
 
-                # not a list assign
-                if varname.find('[')>0:
-                    continue
+                    # not a tuple assign
+                    if varname.find('(')>0:
+                        continue
 
-                #TODO handle (a,)=(0,) case types
+                    # not a list assign
+                    if varname.find('[')>0:
+                        continue
 
-                if not varname in myglobs:
-                    myglobs.append(varname)
+                    #TODO handle (a,)=(0,) case types
+
+                    if not varname in myglobs:
+                        myglobs.append(varname)
 
             myglob = f"global {', '.join(myglobs)}\n"
 
@@ -244,15 +252,26 @@ except NameError:
     aio.cross.simulator = True
 
 
+if __WASM__ and 0:
+    print("===================== TEST ===================", __file__)
+
+    def test():
+        print("i'm a test")
+
+    open('/fic','w').write( b'\xe2\x94\x8c\xe2\x94\x80\xe2\x94\x90'.decode() + "\n" )
 
 
+    data = b'\xe2\x94\x8c\xe2\x94\x80\xe2\x94\x90'
+    txt = data.decode('UTF-8')
+    print( data )
+    print(txt)
+    # "┌─┐"
 
 
-
-
-
-
-
+if __WASM__ and 0:
+    from cffi import FFI
+    ffi = FFI()
+    print( ffi.new("int *") )
 
 
 

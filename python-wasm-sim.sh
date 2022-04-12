@@ -19,11 +19,11 @@ export PYTHONRC=$ROOT/support/pythonrc.py
 
 export __FILE__="$1"
 #export PATH=$ROOT/devices/$(arch)/usr/bin:$PATH
-cat $ROOT/support/cross/aio/simulator.py | envsubst > $ROOT/build/pycache/pythonrc.py
+cat $ROOT/support/cross/aio/simulator.py | envsubst > $ROOT/build/pycache/.pythonrc.py
 
 unset PYTHONHOME
 
-export PYTHONSTARTUP=$ROOT/build/pycache/pythonrc.py
+export PYTHONSTARTUP=$ROOT/build/pycache/.pythonrc.py
 export PYTHONPATH=$(pwd):$ROOT/support/cross:$ROOT/support/sim.links:$PYTHONPATH
 
 
@@ -41,7 +41,10 @@ then
     #ldd /data/git/python-wasm-plus/devices/x86_64/usr/lib/python3.11/lib-dynload/_ctypes.cpython-311-x86_64-linux-gnu.so
     $ROOT/devices/$(arch)/usr/bin/python3.11 -i -u -B
 else
-    export PYTHONPATH=$ROOT/devices/emsdk/usr/lib/python3.11:$PYTHONPATH
+    PYTHONPATH=$ROOT/devices/emsdk/usr/lib/python3.11:$PYTHONPATH
+    PYTHONPATH=$ROOT/devices/$(arch)/usr/lib/python3.11/site-packages:$PYTHONPATH
+
+    export PYTHONPATH
 
     echo "======== SYSTEM PYTHON ============="
     export LD_LIBRARY_PATH=$ROOT/devices/$(arch)/usr/lib

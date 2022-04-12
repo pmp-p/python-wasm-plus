@@ -6,7 +6,7 @@
 
 import sys, os, builtins
 
-#are they not ?
+# are they not ?
 builtins.builtins = builtins
 
 
@@ -16,7 +16,7 @@ except Exception as e:
     try:
         sys.print_exception(e)
     except:
-        __import__('traceback').print_exc()
+        __import__("traceback").print_exc()
 
     # non asyncio stepper as a fallback
     class aio:
@@ -45,12 +45,12 @@ except Exception as e:
                     deferred = cls.oneshots.pop()
                     if deferred[0] > cls.ticks:
                         deferred[0] -= 1
-                        early.append( deferred )
+                        early.append(deferred)
                     else:
-                        _, fn,argv,kw = deferred
-                        fn(*argv,**kw)
+                        _, fn, argv, kw = deferred
+                        fn(*argv, **kw)
                 while len(early):
-                    cls.oneshots.append(early.pop() )
+                    cls.oneshots.append(early.pop())
 
                 for step in cls.steps:
                     step()
@@ -60,17 +60,25 @@ except Exception as e:
                 pdb("- aio paused -")
 
         @classmethod
-        def defer(cls, fn, argv=(), kw={}, deadline = 0):
+        def defer(cls, fn, argv=(), kw={}, deadline=0):
             # FIXME: set ticks + deadline for alarm
-            cls.oneshots.append( [cls.ticks+deadline, fn,argv,kw,] )
+            cls.oneshots.append(
+                [
+                    cls.ticks + deadline,
+                    fn,
+                    argv,
+                    kw,
+                ]
+            )
 
 
 def breakpointhook(*argv, **kw):
     aio.paused = True
 
+
 sys.breakpointhook = breakpointhook
 
-define('aio',aio)
+define("aio", aio)
 
 
 this = __import__(__name__)
@@ -84,7 +92,7 @@ except:
     if hasattr(sys.implementation, "mpy"):
         builtins.__UPY__ = this
     else:
-        builtins.__UPY__ =  None
+        builtins.__UPY__ = None
 
 try:
     __EMSCRIPTEN__
@@ -111,7 +119,7 @@ except:
     # this *is* the cpython way
     if hasattr(sys, "getandroidapilevel"):
         builtins.__ANDROID__ = this
-        builtins.__ANDROID_API__ = sys. getandroidapilevel()
+        builtins.__ANDROID_API__ = sys.getandroidapilevel()
     else:
         builtins.__ANDROID__ = False
 
@@ -174,23 +182,22 @@ def overloaded(i, *attrs):
 builtins.overloaded = overloaded
 
 
-
-
 def init_platform(embed):
     # simulator won't run javascript for now
-    if not hasattr(embed,"run_script"):
+    if not hasattr(embed, "run_script"):
         pdb("186: no js engine")
         return False
 
     import json
+
     def js(code, delay=0):
         # keep a ref till next loop
-        aio.protect.append( code )
+        aio.protect.append(code)
         if not delay:
             result = embed.run_script(f"JSON.stringify({code})")
             if result is not None:
                 return json.loads(result)
-        elif delay<0:
+        elif delay < 0:
             embed.run_script(code)
         else:
             embed.run_script(code, int(delay))
@@ -198,23 +205,30 @@ def init_platform(embed):
     embed.js = js
 
 
+    if __WASM__:
+        import _thread
+
+        try:
+            _thread.start_new_thread(lambda: None, ())
+        except RuntimeError:
+            pdb("WARNING: that wasm build does not support threads")
+
+
+
 def PyConfig_InitPythonConfig(PyConfig):
     global preloadedWasm, preloadedImages, preloadedAudios
 
     # simulator won't run javascript for now
-    if not hasattr(embed,"run_script"):
+    if not hasattr(embed, "run_script"):
         pdb("209: no js engine")
         return False
 
     # do not do stuff if not called properly from our js loader.
-    if PyConfig.get("executable",None) is None:
+    if PyConfig.get("executable", None) is None:
         # running in sim
         return False
 
     sys.executable = PyConfig["executable"]
-
-    #global preloadedWasm, preloadedImages, preloadedAudios
-    pdb("PyConfig_InitPythonConfig done\n")
 
     import shutil
 
@@ -222,11 +236,10 @@ def PyConfig_InitPythonConfig(PyConfig):
     preloadedImages = "png jpeg jpg gif"
     preloadedAudios = "wav ogg mp4"
 
-
     def preload(p=None):
         global preload, prelist, ROOTDIR, preloadedWasm, preloadedImages, preloadedAudios
         ROOTDIR = p or f"/data/data/{sys.argv[0]}"
-        if  os.path.isdir(ROOTDIR):
+        if os.path.isdir(ROOTDIR):
             os.chdir(ROOTDIR)
         else:
             pdb(f"cannot chdir to {ROOTDIR=}")
@@ -247,7 +260,7 @@ def PyConfig_InitPythonConfig(PyConfig):
             for dirname, dirnames, filenames in os.walk(newpath):
                 try:
                     os.chdir(dirname)
-                    #print(f"\nNow in {os.getcwd()[LSRC:] or '.'}")
+                    # print(f"\nNow in {os.getcwd()[LSRC:] or '.'}")
 
                 except:
                     print("Invalid Folder :", pushpopd, newpath)
@@ -258,7 +271,10 @@ def PyConfig_InitPythonConfig(PyConfig):
 
                     ext = f.rsplit(".", 1)[-1].lower()
 
-                    if ext.lower() not in f"{preloadedImages} {preloadedAudios} {preloadedWasm}":
+                    if (
+                        ext.lower()
+                        not in f"{preloadedImages} {preloadedAudios} {preloadedWasm}"
+                    ):
                         continue
 
                     src = os.path.join(os.getcwd(), f)
@@ -273,33 +289,34 @@ def PyConfig_InitPythonConfig(PyConfig):
 
             os.chdir(pushpopd)
 
-        if os.path.isdir('assets'):
+        if os.path.isdir("assets"):
             explore(ROOTDIR, "assets")
             os.chdir(f"{ROOTDIR}/assets")
         else:
 
             embed.prompt()
-        print(f"assets found :",counter)
+        print(f"assets found :", counter)
 
         sys.path.insert(0, os.getcwd())
         return True
 
-
     import aio.clock
+
     # force start asyncio.run is not blocking on that platform.
-    aio.run( aio.clock.loop() )
+    aio.clock.start(x=80)
 
+    # org.python no preload !
 
-    if preload():
+    if (sys.argv[0] != 'org.python') and preload():
 
         def fix_preload_table():
             global aio, prelist, preloadedWasm, preloadedImages, preloadedAudios
 
-            if embed.counter()<0:
-                pdb("asset manager not ready 0>",embed.counter())
+            if embed.counter() < 0:
+                pdb("asset manager not ready 0>", embed.counter())
                 aio.defer(fix_preload_table, deadline=60)
             else:
-                pdb("all assets were ready at",embed.counter())
+                pdb("all assets were ready at", embed.counter())
 
             for (
                 src,
@@ -317,20 +334,19 @@ def PyConfig_InitPythonConfig(PyConfig):
                 dst = f"{ptype}[{repr(dst)}]"
                 swap = f"({src}={dst}) && delete {dst}"
                 embed.js(swap, -1)
-                #print(swap)
-
+                # print(swap)
 
             if os.path.isfile("main.py"):
-                if not aio.started:
-                    def runmain(py):
-                        __main__ = execfile(py)
-                        print("322: TODO asyncio always")
-                        #__main__.setup()
-                        #aio.steps.append(__main__.loop)
-                        #aio.started = True
+                def runmain(py):
+                    __main__ = execfile(py)
+                    if not aio.started:
+                        print("333: TODO setup+loop autostart")
+                        # __main__.setup()
+                        # aio.steps.append(__main__.loop)
+                        # aio.started = True
 
-                    print(f"320: running {sys.argv[0]}.py as main (deferred)" )
-                    aio.defer( runmain, ["main.py"] )
+                print(f"320: running {sys.argv[0]}.py as main (deferred)")
+                aio.defer(runmain, ["main.py"])
             else:
                 pdb(f"no main found for {sys.argv[0]}")
 
@@ -339,11 +355,10 @@ def PyConfig_InitPythonConfig(PyConfig):
     else:
         def fix_preload_table():
             pdb("no assets preloaded")
+        print()
+        embed.prompt()
 
-
-
-
-
-
+    # go pods !
+    aio.started = True
 
 

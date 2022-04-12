@@ -2,7 +2,7 @@
 
 . ${CONFIG:-config}
 
-export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD:-${HOST_PREFIX}/bin/python3}
+export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD:-${HPY}}
 
 mkdir -p build/cpython-host
 
@@ -27,6 +27,8 @@ then
 
 #
 #
+    OPT="-DNDEBUG -g0 -fwrapv -Os -Wno-everything"
+
     PYOPTS="--with-c-locale-coercion --disable-ipv6 \
      --without-pymalloc --without-pydebug \
      --with-ensurepip\
@@ -56,11 +58,11 @@ then
     # CFLAGS="-DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1"
 
     if \
-    CC=clang CXX=clang++ \
+    CC=clang CXX=clang++ OPT="$OPT" \
     ${ROOT}/src/cpython/configure \
      --prefix=$HOST_PREFIX $PYOPTS
     then
-        make -j$(nproc) install
+        make OPT="$OPT" -j$(nproc) install
         cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/. $HOST_PREFIX/lib/python3.??/
     else
         echo "

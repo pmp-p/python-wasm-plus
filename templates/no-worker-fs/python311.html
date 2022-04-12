@@ -40,18 +40,25 @@
             margin: 0;
             padding: none;
         }
+
+        .topright{
+           position:absolute;
+           top:0px;
+           right:0;
+        }
+
+        .framed{
+           position:absolute;
+           top:100px;
+           right:10px;
+           border: 1px solid black;
+        }
     </style>
 
     <script src="./xtermjsixel/xterm.js"></script>
     <script src="./xtermjsixel/xterm-addon-image.js"></script>
 
     <script src="./browserfs.min.js"></script>
-
-    <!-- <script type="application/javascript" src="python311/main.js"></script> -->
-
-    <!-- contains xterm wrapper must be ready first -->
-    <script type="module" src="index.js"></script>
-
 
     <script type="module" src="python311.js" async defer></script>
 
@@ -68,7 +75,7 @@
     <!-- <div class="thick_border" align=center > -->
         <div class="emscripten_border" align=center >
             <canvas class="emscripten" id="canvas"
-width="576px" height="432px"
+width="800px" height="600px"
 style="width: 576px; height: 432px;"
             oncontextmenu="event.preventDefault()" tabindex=0>
             </canvas>
@@ -91,6 +98,25 @@ style="width: 576px; height: 432px;"
               &nbsp;
             </div>
         </div>
+
+        <div id=info class=topright style="width: 640px;height=100px;">
+        </div>
+
+
+        <iframe id="iframe" class=framed name="iframe"
+height="88%" width="640px"
+            sandbox="allow-same-origin allow-top-navigation allow-scripts allow-pointer-lock"
+            mozallowfullscreen="true"
+            allow="autoplay; fullscreen *; geolocation; microphone; camera; midi; monetization; xr-spatial-tracking; gamepad; gyroscope; accelerometer; xr; cross-origin-isolated"
+            frameborder="0"
+            src="index.html"
+            msallowfullscreen="true"
+            scrolling="yes"
+            allowfullscreen="true"
+            webkitallowfullscreen="true"
+            allowtransparency="true">
+        </iframe>
+
     <!--    </div> -->
 
 
@@ -107,6 +133,30 @@ style="width: 576px; height: 432px;"
         console.log(__FILE__, "custom_prerun")
     }
 
+    function info_online(url, data) {
+        // display info about current APK
+        fetch( url /*, options */)
+            .then((response) => response.text())
+            .then((html) => {
+                document.getElementById("info").innerHTML = html || data;
+        })
+        .catch((error) => {
+            console.warn(error);
+        });
+    }
+
+
+    function info_inline(data){
+        document.getElementById("info").innerHTML = data
+    }
+
+    var ifram_dom
+
+    function childLoaded() { ifram_dom = childGetElementById('someid');}
+
+    function frame_online(url) {
+        window.frames["iframe"].location = url;
+    }
 
     async function custom_site(vfs) {
         // python and all filesystems are ready.
@@ -135,6 +185,11 @@ style="width: 576px; height: 432px;"
     "cd site-packages/SimpleGUICS2Pygame/example",
     "cd /data/data/org.sdl2.pysdl2/assets/examples-wasm",
     "test()"]
+
+
+
+    frame_online(  Module.arguments[0]+".html" )
+
 
 
 // PyConfig

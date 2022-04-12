@@ -1,10 +1,19 @@
 #!/bin/bash
 
-export CREDITS_GH=$(git remote -v|head -n1 | cut -d' ' -f1|cut -c8-)
+if [ -d .git ]
+then
+    CREDITS_GH=$(git remote -v|head -n1 | cut -d' ' -f1|cut -c8-)
+else
+    CREDITS_GH="Not a git repo"
+fi
+
+
 
 WEB=${1:-demo}
 
-APK=$(basename $(pwd)).apk
+CN=$(basename $(pwd))
+
+APK=$CN.apk
 echo "
 APK=$APK
 
@@ -16,33 +25,63 @@ CREDITS:
 
 "
 
-rm ../../build/$WEB/$APK $APK
-mkdir assets
-mv static ../$APK-static
-mv * assets/ 2>/dev/null
+export TEMP=some_name_no_one_would_choose
 
-mv assets/META-INF ./
-mv assets/package.toml ./
 
-zip -r9 ${APK} . --exclude .git/\* -x .gitignore | wc -l
-mv ../$APK-static static
 
-cat > static/$APK.html <<END
-<html>
-<pre>
-Github: <a href="$CREDITS_GH">$CREDITS_GH</a>
+if [ -d static ]
+then
+    rm ../../build/$WEB/$APK $APK
+
+    mkdir $TEMP
+
+    mv static ../$APK-static
+    mv * ./$TEMP/ 2>/dev/null
+
+    mv ./$TEMP/META-INF ./
+    mv ./$TEMP/package.toml ./
+
+    mv $TEMP assets
+
+    zip -r9 ${APK} . --exclude .git/\* -x .gitignore | wc -l
+    mv ../$APK-static static
+
+
+    mv assets ./$TEMP/
+    mv ./$TEMP/* ./
+    rmdir ./$TEMP
+
+    cat > static/$CN.html <<END
+    <html>
+    <pre>
+    Github: <a href="$CREDITS_GH">$CREDITS_GH</a>
 END
 
-git status 2>&1 |grep -v \(use |grep -v ^$|grep -v :$|grep -v ^Your |grep -v ^On >> static/$APK.html
-cat >> static/$APK.html <<END
-</pre>
-</html>
+
+    if [ -d .git ]
+    then
+        git status 2>&1 |grep -v \(use |grep -v ^$|grep -v :$|\
+            grep -v ^Your |grep -v ^On | grep -v apk$ |grep -v static/ >> static/$CN.html
+    else
+        cat package.toml >> static/$CN.html
+    fi
+
+    cat >> static/$CN.html <<END
+    </pre>
+    </html>
 END
 
+    if [ -f inline.html ]
+    then
+        cat inline.html >> static/$CN.html
+    fi
 
-mv assets/* ./
-rmdir assets
-ln $APK ../../build/$WEB/
-ln static/* ../../build/$WEB/
+
+    ln $APK ../../build/$WEB/
+    ln static/* ../../build/$WEB/
+
+else
+    echo "no folder 'static' found, Are you in app folder ?"
+fi
 
 

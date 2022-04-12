@@ -9,17 +9,9 @@
 
 export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD:-${HOST_PREFIX}/bin/python3}
 
-if [ -d $EMSDK ]
-then
-    echo "
-    * using emdk located at ${EMSDK}
-"
-else
-    echo "
-    ERROR cannot find EMSDK in env
-"
-    read
-fi
+
+. ./scripts/emsdk-fetch.sh
+
 
 if $REBUILD
 then
@@ -50,6 +42,7 @@ else
     #and no loder lib-dynload in the way.
 
         export EMCC_CFLAGS="-Os -g0 -fPIC"
+        OPT="-DNDEBUG -g0 -fwrapv -Os -Wno-everything"
 
          CFLAGS="-Os -g0 -fPIC"\
           emconfigure $ROOT/src/libffi/configure --host=wasm32-tot-linux\
@@ -69,7 +62,7 @@ else
 
 #     --with-tzpath="/usr/share/zoneinfo" \
 
-CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten \
+CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten  OPT="$OPT" \
   emconfigure $ROOT/src/cpython/configure  -C --without-pymalloc --disable-ipv6 \
     --cache-file=${PYTHONPYCACHEPREFIX}/config.cache \
     --enable-wasm-dynamic-linking \
@@ -80,7 +73,7 @@ CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten \
     --with-build-python=${PYTHON_FOR_BUILD}
 
 
-    EMCC_CFLAGS="$EMCC_CFLAGS -s USE_ZLIB=1 -s USE_BZIP2=1" emmake make -j$(nproc) install
+    EMCC_CFLAGS="$EMCC_CFLAGS -s USE_ZLIB=1 -s USE_BZIP2=1" emmake make OPT="$OPT" -j$(nproc) install
     popd
 
     cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/. $HOST_PREFIX/lib/python3.??/
@@ -93,5 +86,127 @@ CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten \
     rmdir  $PREFIX/lib/python3.??/lib-dynload
 fi
 
+
+
+# python setup.py install --single-version-externally-managed --root=/
+# pip3 install .
+
+
+
+
+
+
+cat > ${PYTHONPYCACHEPREFIX}/.nanorc <<END
+set tabsize 4
+set tabstospaces
+END
+
+cat > $ROOT/${PYDK_PYTHON_HOST_PLATFORM}-shell.sh <<END
+#!/bin/bash
+export PATH=${HOST_PREFIX}/bin:\$PATH
+export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
+export HOME=${PYTHONPYCACHEPREFIX}
+export PLATFORM_TRIPLET=${PYDK_PYTHON_HOST_PLATFORM}
+export PREFIX=$PREFIX
+
+export PYTHONDONTWRITEBYTECODE=1
+export PYTHONSTARTUP="${ROOT}/support/__EMSCRIPTEN__.py"
+> ${PYTHONPYCACHEPREFIX}/.pythonrc.py
+
+export PS1="[PyDK:wasm] \w $ "
+
+export _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata__emscripten_
+
+cat >${PYTHONPYCACHEPREFIX}/.numpy-site.cfg <<NUMPY
+[DEFAULT]
+library_dirs = $PREFIX//lib
+include_dirs = $PREFIX/include
+NUMPY
+
+
+if [[ ! -z \${EMSDK+z} ]]
+then
+    # emsdk_env already parsed
+    echo -n
+else
+    pushd $ROOT
+    . scripts/emsdk-fetch.sh
+    popd
+fi
+END
+
+cat > $HOST_PREFIX/bin/python3-wasm <<END
+#!/bin/bash
+. $ROOT/${PYDK_PYTHON_HOST_PLATFORM}-shell.sh
+
+# most important
+export EMCC_CFLAGS="-s SIDE_MODULE=1"
+export _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata__emscripten_
+
+# does not work with -mpip
+export PYTHONSTARTUP="/data/git/python-wasm-plus/support/__EMSCRIPTEN__.py"
+
+
+# so include dirs are good
+export PYTHONHOME=$PREFIX
+
+# but still can load dynload and setuptools
+PYTHONPATH=$(echo -n ${HOST_PREFIX}/lib/python3.??/site-packages):\$PYTHONPATH
+export PYTHONPATH=$(echo -n ${HOST_PREFIX}/lib/python3.??/lib-dynload):\$PYTHONPATH
+
+
+
+
+#probably useless
+export _PYTHON_HOST_PLATFORM=${PYDK_PYTHON_HOST_PLATFORM}
+export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD}
+
+$HOST_PREFIX/bin/python3 -u -B \$@
+END
+
+chmod +x $HOST_PREFIX/bin/python3-wasm
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 unset PYTHON_FOR_BUILD
 unset EMCC_CFLAGS
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
