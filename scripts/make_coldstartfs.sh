@@ -13,6 +13,20 @@ $HPY -v <<END 2>&1 |grep py$ > $FS
 import sys, os, json, builtins, shutil, zipimport, tomllib, time
 import trace, traceback, asyncio, inspect, _thread
 sys.stdout.reconfigure(encoding='utf-16')
+import ctypes
+#pymunk4
+import imp, platform
+#pymunk6
+import numbers, random
+#pymunk tests
+import unittest, locale
+
+# cffi
+import copy
+if 0:
+    import cffi
+    from cffi import FFI
+    ffi = FFI()
 END
 
 echo "=============================="
@@ -23,6 +37,8 @@ with open("$PYTHONPYCACHEPREFIX/stdl.list","w") as tarlist:
     with open("$FS") as fs:
         for l in fs.readlines():
             #print( l.strip() )
+            if l.find('/')<0:
+                continue
             _,trail = l.strip().split('/',1)
             stdlp, name = trail.rsplit('usr/lib/',1)
             #print (stdlp, name)

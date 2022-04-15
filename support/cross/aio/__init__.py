@@ -76,6 +76,7 @@ except:
 
 started = False
 paused = False
+exit = False
 steps = []
 oneshots = []
 ticks = 0
@@ -126,7 +127,7 @@ inloop = False
 
 # this runs both asyncio loop and the arduino style stepper
 def step(*argv):
-    global inloop, last_state, paused, started, loop, oneshots, protect, ticks, steps, step, flush
+    global inloop, last_state, paused, started, loop, oneshots, protect, ticks, steps, step, flush, exit
 
     # those hold variable that could be processed by C
     # outside the pyloop, to keep them GC
@@ -146,9 +147,13 @@ def step(*argv):
         return
     inloop = True
 
+
     if paused is not last_state:
-        # print(f' - aio is {(paused and "paused") or "resuming"}')
-        print(f" - aio is {'paused' if paused else 'resuming'} -")
+        if not exit:
+            # print(f' - aio is {(paused and "paused") or "resuming"}')
+            print(f" - aio is {'paused' if paused else 'resuming'} -")
+        else:
+            print(f" - aio is exiting -")
         last_state = paused
 
     ticks += 1
@@ -186,7 +191,7 @@ def step(*argv):
         pdb("- aio paused -")
 
     # if using external loop handler (eg  PyOS_InputHook ) then call us again
-    if started and cross.scheduler:
+    if started and cross.scheduler and not exit:
         cross.scheduler(step, 1)
 
     flush()
@@ -245,46 +250,61 @@ def run(coro, *, debug=False):
     elif debug:
         pdb("157:None coro called, just starting loop")
 
-    started = True
+    if not started:
+        started = True
+        # the stepper fonction when in simulator
+        if cross.scheduler:
+            if debug:
+                pdb("164: asyncio handler is", cross.scheduler)
+            paused = False
+            cross.scheduler(step, 1)
 
-    # the stepper fonction when in simulator
-    if cross.scheduler:
-        if debug:
-            pdb("164: asyncio handler is", cross.scheduler)
-        paused = False
-        cross.scheduler(step, 1)
-
-    # the stepper when called from  window.requestAnimationFrame()
-    # https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
-    elif __EMSCRIPTEN__ or __wasi__:
-        print("AIO will auto-start at 0+, now is", embed.counter())
-    # fallback to blocking asyncio
+        # the stepper when called from  window.requestAnimationFrame()
+        # https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
+        elif __EMSCRIPTEN__ or __wasi__:
+            print("AIO will auto-start at 0+, now is", embed.counter())
+        # fallback to blocking asyncio
+        else:
+            loop.run_forever()
     else:
-        loop.run_forever()
+        pdb("257: aio.run called twice !!!")
+
+if __WASM__:
+    def __exit__(ec):
+        global loop
+        loop.close()
+        pdb("270: exited with code",ec)
+else:
+    __exit__ = sys.exit
 
 
-__exit__ = sys.exit
+def exit_now(ec):
+    global exit, paused
+    # rescheduling happens only where started is True
+    exit = True
+    while len(tasks):
+        task = tasks.pop(0)
+        if hasattr(task, 'cancel'):
+            print(f"290: canceling {task}")
+            task.cancel()
 
+    #  will prevent another asyncio loop call, we exit next cycle on oneshots queue
+    paused = True
+    #if not __WASM__:
+    pdb("291: exiting with code",ec)
+    defer(__exit__,(ec,),{},0)
 
 def aio_exit(maybecoro):
-    global paused
     import inspect
-    print("aio will exit on return of", maybecoro)
 
-    def exit_now(ec):
-        # rescheduling happens only where started is True
-        started = False
-        paused = True
-        # the pause will prevent assyncio loop call
-        loop.close()
-        defer(__exit__,(ec,),{},0)
-
-    if inspect.iscoroutinefunction(maybecoro):
-        async def aexit():
+    if inspect.iscoroutine(maybecoro):
+        async def atexit(coro):
             exit_now(await coro)
-        run(aexit())
+        run(atexit(maybecoro))
     else:
-        exit_now(ec)
+        if __WASM__:
+            pdb("298: NOT A CORO", maybecoro)
+        exit_now(maybecoro)
 
 
 sys.exit = aio_exit

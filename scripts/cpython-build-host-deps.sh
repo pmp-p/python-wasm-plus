@@ -1,6 +1,6 @@
 . ${CONFIG:-config}
 
-rm -fr $ROOT/./build/pycache/*
+rm -fr $ROOT/build/pycache/*
 
 
 git_update () {
@@ -48,7 +48,6 @@ do
 done
 
 
-
 rm cffi-branch-default.zip
 wget https://foss.heptapod.net/pypy/cffi/-/archive/branch/default/cffi-branch-default.zip
 unzip -o -q cffi-branch-default.zip
@@ -59,7 +58,7 @@ popd
 
 
 # cython 3 ( not out yet )
-if python3 -m cython -V 2>&1|grep -q 'version 3.0.'
+if $HPY -m cython -V 2>&1|grep -q 'version 3.0.'
 then
     echo  found cython 3+
 else

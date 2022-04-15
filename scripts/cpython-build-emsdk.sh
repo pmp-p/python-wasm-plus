@@ -41,9 +41,9 @@ else
     #TODO: check if export PATH=${HOST_PREFIX}/bin:$PATH is really set to avoid system python with different bytecode
     #and no loder lib-dynload in the way.
 
-        export EMCC_CFLAGS="-Os -g0 -fPIC"
+        export EMCC_CFLAGS="$COPTS"
 
-         CFLAGS="-Os -g0 -fPIC"\
+         CFLAGS="$COPTS"\
           emconfigure $ROOT/src/libffi/configure --host=wasm32-tot-linux\
           --prefix=$PREFIX --enable-static --disable-shared --disable-dependency-tracking\
           --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs\
@@ -62,7 +62,7 @@ else
 #     --with-tzpath="/usr/share/zoneinfo" \
 
 
-    export OPT="-DNDEBUG -g0 -fwrapv -Os"
+    export OPT="$COPTS -DNDEBUG -fwrapv"
 
     CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten OPT="$OPT" \
   emconfigure $ROOT/src/cpython/configure  -C --without-pymalloc --disable-ipv6 \
@@ -75,10 +75,16 @@ else
     --with-build-python=${PYTHON_FOR_BUILD}
 
 
-    EMCC_CFLAGS="$EMCC_CFLAGS -s USE_ZLIB=1 -s USE_BZIP2=1" emmake make -j$(nproc) install
+    EMCC_CFLAGS="-s USE_ZLIB=1 -s USE_BZIP2=1" emmake make -j$(nproc) install 2>&1|grep --line-buffered -v ^Compiling
     popd
 
+    # move them to MEMFS
+    mv $PREFIX/lib/python3.??/lib-dynload/* $ROOT/support/__EMSCRIPTEN__/
+
+    # specific platform support
     cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/. $HOST_PREFIX/lib/python3.??/
+
+    # TODO: use PYTHONPATH for python3-wasm to pick them in devices/emsdk/usr/lib/python3.11/
 
     cp -vf build/cpython-wasm/build/lib.emscripten-wasm32-*/_sysconfigdata_*.py devices/x86_64/usr/lib/python3.??/
     cp -vf build/cpython-wasm/build/lib.emscripten-wasm32-*/_sysconfigdata_*.py $(echo -n devices/x86_64/usr/lib/python3.??/)_sysconfigdata__emscripten_.py
@@ -92,6 +98,17 @@ fi
 # python setup.py install --single-version-externally-managed --root=/
 # pip3 install .
 
+cat > $HOST_PREFIX/bin/cc <<END
+#!/bin/bash
+if echo \$@|grep -q shared
+then
+    emcc $COPTS -sSIDE_MODULE -gsource-map --source-map-base / \$@
+else
+    emcc $COPTS \$@
+fi
+END
+
+chmod +x $HOST_PREFIX/bin/cc
 
 
 
@@ -140,7 +157,7 @@ cat > $HOST_PREFIX/bin/python3-wasm <<END
 . $ROOT/${PYDK_PYTHON_HOST_PLATFORM}-shell.sh
 
 # most important
-export EMCC_CFLAGS="-s SIDE_MODULE=1"
+export EMCC_CFLAGS="-s SIDE_MODULE=1 -fPIC"
 export _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata__emscripten_
 
 # does not work with -mpip

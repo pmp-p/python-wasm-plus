@@ -38,12 +38,12 @@ def step(x=70, y=0, z=2):
         box(t, x=x, y=y, z=z)
 
 
-async def loop(x=70, y=0, z=2):
-    while True:
+async def clock(x=70, y=0, z=2):
+    while not asyncio.exit:
         step(x, y, z)
         await asyncio.sleep(1)
         sys.stdout.flush()
 
 
 def start(x=70, y=0, z=2):
-    asyncio.create_task(loop(x, y, z))
+    asyncio.create_task(clock(x, y, z))

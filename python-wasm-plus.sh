@@ -22,7 +22,4 @@ export PYTHONPYCACHEPREFIX="$(realpath build/pycache)"
 ./scripts/cpython-build-emsdk.sh
 ./scripts/pygame-all.sh
 
-# prepare the minimal stdlib fs
-./scripts/make_coldstartfs.sh
-
 echo done

@@ -173,8 +173,8 @@ except:
 
 def overloaded(i, *attrs):
     for attr in attrs:
-        if attr in i.__class__.__dict__:
-            if attr in i.__dict__:
+        if attr in vars(i.__class__):
+            if attr in vars(i):
                 return True
     return False
 
@@ -302,7 +302,7 @@ def PyConfig_InitPythonConfig(PyConfig):
 
     import aio.clock
 
-    # force start asyncio.run is not blocking on that platform.
+    # could force start asyncio.run it's not blocking on that platform.
     aio.clock.start(x=80)
 
     # org.python no preload !
@@ -343,7 +343,6 @@ def PyConfig_InitPythonConfig(PyConfig):
                         print("333: TODO setup+loop autostart")
                         # __main__.setup()
                         # aio.steps.append(__main__.loop)
-                        # aio.started = True
 
                 print(f"320: running {sys.argv[0]}.py as main (deferred)")
                 aio.defer(runmain, ["main.py"])
@@ -355,10 +354,11 @@ def PyConfig_InitPythonConfig(PyConfig):
     else:
         def fix_preload_table():
             pdb("no assets preloaded")
-        print()
-        embed.prompt()
+
+        embed.run()
+        aio.defer(embed.prompt)
 
     # go pods !
-    aio.started = True
+
 
 

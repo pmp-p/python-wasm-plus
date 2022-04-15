@@ -154,12 +154,12 @@ if __name__ == "__main__":
     # on not arduino style, expect user to run main with asyncio.run( main() )
     # should be already called at this point.
 
-    setup = __main__.__dict__.get("setup", None)
-    loop = __main__.__dict__.get("loop", None)
+    setup = vars(__main__).get("setup", None)
+    loop = vars(__main__).get("loop", None)
 
     # arduino naming is just wrong anyway
     if loop is None:
-        loop = __main__.__dict__.get("step", None)
+        loop = vars(__main__).get("step", None)
 
     if loop and setup:
         print("found setup, loop")

@@ -34,7 +34,7 @@ crosstoosl=${CROSS}
 
 # clean up untested modules
 rm -fr $PREFIX/lib/python3.??/site-packages/*
-touch $PREFIX/lib/python3.??/site-packages/README.txt
+touch $(echo -n $PREFIX/lib/python3.??/site-packages)/README.txt
 
 
 . scripts/emsdk-fetch.sh
@@ -43,22 +43,24 @@ ALWAYS_ASSETS=$(realpath tests/assets)
 ALWAYS_CODE=$(realpath tests/code)
 
 
-COPTS="-s MAIN_MODULE=1"
-EMCC_CFLAGS="-fPIC"
+LOPTS="-sMAIN_MODULE"
 
 # O0/g3 is much faster to build and easier to debug
 
-
+echo "  ************************************"
 if [ -f dev ]
 then
-    echo ' building DEBUG'
-    COPTS="$COPTS -O0 -g3 -s ASSERTIONS=1 -gsource-map --source-map-base /"
+    echo "       building DEBUG $COPTS"
+    LOPTS="$LOPTS -s ASSERTIONS=0"
+    # -gsource-map --source-map-base /"
     ALWAYS_FS="--preload-file ${ALWAYS_CODE}@/data/data/org.python/assets"
 else
-    echo ' building RELEASE'
-    COPTS="$COPTS -Os -s ASSERTIONS=0 -s LZ4=1"
+    echo "       building RELEASE $COPTS"
+    LOPTS="$LOPTS -s ASSERTIONS=0 -s LZ4=1"
     ALWAYS_FS=""
 fi
+
+echo "  ************************************"
 
 ALWAYS_FS="$ALWAYS_FS --preload-file ${ALWAYS_ASSETS}@/data/data/org.python/assets"
 
@@ -137,11 +139,13 @@ else
 
 fi
 
-pushd build/cpython-wasm
-
 /bin/cp -Rfv $PLATFORM.patches/. $ROOT/devices/$(arch)/usr/lib/python3.??/
 /bin/cp -Rf $PLATFORM.patches/. $ROOT/devices/emsdk/usr/lib/python3.??/
 
+./scripts/make_coldstartfs.sh
+
+
+pushd build/cpython-wasm
 
 [ -f ${MODE}.js ] && rm ${MODE}.*
 [ -f Programs/${MODE}.o ] && rm Programs/${MODE}.o
@@ -159,7 +163,7 @@ emcc -D__PYDK__=1 -DNDEBUG\
 # --preload-file $ROOT/devices/emsdk/usr/lib/python3.11@/usr/lib/python3.11
 STDLIBFS="--preload-file  $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.11@/usr/lib/python3.11"
 
-emcc $FINAL_OPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
+time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  -s TOTAL_MEMORY=512MB -s ALLOW_TABLE_GROWTH \
  -s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_SDL=2\
  --use-preload-plugins \

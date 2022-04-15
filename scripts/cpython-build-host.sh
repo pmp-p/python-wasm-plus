@@ -27,7 +27,7 @@ then
 
 #
 #
-    export OPT="-DNDEBUG -g0 -fwrapv -Os -Wno-everything"
+    export OPT="$COPTS -DNDEBUG -fwrapv"
 
     PYOPTS="--with-c-locale-coercion --disable-ipv6 \
      --without-pymalloc --without-pydebug \
@@ -62,7 +62,7 @@ then
     ${ROOT}/src/cpython/configure \
      --prefix=$HOST_PREFIX $PYOPTS
     then
-        make -j$(nproc) install
+        make -j$(nproc) install 2>&1|grep --line-buffered -v ^Compiling
         cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/. $HOST_PREFIX/lib/python3.??/
     else
         echo "

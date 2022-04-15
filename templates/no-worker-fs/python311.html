@@ -183,11 +183,13 @@ height="88%" width="640px"
     "os.listdir('/data/data')",
     "cd site-packages/SimpleGUICS2Pygame/example",
     "cd /data/data/org.sdl2.pysdl2/assets/examples-wasm",
+    "cd /data/data/org.python/assets;test.py",
     "test()"]
 
+        _rcp("current.py", "/data/data/org.python/assets/test.py")
 
 
-    frame_online(  Module.arguments[0]+".html" )
+        frame_online(  Module.arguments[0]+".html" )
 
 
 
@@ -215,7 +217,7 @@ height="88%" width="640px"
     "filesystem_encoding" : "utf-8",
     "filesystem_errors" : "surrogatepass",
     "use_hash_seed" : 1,
-    "hash_seed" : 0,
+    "hash_seed" : 1,
     "home": null,
     "import_time" : 0,
     "inspect" : 1,
@@ -246,6 +248,7 @@ if os.path.isfile("/data/data/pythonrc.py"):
 `
         if (python.motd)
             runsite = runsite+ `print("_"*80);print("${python.motd}");print("_"*80);`
+
 
         if (await _rcp("pythonrc.py")) {
 

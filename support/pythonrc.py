@@ -10,8 +10,6 @@ import aio.cross
 # the sim does not preload assets and cannot access currentline
 # unless using https://github.com/pmp-p/aioprompt/blob/master/aioprompt/__init__.py
 
-
-
 if not defined('undefined'):
     class sentinel:
         def __bool__(self):
@@ -39,11 +37,10 @@ if not defined('undefined'):
     exec("__import__('builtins').const = lambda x:x", globals(), globals())
 
 
-
 def overloaded(i, *attrs):
     for attr in attrs:
-        if attr in i.__class__.__dict__:
-            if attr in i.__dict__:
+        if attr in vars(i.__class__):
+            if attr in vars(i):
                 return True
     return False
 
@@ -137,9 +134,10 @@ except:
             #    dump_code()
 
             # use of globals() is only valid in __main__ scope
-            # we really want the module __main__ dict here.
+            # we really want the module __main__ dict here
+            # whereever from we are called.
 
-            __main__dict = __import__("__main__").__dict__
+            __main__dict = vars(__import__("__main__"))
             __main__dict['__file__']= filename
             try:
                 code = compile("".join(__prepro), filename, "exec")
@@ -211,22 +209,25 @@ if defined('embed') and hasattr(embed,'readline'):
             #last_fail.append([etype, e, tb])
 
             cmdline = embed.readline().strip()
-            cmd = cmdline.strip()
-            if cmd.find(' ')>0:
-                cmd, args = cmdline.split(' ',1)
-                args = args.split(' ')
-            else:
-                args = ()
+            first = True
+            for cmd in cmdline.strip().split(';'):
+                cmd = cmd.strip()
+                if cmd.find(' ')>0:
+                    cmd, args = cmd.split(' ',1)
+                    args = args.split(' ')
+                else:
+                    args = ()
 
-            if hasattr(shell, cmd):
-                try:
-                    getattr(shell, cmd)(*args)
-                except Exception as cmderror:
-                    print(cmderror, file=sys.stderr)
-            elif cmd.endswith('.py'):
-                execfile(cmd)
-            else:
-                catch =False
+                if hasattr(shell, cmd):
+                    try:
+                        getattr(shell, cmd)(*args)
+                    except Exception as cmderror:
+                        print(cmderror, file=sys.stderr)
+                elif cmd.endswith('.py'):
+                    execfile(cmd)
+                else:
+                    catch =False
+                first = False
 
         if not catch:
             sys.__excepthook__(etype, e, tb)
@@ -252,6 +253,11 @@ except NameError:
     print(" - running in simulator - ")
     aio.cross.simulator = True
 
+# make simulations same each time, easier to debug
+import random
+random.seed(1)
+
+#======================================================
 
 if __WASM__ and 0:
     print("===================== TEST ===================", __file__)
@@ -272,22 +278,58 @@ if __WASM__ and 0:
 if __WASM__ and 0:
     from cffi import FFI
     ffi = FFI()
-    print( ffi.new("int *") )
+
+if __WASM__ and 0:
+
+    import ctypes
+
+    cm = ctypes.cdll.LoadLibrary('/data/data/org.python/assets/site-packages/pymunk/libchipmunk.so')
+    print("YEAH",cm)
+
+    if __WASM__ and 0:
+        import pygame
+        #import pymunk
+        #import pymunk.pygame_util
+        #import pymunk.space_debug_draw_options
+        #from pymunk_static import ffi, lib
+
+        #
+        import pymunk
+        space = pymunk.Space()      # Create a Space which contain the simulation
+        space.gravity = 0,-981      # Set its gravity
+
+        body = pymunk.Body(50,100)        # Create a Body
+        body.position = 50,100      # Set the position of the body
+
+        poly = pymunk.Poly.create_box(body) # Create a box shape and attach to body
+        poly.mass = 10              # Set the mass on the shape
+        space.add(body, poly)       # Add both body and shape to the simulation
 
 
-
-#sys.stdout.reconfigure(encoding='utf-16')
-
-
-
-
-
-
-
+    if __WASM__ and 0:
+        def callback_decorator_wrap(python_callable):
+            cdecl = python_callable.__name__
+            print("decorating", cdecl )
+            wrap = ffi.callback(cdecl, python_callable, None, None)
+            print("wrap",wrap)
+            return wrap
 
 
+        class SpaceDebugDrawOptions(object):
+            def __init__(self) -> None:
+                print("SpaceDebugDrawOptions", ffi, lib)
+                @callback_decorator_wrap
+                def cpSpaceDebugDrawCircleImpl(pos, angle, radius, outline_color, fill_color, _):  # type: ignore
+                    pass
+                self.f1 = f1
 
+        class DrawOptions(SpaceDebugDrawOptions):
+            def __init__(self, surface) -> None:
+                self.surface = surface
+                super(DrawOptions, self).__init__()
+                print("super(DrawOptions, self).__init__()")
 
+        DrawOptions(1)
 
 
 

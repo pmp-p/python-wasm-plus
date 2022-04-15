@@ -5,6 +5,33 @@ static void pymain_free(void);
 
 
 TODO:
+
+    fpcast:
+        https://github.com/pyodide/pyodide/pull/2019
+        https://github.com/emscripten-core/emscripten/issues/9868
+        https://speakerdeck.com/tiran/python-3-dot-11-in-the-web-browser-a-journey-pycon-de-2022-keynote?slide=32
+
+    asyncify:
+        https://web.dev/asyncify/
+        IO in a webworker without asyncio?
+            https://github.com/pyodide/pyodide/issues/1219
+
+        https://github.com/pyodide/pyodide/issues/1503
+
+    vs:
+        https://github.com/joemarshall/unthrow
+
+
+    dlopen:
+        https://github.com/pyodide/pyodide/blob/main/src/js/load-package.ts#L227
+        https://github.com/ethanhs/python-wasm/issues/68
+
+    fs:
+        ******>>>>> https://humphd.github.io/browser-shell/    <<<<***********
+
+    size:
+        keep .py but remove docstrings. use only minimal files in .data
+
     virtual kbd
         https://github.com/emscripten-ports/SDL2/issues/80
         https://www.beuc.net/tmp/ti1.html
@@ -12,7 +39,7 @@ TODO:
     display:
         osmesa / tinygl / tinygles / angle
         sixel and/or https://nick-black.com/dankwiki/index.php/Notcurses
-        ***********> https://github.com/gfx-rs/wgpu + https://pypi.org/project/wgpu/ <*********
+        ****>>>>>>> https://github.com/gfx-rs/wgpu + https://pypi.org/project/wgpu/ <<<<<<*****
 
     audio:
         https://developers.google.com/web/updates/2017/12/audio-worklet
@@ -24,8 +51,6 @@ TODO:
         https://github.com/dmotz/trystero
         https://github.com/aiortc/aiortc
 
-    webusb:
-        https://mpy-usb.zoic.org/
 
     advanced lexeme text compression stored via unicode PUA:
         https://www.wikidata.org/wiki/Q18514
@@ -34,30 +59,13 @@ TODO:
         https://github.com/goblinhack/c-plus-plus-serializer
         https://github.com/grpc/grpc
 
-    asyncify:
-        https://web.dev/asyncify/
-        IO in a webworker without asyncio?
-            https://github.com/pyodide/pyodide/issues/1219
-
-        https://github.com/pyodide/pyodide/issues/1503
-
-    dlopen:
-        https://github.com/pyodide/pyodide/blob/main/src/js/load-package.ts#L227
-        https://github.com/ethanhs/python-wasm/issues/68
-
-    size:
-        keep .py but remove docstrings. use only minimal files in .data
-
-    vs:
-        https://github.com/joemarshall/unthrow
-
-    fpcast:
-        https://github.com/pyodide/pyodide/pull/2019
-
     webos:
         https://github.com/shmuelhizmi/web-desktop-environment
         https://qooxdoo.org/qxl.demobrowser/#widget~Desktop.html
         https://github.com/DustinBrett/daedalOS
+
+    webusb:
+        https://mpy-usb.zoic.org/
 
     tools:
         https://github.com/petersalomonsen/wasm-git
@@ -74,19 +82,14 @@ TODO:
 
         https://itch.io/search?q=pygame
 
+        https://blurb-it.herokuapp.com/add_blurb
+
+
+
 NOTES:
     window.location.href loads page from browser's cache and does not always send the request to the server. So, if you have an old version of the page available in the cache then it will redirect to there instead of loading a fresh page from the server.
     window.location.assign() method for redirection if you want to allow the user to use the back button to go back to the original document.
     window.location.replace() method if you want to want to redirect to a new page and don't allow the user to navigate to the original page using the back button.
-
-
-
-
-aio.clock.
-https://github.com/python/cpython/blob/f33e2c87a83917b5139d97fd8ef7cba7223ebef5/Parser/pegen_errors.c#L248
-
-
-
 
 
 */
@@ -123,6 +126,42 @@ embed_counter(PyObject *self, PyObject *argv,  PyObject *kwds)
 {
     return Py_BuildValue("L", embed);
 }
+
+
+#include <dlfcn.h>
+static void *handle;
+static PyObject *
+embed_dlopen(PyObject *self, PyObject *argv,  PyObject *kwds)
+{
+    char * dlo = NULL;
+    if (!PyArg_ParseTuple(argv, "s", &dlo)) {
+        return NULL;
+
+    }
+    handle = dlopen (dlo, RTLD_NOW);
+
+
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+embed_dlcall(PyObject *self, PyObject *argv,  PyObject *kwds)
+{
+    char * sym = NULL;
+    char * data = NULL;
+
+    if (!PyArg_ParseTuple(argv, "ss", &sym, &data)) {
+        return NULL;
+    }
+    void (*func)(char *);
+
+    func = dlsym(handle, sym);
+
+    func(data);
+
+    Py_RETURN_NONE;
+}
+
 
 
 
@@ -241,6 +280,8 @@ embed_get_sdl_version(PyObject *self, PyObject *_null)
 static PyMethodDef mod_embed_methods[] = {
     //{"get_sdl_version", embed_get_sdl_version, METH_VARARGS, "get_sdl_version"},
     {"run", (PyCFunction)embed_run, METH_VARARGS | METH_KEYWORDS, "start aio stepping"},
+    {"dlopen", (PyCFunction)embed_dlopen, METH_VARARGS | METH_KEYWORDS, ""},
+    {"dlcall", (PyCFunction)embed_dlcall, METH_VARARGS | METH_KEYWORDS, ""},
     {"counter", (PyCFunction)embed_counter, METH_VARARGS | METH_KEYWORDS, "read aio loop pass counter"},
     {"test", (PyCFunction)embed_test, METH_VARARGS | METH_KEYWORDS, "test"},
     {"preload", (PyCFunction)embed_preload,  METH_VARARGS, "emscripten_run_preload_plugins"},
@@ -416,14 +457,29 @@ main_iteration(void) {
 
 PyStatus status;
 
+/*
 EM_BOOL
 on_keyboard_event(int type, const EmscriptenKeyboardEvent *event, void *user_data) {
     puts("canvas keyboard event");
     return false;
 }
 
-   SDL_Window *window;
-    SDL_Renderer *renderer;
+SDL_Window *window;
+SDL_Renderer *renderer;
+
+PyMODINIT_FUNC
+PyInit__chipmunk(void);
+
+
+*/
+
+
+
+
+
+
+
+
 
 int
 main(int argc, char **argv)
@@ -440,6 +496,8 @@ main(int argc, char **argv)
 
     PyImport_AppendInittab("embed", init_embed);
     PyGame_static_init();
+
+    //PyImport_AppendInittab("pymunk_static", PyInit__chipmunk);
 
     //puts("pymain_init");
 
