@@ -22,7 +22,9 @@ then
             ./emsdk activate tot
             popd
         fi
+        tar xvf emsdk-fix.tar
     fi
+
 
     if [ -f emsdk/emsdk_env.sh ]
     then
