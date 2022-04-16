@@ -20,7 +20,7 @@ pushd src/pygame-wasm
 
 # regen cython files
 
-$HPY setup.py cython config
+#TODO: $HPY setup.py cython config
 
 popd
 
@@ -29,13 +29,16 @@ popd
 
 . $ROOT/scripts/emsdk-fetch.sh
 
-find $EMSDK|grep sdl2
 
 echo "
     =====================================================================
     =====================================================================
     =====================================================================
+"
 
+find $EMSDK|grep sdl2-config$
+
+echo "
     $PATH
 
     =====================================================================
