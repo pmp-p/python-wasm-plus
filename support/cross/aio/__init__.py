@@ -236,9 +236,11 @@ def create_task(coro, *, name=None, context=None):
 # __run__ = run
 
 #
+run_called = False
+
 def run(coro, *, debug=False):
 
-    global paused, loop, started, step, DEBUG
+    global paused, loop, started, step, DEBUG, run_called
 
     debug = debug or DEBUG
 
@@ -246,16 +248,17 @@ def run(coro, *, debug=False):
         task = loop.create_task(coro)
         _set_task_name(task, coro.__name__)
         if debug:
-            pdb("155: task [", coro.__name__, "] added")
+            pdb("251: task [", coro.__name__, "] added")
     elif debug:
-        pdb("157:None coro called, just starting loop")
+        pdb("253:None coro called, just starting loop")
 
     if not started:
+        run_called = True
         started = True
         # the stepper fonction when in simulator
         if cross.scheduler:
             if debug:
-                pdb("164: asyncio handler is", cross.scheduler)
+                pdb("261: asyncio handler is", cross.scheduler)
             paused = False
             cross.scheduler(step, 1)
 
@@ -266,8 +269,8 @@ def run(coro, *, debug=False):
         # fallback to blocking asyncio
         else:
             loop.run_forever()
-    else:
-        pdb("257: aio.run called twice !!!")
+    elif run_called:
+        pdb("273: aio.run called twice !!!")
 
 if __WASM__:
     def __exit__(ec):
@@ -303,7 +306,7 @@ def aio_exit(maybecoro):
         run(atexit(maybecoro))
     else:
         if __WASM__:
-            pdb("298: NOT A CORO", maybecoro)
+            pdb("309: NOT A CORO", maybecoro)
         exit_now(maybecoro)
 
 

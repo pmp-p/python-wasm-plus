@@ -16,6 +16,3 @@ for i,path in enumerate(sys.path):
 import _cffi_backend
 import cffi
 from cffi import FFI
-
-print("="*40)
-input()

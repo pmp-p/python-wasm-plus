@@ -3,7 +3,7 @@
 
 mkdir -p prebuilt
 
-if [ -d src/pygame-wasm ]
+if [ -d src/pygame-wasm/.git ]
 then
     echo "
     * pygame already fetched

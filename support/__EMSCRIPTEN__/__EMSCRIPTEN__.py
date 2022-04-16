@@ -292,10 +292,10 @@ def PyConfig_InitPythonConfig(PyConfig):
         if os.path.isdir("assets"):
             explore(ROOTDIR, "assets")
             os.chdir(f"{ROOTDIR}/assets")
-        else:
 
-            embed.prompt()
         print(f"assets found :", counter)
+        if not counter:
+            embed.run()
 
         sys.path.insert(0, os.getcwd())
         return True
@@ -349,8 +349,11 @@ def PyConfig_InitPythonConfig(PyConfig):
             else:
                 pdb(f"no main found for {sys.argv[0]}")
 
+            aio.defer(embed.prompt,(),{},200)
+
         # C should unlock aio loop when preload count reach 0.
         aio.defer(fix_preload_table, deadline=60)
+
     else:
         def fix_preload_table():
             pdb("no assets preloaded")
@@ -358,7 +361,6 @@ def PyConfig_InitPythonConfig(PyConfig):
         embed.run()
         aio.defer(embed.prompt)
 
+
     # go pods !
-
-
-
+    aio.started = True

@@ -8,7 +8,7 @@ export PREFIX=${PREFIX:-${ROOT}/devices/emsdk/usr}
 export PYTHONPYCACHEPREFIX=$(realpath ${ROOT}/build/pycache)
 
 export HPY=$(echo -n ${HOST_PREFIX}/bin/python3.??)
-#export EMSDK_PYTHON=$HPY
+export EMSDK_PYTHON="/usr/bin/python3"
 export PIP=$(echo -n ${HOST_PREFIX}/bin/pip3.??)
 
 if [ -f dev ]

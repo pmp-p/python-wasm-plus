@@ -68,6 +68,21 @@ else
     popd
 fi
 
+if [ -d pymunk-4.0.0 ]
+then
+    pushd pymunk-4.0.0
+
+    [ -d $HOST_PREFIX/lib/python3.11/site-packages/pymunk4 ] && rm -rf $HOST_PREFIX/lib/python3.11/site-packages/pymunk4
+    rm -f  build/lib/pymunk/* chipmunk_src/*.so chipmunk_src/*/*.o
+    $HPY setup.py build_chipmunk
+    $HPY setup.py install
+    mv pymunk/libchipmunk.so $HOST_PREFIX/lib/python3.11/site-packages/pymunk/libchipmunk64.so
+    mv $HOST_PREFIX/lib/python3.11/site-packages/pymunk $HOST_PREFIX/lib/python3.11/site-packages/pymunk4
+    popd
+fi
+
+
+
 
 # ${ROOT}/bin/python3-${ABI_NAME} -m pip $MODE --use-feature=2020-resolver --no-use-pep517 --no-binary :all: $@
 #for req in $(find "${ORIGIN}/projects" -maxdepth 2 -type f |grep /requirements.txt$)

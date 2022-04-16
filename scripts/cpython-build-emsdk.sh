@@ -9,13 +9,16 @@
 
 export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD:-${HOST_PREFIX}/bin/python3}
 
+# remove old compiler wrapper to avoid conflicts
+rm $HOST_PREFIX/bin/cc
+
 
 . ./scripts/emsdk-fetch.sh
 
 
 if $REBUILD
 then
-    rm build/cpython-wasm/libpython3*.a
+    rm -rf build/cpython-wasm/ build/pycache/config.cache
 fi
 
 
@@ -48,7 +51,10 @@ else
           --prefix=$PREFIX --enable-static --disable-shared --disable-dependency-tracking\
           --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs\
 
-        emmake make install
+        emmake make
+        cp ./build/lib.emscripten-wasm32-3.??/_sysconfigdata__emscripten_wasm32-emscripten.py \
+            $(echo -n $HOST_PREFIX/usr/lib/python3.11/)
+
         popd
 
         cp -fv  ${PREFIX}/lib/libffi.a $EMSDK/upstream/emscripten/cache/sysroot/lib/wasm32-emscripten/pic/
@@ -75,7 +81,12 @@ else
     --with-build-python=${PYTHON_FOR_BUILD}
 
 
-    EMCC_CFLAGS="-s USE_ZLIB=1 -s USE_BZIP2=1" emmake make -j$(nproc) install 2>&1|grep --line-buffered -v ^Compiling
+    EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" emmake make -j$(nproc)
+    EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" emmake make -j$(nproc) install 2>&1 \
+     |grep --line-buffered -v ^Compiling\
+     |grep --line-buffered -v ^Listing\
+     |grep --line-buffered -v ^install
+
     popd
 
     # move them to MEMFS
@@ -100,6 +111,9 @@ fi
 
 cat > $HOST_PREFIX/bin/cc <<END
 #!/bin/bash
+
+# -sEMULATE_FUNCTION_POINTER_CASTS or not ?
+
 if echo \$@|grep -q shared
 then
     emcc $COPTS -sSIDE_MODULE -gsource-map --source-map-base / \$@

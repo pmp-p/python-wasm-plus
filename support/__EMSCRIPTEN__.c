@@ -21,6 +21,9 @@ TODO:
     vs:
         https://github.com/joemarshall/unthrow
 
+    criu:
+        wizer
+        https://github.com/kisonecat/web2js
 
     dlopen:
         https://github.com/pyodide/pyodide/blob/main/src/js/load-package.ts#L227
@@ -74,15 +77,23 @@ TODO:
 
 
     bookmarks:
+
+        https://github.com/CTPUG/pygame_cffi  (stalled)
+
         https://github.com/sunfishcode/wasm-reference-manual/blob/master/WebAssembly.md
+
+        https://xinhuang.github.io/posts/2017-07-31-common-mistakes-using-python3-asyncio.html
 
         https://cors-anywhere.herokuapp.com/corsdemo
 
         https://stackoverflow.com/questions/28921507/how-switch-full-screen-in-a-pygame-surface-window
 
+        https://github.com/lettier/3d-game-shaders-for-beginners
+
         https://itch.io/search?q=pygame
 
         https://blurb-it.herokuapp.com/add_blurb
+
 
 
 

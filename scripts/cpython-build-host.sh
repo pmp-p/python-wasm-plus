@@ -62,7 +62,10 @@ then
     ${ROOT}/src/cpython/configure \
      --prefix=$HOST_PREFIX $PYOPTS
     then
-        make -j$(nproc) install 2>&1|grep --line-buffered -v ^Compiling
+        make -j$(nproc) install 2>&1 \
+         |grep --line-buffered -v ^Compiling\
+         |grep --line-buffered -v ^Listing\
+         |grep --line-buffered -v ^install
         cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/. $HOST_PREFIX/lib/python3.??/
     else
         echo "

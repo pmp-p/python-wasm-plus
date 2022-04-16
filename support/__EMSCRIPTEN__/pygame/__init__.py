@@ -141,6 +141,13 @@ music = clean_mod("pygame.mixer_music")
 mixer.music = music
 ################################
 
+import pygame._sdl2
+sys.modules["pygame._sdl2.video"]=pygame._sdl2.video
+
+
+import pygame_sprite
+sprite = clean_mod("pygame.sprite")
+
 del clean_mod
 
 

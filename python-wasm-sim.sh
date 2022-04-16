@@ -32,15 +32,8 @@ export PYTHONPATH=$(pwd):$ROOT/support/cross:$ROOT/support/sim.links:$PYTHONPATH
 
 
 
-if false
+if [ -f /usr/local/bin/python3.11 ]
 then
-    export LD_LIBRARY_PATH=$ROOT/devices/$(arch)/usr/lib
-    export PYTHONPATH=$ROOT/devices/$(arch)/usr/lib/python3.11/lib-dynload:$PYTHONPATH
-
-    #ldd $ROOT/devices/$(arch)/usr/bin/python3.11
-    #ldd /data/git/python-wasm-plus/devices/x86_64/usr/lib/python3.11/lib-dynload/_ctypes.cpython-311-x86_64-linux-gnu.so
-    $ROOT/devices/$(arch)/usr/bin/python3.11 -i -u -B
-else
     PYTHONPATH=$ROOT/devices/emsdk/usr/lib/python3.11:$PYTHONPATH
     PYTHONPATH=$ROOT/devices/$(arch)/usr/lib/python3.11/site-packages:$PYTHONPATH
 
@@ -50,4 +43,13 @@ else
     export LD_LIBRARY_PATH=$ROOT/devices/$(arch)/usr/lib
     /usr/local/bin/python3.11
     python3.11 -i -u -B
+
+else
+    export LD_LIBRARY_PATH=$ROOT/devices/$(arch)/usr/lib
+    export PYTHONPATH=$ROOT/devices/$(arch)/usr/lib/python3.11/lib-dynload:$PYTHONPATH
+
+    #ldd $ROOT/devices/$(arch)/usr/bin/python3.11
+    #ldd /data/git/python-wasm-plus/devices/x86_64/usr/lib/python3.11/lib-dynload/_ctypes.cpython-311-x86_64-linux-gnu.so
+    $ROOT/devices/$(arch)/usr/bin/python3.11 -i -u -B
+
 fi
