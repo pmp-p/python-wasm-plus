@@ -46,7 +46,7 @@ then
     "
     else
         ALL="struct_info libfetch zlib bzip2 freetype harfbuzz"
-        ALL="$ALL libpng libjpeg sdl2_image sdl2_mixer sdl2_ttf"
+        ALL="$ALL libpng libjpeg sdl2 sdl2_image sdl2_mixer sdl2_ttf"
 
         echo "
         * building third parties libraries for emsdk ( can take time ... )
@@ -58,7 +58,7 @@ then
             + $done
 "
             embuilder --pic build $one
-            embuilder build $one
+            #embuilder build $one
         done
         touch embuild.done
     fi
