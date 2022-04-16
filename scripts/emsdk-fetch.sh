@@ -45,8 +45,9 @@ then
         * emsdk prereq ok
     "
     else
-        ALL="struct_info libfetch zlib bzip2 freetype harfbuzz"
+        ALL=""
         ALL="$ALL libpng libjpeg sdl2 sdl2_image sdl2_mixer sdl2_ttf"
+        ALL="$ALL struct_info libfetch zlib bzip2 freetype harfbuzz"
 
         echo "
         * building third parties libraries for emsdk ( can take time ... )

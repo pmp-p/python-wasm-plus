@@ -29,6 +29,37 @@ popd
 
 . $ROOT/scripts/emsdk-fetch.sh
 
+find $EMSDK|grep sdl2
+
+echo "
+    =====================================================================
+    =====================================================================
+    =====================================================================
+
+    $PATH
+
+    =====================================================================
+    =====================================================================
+    =====================================================================
+"
+
+cat > $HOST_PREFIX/bin/sdl2-config <<END
+#!/usr/bin/env python3
+
+import sys
+
+print('emscripten sdl2-config called with', ' '.join(sys.argv), file=sys.stderr)
+
+args = sys.argv[1:]
+
+if '--cflags' in args or '--libs' in args:
+  print('-s USE_SDL=2')
+elif '--version' in args:
+  print('2.0.10')
+END
+
+chmod +x $HOST_PREFIX/bin/sdl2-config
+
 
 pushd src/pygame-wasm
 
