@@ -145,18 +145,17 @@ sed -i 's|-g0|-g3|g' $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_d
 cat > $HOST_PREFIX/bin/cc <<END
 #!/bin/bash
 
-# -sEMULATE_FUNCTION_POINTER_CASTS or not ?
-
 if echo \$@|grep -q shared
 then
-    emcc $COPTS -sSIDE_MODULE -gsource-map --source-map-base / \$@
+    # $COPTS
+    emcc -O0 -g3 -fPIC -sSIDE_MODULE -gsource-map --source-map-base / \$@
 else
-    emcc $COPTS \$@
+    # $COPTS
+    emcc -O0 -g3 -fPIC \$@
 fi
 END
 
 chmod +x $HOST_PREFIX/bin/cc
-
 
 
 cat > ${PYTHONPYCACHEPREFIX}/.nanorc <<END
@@ -206,12 +205,12 @@ cat > $HOST_PREFIX/bin/python3-wasm <<END
 . $ROOT/${PYDK_PYTHON_HOST_PLATFORM}-shell.sh
 
 # most important
-export EMCC_CFLAGS="-sSIDE_MODULE -DBUILD_STATIC -fPIC"
+#export EMCC_CFLAGS="-sSIDE_MODULE -DBUILD_STATIC -fPIC"
+export CC=cc
 export _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata__emscripten_debug
 
 # does not work with -mpip
-export PYTHONSTARTUP=$ROOT/support/__EMSCRIPTEN__.py"
-
+export PYTHONSTARTUP=$ROOT/support/__EMSCRIPTEN__.py
 
 # so include dirs are good
 export PYTHONHOME=$PREFIX

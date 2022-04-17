@@ -258,6 +258,9 @@ import random
 random.seed(1)
 
 #======================================================
+import pymunk4 as pymunk
+
+
 
 if __WASM__ and 0:
     print("===================== TEST ===================", __file__)
