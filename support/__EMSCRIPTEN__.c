@@ -18,6 +18,14 @@ TODO:
 
         https://github.com/pyodide/pyodide/issues/1503
 
+    sab:
+        https://exploringjs.com/es2016-es2017/ch_shared-array-buffer.html
+        https://github.com/WebAssembly/threads/issues/106
+        https://github.com/tc39/proposal-atomics-wait-async
+
+        https://jasonformat.com/javascript-sleep/
+        view-source:https://sleep-sw.glitch.me/
+
     vs:
         https://github.com/joemarshall/unthrow
 
@@ -102,6 +110,7 @@ NOTES:
     window.location.assign() method for redirection if you want to allow the user to use the back button to go back to the original document.
     window.location.replace() method if you want to want to redirect to a new page and don't allow the user to navigate to the original page using the back button.
 
+    https://wiki.libsdl.org/SDL_RWseek  64bits values ?
 
 */
 

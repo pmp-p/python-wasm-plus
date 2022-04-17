@@ -29,14 +29,20 @@ popd
 
 . $ROOT/scripts/emsdk-fetch.sh
 
+chmod +x $(find $EMSDK|grep sdl2-config$)
 
-echo "
+
+if echo $(which sdl2-config)|grep -q sdl2-config
+then
+    echo -n
+else
+    echo "
     =====================================================================
     =====================================================================
     =====================================================================
 "
 
-find $EMSDK|grep sdl2-config$
+    find $EMSDK|grep sdl2-config$
 
 echo "
     $PATH
@@ -62,6 +68,8 @@ elif '--version' in args:
 END
 
 chmod +x $HOST_PREFIX/bin/sdl2-config
+
+fi
 
 
 pushd src/pygame-wasm

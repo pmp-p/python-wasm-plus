@@ -38,6 +38,11 @@ else
         echo "
     * ffi already built"
     else
+
+        pushd src
+        git clone https://github.com/pmp-p/libffi-emscripten libffi
+        popd
+
         mkdir -p build/libffi $PREFIX
         pushd build/libffi
 
@@ -60,7 +65,6 @@ else
         cp -fv  ${PREFIX}/lib/libffi.a $EMSDK/upstream/emscripten/cache/sysroot/lib/wasm32-emscripten/pic/
         cp -vf  ${PREFIX}/include/ffi*.h ${EMSDK}/upstream/emscripten/cache/sysroot/include/
     fi
-
 
     mkdir -p build/cpython-wasm $PREFIX
     pushd build/cpython-wasm

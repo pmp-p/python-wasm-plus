@@ -25,6 +25,7 @@ then
     popd
 else
     git clone https://github.com/python/cpython.git
+    export REBUILD=true
 fi
 
 popd

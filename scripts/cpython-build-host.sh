@@ -25,9 +25,6 @@ if $REBUILD
 then
     pushd build/cpython-host
 
-#
-#
-
 
     export OPT="$COPTS -DNDEBUG -fwrapv"
 
