@@ -38,7 +38,7 @@ else
         echo "
     * ffi already built"
     else
-echo "
+        echo "
 
 
         *************************************************************************
@@ -67,22 +67,20 @@ echo "
           --prefix=$PREFIX --enable-static --disable-shared --disable-dependency-tracking\
           --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs\
 
-        emmake make
-        cp ./build/lib.emscripten-wasm32-3.??/_sysconfigdata__emscripten_wasm32-emscripten.py \
-            $(echo -n $HOST_PREFIX/usr/lib/python3.11/)
+        emmake make install
 
         popd
 
         cp -fv  ${PREFIX}/lib/libffi.a $EMSDK/upstream/emscripten/cache/sysroot/lib/wasm32-emscripten/pic/
         cp -vf  ${PREFIX}/include/ffi*.h ${EMSDK}/upstream/emscripten/cache/sysroot/include/
-    fi
-
-echo "
+    echo "
 
         *************************************************************************
         *************************************************************************
 
 "
+    fi
+
 
     mkdir -p build/cpython-wasm $PREFIX
     pushd build/cpython-wasm

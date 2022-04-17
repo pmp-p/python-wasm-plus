@@ -32,6 +32,9 @@ then
         * activating emsdk via emsdk_env.sh
 "
         . emsdk/emsdk_env.sh 2>&1 > /dev/null
+
+        export EMSDK_PYTHON=/usr/bin/python3
+
     else
         echo "
         ERROR cannot find emsdk/emsdk_env.sh in $(pwd)
