@@ -224,7 +224,6 @@ PYTHONPATH=$(echo -n ${HOST_PREFIX}/lib/python3.??/site-packages):\$PYTHONPATH
 export PYTHONPATH=$(echo -n ${HOST_PREFIX}/lib/python3.??/lib-dynload):\$PYTHONPATH
 
 
-
 #probably useless
 export _PYTHON_HOST_PLATFORM=${PYDK_PYTHON_HOST_PLATFORM}
 export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD}
