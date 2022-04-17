@@ -134,10 +134,18 @@ else
 fi
 
 mkdir -p $PYTHONPYCACHEPREFIX/sysconfig
-cp $PREFIX/lib/python3.??/_sysconfigdata__emscripten_.py $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
 
+
+# FIXME: seems CI cannot locate that one with python3-wasm
+cp $PREFIX/lib/python3.??/_sysconfigdata__emscripten_.py $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
 sed -i 's|-Os|-O0|g' $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
 sed -i 's|-g0|-g3|g' $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
+
+#workaround
+cp $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py  devices/x86_64/usr/lib/python3.11/_sysconfigdata__emscripten_debug.py
+
+
+
 
 # python setup.py install --single-version-externally-managed --root=/
 # pip3 install .
@@ -216,18 +224,16 @@ export PYTHONSTARTUP=$ROOT/support/__EMSCRIPTEN__.py
 export PYTHONHOME=$PREFIX
 
 # find sysconfig ( tweaked )
-PYTHONPATH=$PYTHONPYCACHEPREFIX/sysconfig:\$PYTHONPATH
-
 # but still can load dynload and setuptools
 PYTHONPATH=$(echo -n ${HOST_PREFIX}/lib/python3.??/site-packages):\$PYTHONPATH
-export PYTHONPATH=$(echo -n ${HOST_PREFIX}/lib/python3.??/lib-dynload):\$PYTHONPATH
+export PYTHONPATH=$PYTHONPYCACHEPREFIX/sysconfig:$(echo -n ${HOST_PREFIX}/lib/python3.??/lib-dynload):\$PYTHONPATH
 
 
 #probably useless
 export _PYTHON_HOST_PLATFORM=${PYDK_PYTHON_HOST_PLATFORM}
 export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD}
 
-$HOST_PREFIX/bin/python3 -u -B \$@
+$HOST_PREFIX/bin/python3.?? -u -B \$@
 END
 
 chmod +x $HOST_PREFIX/bin/python3-wasm
