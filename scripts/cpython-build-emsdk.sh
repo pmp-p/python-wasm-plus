@@ -210,7 +210,7 @@ export EMCC_CFLAGS="-sSIDE_MODULE -DBUILD_STATIC -fPIC"
 export _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata__emscripten_debug
 
 # does not work with -mpip
-export PYTHONSTARTUP="/data/git/python-wasm-plus/support/__EMSCRIPTEN__.py"
+export PYTHONSTARTUP=$ROOT/support/__EMSCRIPTEN__.py"
 
 
 # so include dirs are good

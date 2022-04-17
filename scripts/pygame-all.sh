@@ -1,5 +1,35 @@
 . ${CONFIG:-config}
 
+echo "
+
+
+
+
+
+
+
+
+            *****************************************************************
+                    BUILDING PYGAME
+            *****************************************************************
+
+
+
+
+
+
+
+
+________________________________________________________________________________
+"
+
+
+cat $(which python3-wasm)
+
+echo "
+________________________________________________________________________________
+"
+
 mkdir -p prebuilt
 
 if [ -d src/pygame-wasm/.git ]
@@ -14,7 +44,6 @@ else
 fi
 
 
-
 pushd src/pygame-wasm
 
 # regen cython files
@@ -24,57 +53,13 @@ pushd src/pygame-wasm
 popd
 
 
-# active emsdk
-
-. $ROOT/scripts/emsdk-fetch.sh
-
-chmod +x $(find $EMSDK|grep sdl2-config$)
-
-
-if echo $(which sdl2-config)|grep -q sdl2-config
-then
-    echo -n
-else
-    echo "
-    =====================================================================
-    =====================================================================
-    =====================================================================
-"
-
-    find $EMSDK|grep sdl2-config$
-
-echo "
-    $PATH
-
-    =====================================================================
-    =====================================================================
-    =====================================================================
-"
-
-cat > $HOST_PREFIX/bin/sdl2-config <<END
-#!/usr/bin/env python3
-
-import sys
-
-print('emscripten sdl2-config called with', ' '.join(sys.argv), file=sys.stderr)
-
-args = sys.argv[1:]
-
-if '--cflags' in args or '--libs' in args:
-  print('-s USE_SDL=2')
-elif '--version' in args:
-  print('2.0.10')
-END
-
-chmod +x $HOST_PREFIX/bin/sdl2-config
-
-fi
+#chmod +x $(find $EMSDK|grep sdl2-config$)
 
 
 pushd src/pygame-wasm
 
 # remove old lib
-rm ${ROOT}/prebuilt/libpygame.a
+[ -f ${ROOT}/prebuilt/libpygame.a ] && rm ${ROOT}/prebuilt/libpygame.a
 
 #../../scripts/static-merger.sh
 
@@ -89,8 +74,10 @@ then
  EMCC_CFLAGS="-s USE_SDL=2 -s USE_LIBPNG=1 -s USE_LIBJPEG=1"\
  python3-wasm setup.py build
     then
+        # activate emsdk
+
         OBJS=$(find build/temp.wasm32-tot-emscripten-3.??/|grep o$)
-        $EMSDK/upstream/emscripten/emar rcs ${ROOT}/prebuilt/libpygame.a $OBJS
+        $ROOT/emsdk/upstream/emscripten/emar rcs ${ROOT}/prebuilt/libpygame.a $OBJS
         for obj in $OBJS
         do
             echo $obj
