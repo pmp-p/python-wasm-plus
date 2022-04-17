@@ -33,7 +33,15 @@ then
 "
         . emsdk/emsdk_env.sh 2>&1 > /dev/null
 
-        export EMSDK_PYTHON=/usr/bin/python3
+
+        for py in 10 9 8 7 6 5
+        do
+            if command -v python3.${py}
+            then
+                export EMSDK_PYTHON=$(command -v python3.${py})
+                break
+            fi
+        done
 
     else
         echo "
@@ -42,25 +50,27 @@ then
         read
     fi
 
+
     if [ -f embuild.done ]
     then
         echo "
         * emsdk prereq ok
     "
     else
-        ALL=""
+        ALL="libgl libal libhtml5 libstubs libnoexit libsockets"
+        ALL="$ALL libc libdlmalloc libcompiler_rt libc++-noexcept libc++abi-noexcept"
         ALL="$ALL libpng libjpeg sdl2 sdl2_image sdl2_mixer sdl2_ttf sdl2_gfx"
         ALL="$ALL struct_info libfetch zlib bzip2 freetype harfbuzz"
 
         echo "
         * building third parties libraries for emsdk ( can take time ... )
-"
+    "
 
         for one in $ALL
         do
             echo "
             + $done
-"
+    "
             embuilder --pic build $one
             #embuilder build $one
         done

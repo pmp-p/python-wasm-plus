@@ -163,6 +163,7 @@ emcc -D__PYDK__=1 -DNDEBUG\
 # --preload-file $ROOT/devices/emsdk/usr/lib/python3.11@/usr/lib/python3.11
 STDLIBFS="--preload-file  $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.11@/usr/lib/python3.11"
 
+
 time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  -s TOTAL_MEMORY=512MB -s ALLOW_TABLE_GROWTH \
  -s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_SDL=2\

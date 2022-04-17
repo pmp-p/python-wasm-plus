@@ -22,6 +22,57 @@ then
 fi
 
 
+
+
+if [ -f $EMSDK/upstream/emscripten/cache/sysroot/lib/wasm32-emscripten/pic/libffi.a ]
+then
+    echo "
+    * ffi already built"
+else
+    echo "
+
+
+    *************************************************************************
+    *************************************************************************
+
+"
+    if [ -d src/libffi ]
+    then
+        echo -n
+    else
+        pushd src
+        git clone https://github.com/pmp-p/libffi-emscripten.git libffi
+        popd
+    fi
+
+    mkdir -p build/libffi $PREFIX
+    pushd build/libffi
+
+#TODO: check if export PATH=${HOST_PREFIX}/bin:$PATH is really set to avoid system python with different bytecode
+#and no loder lib-dynload in the way.
+
+    export EMCC_CFLAGS="$COPTS"
+
+     CFLAGS="$COPTS"\
+      emconfigure $ROOT/src/libffi/configure --host=wasm32-tot-linux\
+      --prefix=$PREFIX --enable-static --disable-shared --disable-dependency-tracking\
+      --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs\
+
+    emmake make install
+
+    popd
+
+    cp -fv  ${PREFIX}/lib/libffi.a $EMSDK/upstream/emscripten/cache/sysroot/lib/wasm32-emscripten/pic/
+    cp -vf  ${PREFIX}/include/ffi*.h ${EMSDK}/upstream/emscripten/cache/sysroot/include/
+echo "
+
+    *************************************************************************
+    *************************************************************************
+
+"
+fi
+
+
 if [ -f build/cpython-wasm/libpython3.??.a ]
 then
     echo "
@@ -33,53 +84,7 @@ else
         PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD}
 "
 
-    if [ -f ${PREFIX}/lib/libffi.a ]
-    then
-        echo "
-    * ffi already built"
-    else
-        echo "
 
-
-        *************************************************************************
-        *************************************************************************
-
-"
-        if [ -d src/libffi ]
-        then
-            echo -n
-        else
-            pushd src
-            git clone https://github.com/pmp-p/libffi-emscripten.git libffi
-            popd
-        fi
-
-        mkdir -p build/libffi $PREFIX
-        pushd build/libffi
-
-    #TODO: check if export PATH=${HOST_PREFIX}/bin:$PATH is really set to avoid system python with different bytecode
-    #and no loder lib-dynload in the way.
-
-        export EMCC_CFLAGS="$COPTS"
-
-         CFLAGS="$COPTS"\
-          emconfigure $ROOT/src/libffi/configure --host=wasm32-tot-linux\
-          --prefix=$PREFIX --enable-static --disable-shared --disable-dependency-tracking\
-          --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs\
-
-        emmake make install
-
-        popd
-
-        cp -fv  ${PREFIX}/lib/libffi.a $EMSDK/upstream/emscripten/cache/sysroot/lib/wasm32-emscripten/pic/
-        cp -vf  ${PREFIX}/include/ffi*.h ${EMSDK}/upstream/emscripten/cache/sysroot/include/
-    echo "
-
-        *************************************************************************
-        *************************************************************************
-
-"
-    fi
 
 
     mkdir -p build/cpython-wasm $PREFIX
@@ -101,9 +106,8 @@ else
     --with-build-python=${PYTHON_FOR_BUILD} $VERBOSE
 
 
-    #EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2"  eval emmake make -j$(nproc) $VERBOSE
-
-    EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" eval emmake make -j$(nproc) install $VERBOSE
+    EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" eval emmake make -j$(nproc) $VERBOSE
+    EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" eval emmake make install $VERBOSE
 
     rm -rf $(find $ROOT/devices/ -type d|grep __pycache__$)
 #    2>&1 \
