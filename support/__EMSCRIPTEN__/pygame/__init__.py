@@ -148,6 +148,10 @@ sys.modules["pygame._sdl2.video"]=pygame._sdl2.video
 import pygame_sprite
 sprite = clean_mod("pygame.sprite")
 
+
+import pygame.pkgdata as pkgdata
+
+
 del clean_mod
 
 

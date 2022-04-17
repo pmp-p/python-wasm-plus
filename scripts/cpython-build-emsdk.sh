@@ -71,21 +71,25 @@ else
     export OPT="$COPTS -DNDEBUG -fwrapv"
 
     CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten OPT="$OPT" \
-  emconfigure $ROOT/src/cpython/configure  -C --without-pymalloc --disable-ipv6 \
+  eval emconfigure $ROOT/src/cpython/configure  -C --without-pymalloc --disable-ipv6 \
     --cache-file=${PYTHONPYCACHEPREFIX}/config.cache \
     --enable-wasm-dynamic-linking \
     --host=$PYDK_PYTHON_HOST_PLATFORM \
     --build=$($ROOT/src/cpython/config.guess) \
     --with-emscripten-target=browser \
     --prefix=$PREFIX \
-    --with-build-python=${PYTHON_FOR_BUILD}
+    --with-build-python=${PYTHON_FOR_BUILD} $VERBOSE
 
 
-    EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" emmake make -j$(nproc)
-    EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" emmake make -j$(nproc) install 2>&1 \
-     |grep --line-buffered -v ^Compiling\
-     |grep --line-buffered -v ^Listing\
-     |grep --line-buffered -v ^install
+    #EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2"  eval emmake make -j$(nproc) $VERBOSE
+
+    EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" eval emmake make -j$(nproc) install $VERBOSE
+
+    rm -rf $(find $ROOT/devices/ -type d|grep __pycache__$)
+#    2>&1 \
+#     |grep --line-buffered -v ^Compiling\
+#     |grep --line-buffered -v ^Listing\
+#     |grep --line-buffered -v ^install
 
     popd
 

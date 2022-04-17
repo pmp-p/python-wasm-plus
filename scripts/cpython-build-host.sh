@@ -27,12 +27,14 @@ then
 
 #
 #
+
+
     export OPT="$COPTS -DNDEBUG -fwrapv"
 
     PYOPTS="--with-c-locale-coercion --disable-ipv6 \
      --without-pymalloc --without-pydebug \
      --with-ensurepip\
-     --with-decimal-contextvar --with-system-ffi --enable-shared \
+     --with-decimal-contextvar --enable-shared \
      --with-computed-gotos"
 
     # Prevent freezing bytecode with a different magic
@@ -59,13 +61,17 @@ then
 
     if \
     CC=clang CXX=clang++ OPT="$OPT" \
-    ${ROOT}/src/cpython/configure \
-     --prefix=$HOST_PREFIX $PYOPTS
+    eval ${ROOT}/src/cpython/configure \
+     --prefix=$HOST_PREFIX $PYOPTS $VERBOSE
     then
-        make -j$(nproc) install 2>&1 \
-         |grep --line-buffered -v ^Compiling\
-         |grep --line-buffered -v ^Listing\
-         |grep --line-buffered -v ^install
+        eval make -j$(nproc) install $VERBOSE
+        rm -rf $(find $ROOT/devices/ -type d|grep __pycache__$)
+
+        #2>&1 \
+         #|grep --line-buffered -v ^Compiling\
+         #|grep --line-buffered -v ^Listing\
+         #|grep --line-buffered -v ^install
+
         cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/. $HOST_PREFIX/lib/python3.??/
     else
         echo "

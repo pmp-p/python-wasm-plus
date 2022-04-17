@@ -11,11 +11,14 @@ export HPY=$(echo -n ${HOST_PREFIX}/bin/python3.??)
 export EMSDK_PYTHON="/usr/bin/python3"
 export PIP=$(echo -n ${HOST_PREFIX}/bin/pip3.??)
 
+
 if [ -f dev ]
 then
     export COPTS="-Os -g0 -fPIC"
+    export VERBOSE=""
 else
     export COPTS="-Os -g0 -fPIC"
+    export VERBOSE="2>&1 > $PYTHONPYCACHEPREFIX/.log"
 fi
 
 #stable
