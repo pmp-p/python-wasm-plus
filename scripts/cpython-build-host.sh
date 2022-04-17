@@ -78,7 +78,7 @@ then
     reminder: you need clang libffi-dev and usual cpython requirements.
 ==========================================================================
     "
-        read
+        exit 1
     fi
 
 

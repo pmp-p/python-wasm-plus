@@ -47,7 +47,7 @@ then
         echo "
         ERROR cannot find emsdk/emsdk_env.sh in $(pwd)
 "
-        read
+        exit 1
     fi
 
 

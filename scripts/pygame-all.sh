@@ -1,6 +1,5 @@
 . ${CONFIG:-config}
 
-
 mkdir -p prebuilt
 
 if [ -d src/pygame-wasm/.git ]

@@ -125,14 +125,19 @@ else
 
     # TODO: use PYTHONPATH for python3-wasm to pick them in devices/emsdk/usr/lib/python3.11/
 
-    cp -vf build/cpython-wasm/build/lib.emscripten-wasm32-*/_sysconfigdata_*.py devices/x86_64/usr/lib/python3.??/
-    cp -vf build/cpython-wasm/build/lib.emscripten-wasm32-*/_sysconfigdata_*.py $(echo -n devices/x86_64/usr/lib/python3.??/)_sysconfigdata__emscripten_.py
-    cp -vf build/cpython-wasm/build/lib.emscripten-wasm32-*/_sysconfigdata_*.py $(echo -n devices/emsdk/usr/lib/python3.??/)_sysconfigdata__emscripten_.py
+
+    ln $PREFIX/lib/python3.??/_sysconfigdata__emscripten_.py devices/x86_64/usr/lib/python3.??/
+
     mkdir -p prebuilt
     cp -vf build/cpython-wasm/libpython3.*.a prebuilt/
     rmdir  $PREFIX/lib/python3.??/lib-dynload
 fi
 
+mkdir -p $PYTHONPYCACHEPREFIX/sysconfig
+cp $PREFIX/lib/python3.??/_sysconfigdata__emscripten_.py $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
+
+sed -i 's|-Os|-O0|g' $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
+sed -i 's|-g0|-g3|g' $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
 
 # python setup.py install --single-version-externally-managed --root=/
 # pip3 install .
@@ -202,7 +207,7 @@ cat > $HOST_PREFIX/bin/python3-wasm <<END
 
 # most important
 export EMCC_CFLAGS="-sSIDE_MODULE -DBUILD_STATIC -fPIC"
-export _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata__emscripten_wasm32-emscripten
+export _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata__emscripten_debug
 
 # does not work with -mpip
 export PYTHONSTARTUP="/data/git/python-wasm-plus/support/__EMSCRIPTEN__.py"
@@ -211,8 +216,8 @@ export PYTHONSTARTUP="/data/git/python-wasm-plus/support/__EMSCRIPTEN__.py"
 # so include dirs are good
 export PYTHONHOME=$PREFIX
 
-# can find sysconfig
-PYTHONPATH=$(echo -n ${PREFIX}/lib/python3.??/):\$PYTHONPATH
+# find sysconfig ( tweaked )
+PYTHONPATH=$PYTHONPYCACHEPREFIX/sysconfig:\$PYTHONPATH
 
 # but still can load dynload and setuptools
 PYTHONPATH=$(echo -n ${HOST_PREFIX}/lib/python3.??/site-packages):\$PYTHONPATH
