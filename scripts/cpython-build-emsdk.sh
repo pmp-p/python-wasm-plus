@@ -38,10 +38,21 @@ else
         echo "
     * ffi already built"
     else
+echo "
 
-        pushd src
-        git clone https://github.com/pmp-p/libffi-emscripten libffi
-        popd
+
+        *************************************************************************
+        *************************************************************************
+
+"
+        if [ -d src/libffi ]
+        then
+            echo -n
+        else
+            pushd src
+            git clone https://github.com/pmp-p/libffi-emscripten.git libffi
+            popd
+        fi
 
         mkdir -p build/libffi $PREFIX
         pushd build/libffi
@@ -65,6 +76,13 @@ else
         cp -fv  ${PREFIX}/lib/libffi.a $EMSDK/upstream/emscripten/cache/sysroot/lib/wasm32-emscripten/pic/
         cp -vf  ${PREFIX}/include/ffi*.h ${EMSDK}/upstream/emscripten/cache/sysroot/include/
     fi
+
+echo "
+
+        *************************************************************************
+        *************************************************************************
+
+"
 
     mkdir -p build/cpython-wasm $PREFIX
     pushd build/cpython-wasm
@@ -141,6 +159,17 @@ END
 
 cat > $ROOT/${PYDK_PYTHON_HOST_PLATFORM}-shell.sh <<END
 #!/bin/bash
+
+if [[ ! -z \${EMSDK+z} ]]
+then
+    # emsdk_env already parsed
+    echo -n
+else
+    pushd $ROOT
+    . scripts/emsdk-fetch.sh
+    popd
+fi
+
 export PATH=${HOST_PREFIX}/bin:\$PATH
 export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
@@ -163,15 +192,6 @@ include_dirs = $PREFIX/include
 NUMPY
 
 
-if [[ ! -z \${EMSDK+z} ]]
-then
-    # emsdk_env already parsed
-    echo -n
-else
-    pushd $ROOT
-    . scripts/emsdk-fetch.sh
-    popd
-fi
 END
 
 cat > $HOST_PREFIX/bin/python3-wasm <<END
@@ -179,8 +199,8 @@ cat > $HOST_PREFIX/bin/python3-wasm <<END
 . $ROOT/${PYDK_PYTHON_HOST_PLATFORM}-shell.sh
 
 # most important
-export EMCC_CFLAGS="-s SIDE_MODULE=1 -fPIC"
-export _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata__emscripten_
+export EMCC_CFLAGS="-sSIDE_MODULE -DBUILD_STATIC -fPIC"
+export _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata__emscripten_wasm32-emscripten
 
 # does not work with -mpip
 export PYTHONSTARTUP="/data/git/python-wasm-plus/support/__EMSCRIPTEN__.py"
@@ -189,10 +209,12 @@ export PYTHONSTARTUP="/data/git/python-wasm-plus/support/__EMSCRIPTEN__.py"
 # so include dirs are good
 export PYTHONHOME=$PREFIX
 
+# can find sysconfig
+PYTHONPATH=$(echo -n ${PREFIX}/lib/python3.??/):\$PYTHONPATH
+
 # but still can load dynload and setuptools
 PYTHONPATH=$(echo -n ${HOST_PREFIX}/lib/python3.??/site-packages):\$PYTHONPATH
 export PYTHONPATH=$(echo -n ${HOST_PREFIX}/lib/python3.??/lib-dynload):\$PYTHONPATH
-
 
 
 
