@@ -102,7 +102,8 @@ TODO:
 
         https://blurb-it.herokuapp.com/add_blurb
 
-
+        https://github.com/pioul/Minimalist-Online-Markdown-Editor
+        https://github.com/CribberSix/pygame-markdown
 
 
 NOTES:
@@ -111,6 +112,18 @@ NOTES:
     window.location.replace() method if you want to want to redirect to a new page and don't allow the user to navigate to the original page using the back button.
 
     https://wiki.libsdl.org/SDL_RWseek  64bits values ?
+
+
+
+not portable ?
+    https://github.com/pyglet/pyglet
+    https://github.com/mcfletch/pyopengl
+
+
+
+
+
+
 
 */
 

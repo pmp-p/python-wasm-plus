@@ -1,42 +1,5 @@
 . ${CONFIG:-config}
 
-echo "
-
-
-
-
-
-
-
-
-            *****************************************************************
-                    BUILDING PYGAME
-            *****************************************************************
-
-
-
-
-
-
-
-
-________________________________________________________________________________
-"
-
-
-cat $(which python3-wasm)
-
-echo "
-________________________________________________________________________________
-"
-
-
-ls $PYTHONPYCACHEPREFIX/sysconfig
-
-echo "
-________________________________________________________________________________
-"
-
 mkdir -p prebuilt
 
 if [ -d src/pygame-wasm/.git ]
@@ -77,8 +40,8 @@ pushd src/pygame-wasm
 
 if python3-wasm setup.py -config -auto -sdl2
 then
-    if CC=emcc CFLAGS="-DBUILD_STATIC -DSDL_NO_COMPAT -ferror-limit=1"\
- EMCC_CFLAGS="-s USE_SDL=2 -s USE_LIBPNG=1 -s USE_LIBJPEG=1"\
+    if CC=emcc CFLAGS="-DBUILD_STATIC -DSDL_NO_COMPAT -ferror-limit=1 -fPIC"\
+ EMCC_CFLAGS="-s USE_SDL=2 -sUSE_LIBPNG -s USE_LIBJPEG -sUSE_SDL_TTF -sUSE_SDL_IMAGE"\
  python3-wasm setup.py build
     then
         # activate emsdk

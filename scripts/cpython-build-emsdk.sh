@@ -124,8 +124,7 @@ else
     cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/. $HOST_PREFIX/lib/python3.??/
 
     # TODO: use PYTHONPATH for python3-wasm to pick them in devices/emsdk/usr/lib/python3.11/
-
-    #ln $PREFIX/lib/python3.??/_sysconfigdata__emscripten_.py devices/x86_64/usr/lib/python3.??/
+    #ln $PREFIX/lib/python3.??/_sysconfigdata__emscripten_wasm32-emscripten.py devices/x86_64/usr/lib/python3.??/
 
     mkdir -p prebuilt
     cp -vf build/cpython-wasm/libpython3.*.a prebuilt/
@@ -141,7 +140,7 @@ sed -i 's|-Os|-O0|g' $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_d
 sed -i 's|-g0|-g3|g' $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
 
 #workaround
-cp $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py  devices/x86_64/usr/lib/python3.11/_sysconfigdata__emscripten_debug.py
+#cp $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py  devices/x86_64/usr/lib/python3.11/_sysconfigdata__emscripten_debug.py
 
 
 
