@@ -125,8 +125,7 @@ else
 
     # TODO: use PYTHONPATH for python3-wasm to pick them in devices/emsdk/usr/lib/python3.11/
 
-
-    ln $PREFIX/lib/python3.??/_sysconfigdata__emscripten_.py devices/x86_64/usr/lib/python3.??/
+    #ln $PREFIX/lib/python3.??/_sysconfigdata__emscripten_.py devices/x86_64/usr/lib/python3.??/
 
     mkdir -p prebuilt
     cp -vf build/cpython-wasm/libpython3.*.a prebuilt/
@@ -137,13 +136,12 @@ mkdir -p $PYTHONPYCACHEPREFIX/sysconfig
 
 
 # FIXME: seems CI cannot locate that one with python3-wasm
-cp $PREFIX/lib/python3.??/_sysconfigdata__emscripten_.py $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
+cp $PREFIX/lib/python3.??/_sysconfigdata__emscripten_wasm32-emscripten.py $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
 sed -i 's|-Os|-O0|g' $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
 sed -i 's|-g0|-g3|g' $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
 
 #workaround
 cp $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py  devices/x86_64/usr/lib/python3.11/_sysconfigdata__emscripten_debug.py
-
 
 
 
@@ -159,7 +157,7 @@ then
     emcc -O0 -g3 -fPIC -sSIDE_MODULE -gsource-map --source-map-base / \$@
 else
     # $COPTS
-    emcc -O0 -g3 -fPIC \$@
+    emcc -O0 -g3 -fPIC -DBUILD_STATIC \$@
 fi
 END
 

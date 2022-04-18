@@ -1,5 +1,7 @@
 . ${CONFIG:-config}
 
+export CC=clang
+
 rm -fr $ROOT/build/pycache/*
 
 
@@ -103,28 +105,7 @@ popd
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+unset CC
 
 
 
