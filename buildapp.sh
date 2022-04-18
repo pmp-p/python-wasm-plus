@@ -25,12 +25,7 @@ PLATFORM=$(realpath support/__EMSCRIPTEN__)
 # crosstools, aio and simulator
 CROSS=$(realpath support/cross)
 
-echo "
-TMPL=${TMPL}
-APK=${APK}
-site-packages=${PLATFORM}
-crosstoosl=${CROSS}
-"
+
 
 # clean up untested modules
 rm -fr $PREFIX/lib/python3.??/site-packages/*
@@ -39,8 +34,12 @@ touch $(echo -n $PREFIX/lib/python3.??/site-packages)/README.txt
 
 . scripts/emsdk-fetch.sh
 
+
+
 ALWAYS_ASSETS=$(realpath tests/assets)
 ALWAYS_CODE=$(realpath tests/code)
+
+
 
 
 LOPTS="-sMAIN_MODULE"
@@ -50,6 +49,8 @@ LOPTS="-sMAIN_MODULE"
 echo "  ************************************"
 if [ -f dev ]
 then
+    export COPTS="-O0 -g3 -fPIC"
+
     echo "       building DEBUG $COPTS"
     LOPTS="$LOPTS -s ASSERTIONS=0"
     # -gsource-map --source-map-base /"
@@ -69,10 +70,23 @@ ALWAYS_FS="$ALWAYS_FS --preload-file ${ALWAYS_ASSETS}@/data/data/org.python/asse
 
 
 echo "
+TMPL=${TMPL}
+APK=${APK}
+site-packages=${PLATFORM}
+crosstoosl=${CROSS}
+
+COPTS=$COPTS
+LOPTS=$LOPTS
+
+ALWAYS_ASSETS=$ALWAYS_ASSETS
+ALWAYS_CODE=$ALWAYS_CODE
 
     ALWAYS_FS=$ALWAYS_FS
 
+
 "
+
+
 
 
 # to trigger emscripten worker
