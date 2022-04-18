@@ -173,8 +173,9 @@ if defined('embed') and hasattr(embed,'readline'):
 
         @classmethod
         def ls(cls, *argv):
-            for out in os.listdir(*argv):
-                print(out)
+            for arg in argv:
+                for out in os.listdir(arg):
+                    print(out)
 
         @classmethod
         def pwd(cls, *argv):

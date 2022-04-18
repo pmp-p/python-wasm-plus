@@ -48,7 +48,8 @@ https://github.com/pygame/pygame/issues/718
 
 REQUIRED:
 
-    1 GNU/Linux system with clang, libffi-dev, git, patch, bash
+    1 GNU/Linux system with clang, git, libffi-dev, libssl dev (1.1.1), zlib1g-dev, patch, bash and make
+       for the simulator add sdl2-dev + sdl_* dev.
 
     everything else will be downloaded.
     includes emsdk , cpython , cython, pygame, various imaging lib ...

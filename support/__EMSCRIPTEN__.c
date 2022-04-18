@@ -625,7 +625,7 @@ EM_ASM({
     PyRun_SimpleString("import sys, os, json, builtins, shutil, time;");
     //# zipimport, tomlib
 
-
+/*
     if (1) {
         // display a nice six logo python-powered in xterm.js
         #define MAX 132
@@ -653,6 +653,9 @@ EM_ASM({
     PyRun_SimpleString(
 "print('CPython',sys.version, '\\n', file=sys.stderr);"
     );
+
+*/
+
 
     embed_flush(NULL,NULL);
 

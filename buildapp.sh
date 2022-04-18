@@ -200,7 +200,7 @@ mv -vf build/cpython-wasm/${MODE}.* build/${CN}/${EXE}/
 mv build/${CN}/${EXE}/*.map build/${CN}/
 
 
-if $GITHUB_ACTIONS
+if $CI
 then
     echo CI not running server
 else
