@@ -198,31 +198,37 @@ popd
 
 mv -vf build/cpython-wasm/${MODE}.* build/${CN}/${EXE}/
 mv build/${CN}/${EXE}/*.map build/${CN}/
-#mv build/${CN}/${EXE}/*.data build/${CN}/
-if [ -f build/${CN}/${EXE}/${MODE}.js ]
+
+
+if $GITHUB_ACTIONS
 then
-    echo "
-_______________________________________________________________________________
-
-Now running final app from [build/${CN}] :
- - beware files in worker/main subdirs overwritten each build, changes are lost
- - others are source files (hard/softlinks), changes impact the originals
-
-Threading system: $WORKER_STATUS
-_______________________________________________________________________________
-
-
-"
-
-    pushd build/${CN}
-    ${HOST_PREFIX}/bin/python3 server.py $@
-    popd
-
+    echo CI not running server
 else
-    echo "
 
-    build failed
+    if [ -f build/${CN}/${EXE}/${MODE}.js ]
+    then
+        echo "
+    _______________________________________________________________________________
+
+    Now running final app from [build/${CN}] :
+     - beware files in worker/main subdirs overwritten each build, changes are lost
+     - others are source files (hard/softlinks), changes impact the originals
+
+    Threading system: $WORKER_STATUS
+    _______________________________________________________________________________
+
 
     "
-fi
 
+        pushd build/${CN}
+        ${HOST_PREFIX}/bin/python3 server.py $@
+        popd
+
+    else
+        echo "
+
+        build failed
+
+        "
+    fi
+fi
