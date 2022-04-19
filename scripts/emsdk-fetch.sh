@@ -29,8 +29,8 @@ then
 "
         . emsdk/emsdk_env.sh 2>&1 > /dev/null
 
-
-        for py in 10 9 8 7 6 5
+        # 3.6 could have problems
+        for py in 10 9 8 7
         do
             if command -v python3.${py}
             then

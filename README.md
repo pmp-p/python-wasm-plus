@@ -40,13 +40,12 @@ ready to use:
 https://github.com/pmp-p/pygame-wasm/tree/pygame-wasm-upstream
 
 
-
 devlog:
 https://github.com/pygame/pygame/issues/718
 
 
 
-REQUIRED:
+***REQUIRED:***
 
     1 GNU/Linux system with clang, git, libffi-dev, libssl dev (1.1.1), zlib1g-dev, patch, bash and make
        for the simulator add sdl2-dev + sdl_* dev.
@@ -55,10 +54,14 @@ REQUIRED:
     includes emsdk , cpython , cython, pygame, various imaging lib ...
 
 
-TESTING:
+***TESTING:***
 
     # need a browser with wasm + WebGL, see https://developer.mozilla.org/en-US/docs/WebAssembly#browser_compatibility
     # ( on android kitkat please use Bromite release 81.0.4044.83 or chrome/firefox, the webview will NOT work )
+    chromium engine based browsers are faster and also impose some limitations so they are the common denominator for Wasm.
+    most of testing was made on current Brave browser on 64bits GNU/Linux.
+
+
 
     # (facultative you can use prebuilt) run :
 
@@ -78,19 +81,34 @@ TESTING:
 
     #enjoy a classic
 
-MANUAL:
-
-    mouse click first out of terminal, then onto canvas.
-    then move up/down with f,v keys.
+    #mouse click first out of terminal, then onto canvas.
+    # then move up/down with f,v keys.
 
 
-CREDITS:
+***USING GITHUB ACTIONS TO PUBLISH SOFTWARE:***
+
+add `support/__EMSCRIPTEN__.yml` to your `.github/workflows/` folder
+create a folder name `static` at base of your repo
+
+in that folder add `index.html`
+containing eg :
+
+`<html><a href=python311.html?org.python.myapp>My App</a></html>`
+
+and the main.py but as as the fully qualified domain name eg `org.python.myapp.py`
+
+After CI completed  ( expect a bit more than 30 minutes ) go to  `https://<yourname>.github.io/<repo>/`
+
+use ctrl+shift+i to see the wasm/js console while running your app.
+
+
+***CREDITS:***
 
     touchpong.py could be shareware so if you like it, send an expensive thank you
     to @blubberquark on Pygame Community discord ;)
 
 
-MORE?:
+***MORE?:***
 
     multithreaded version with online file access and dynamic code is still brewing
     feel free to contact me if you have interest in more than single threaded demos.

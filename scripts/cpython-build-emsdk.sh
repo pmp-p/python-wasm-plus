@@ -150,7 +150,17 @@ sed -i 's|-g0|-g3|g' $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_d
 
 cat > $HOST_PREFIX/bin/cc <<END
 #!/bin/bash
-
+unset _PYTHON_SYSCONFIGDATA_NAME
+unset PYTHONHOME
+unset PYTHONPATH
+for py in 10 9 8 7
+do
+    if command -v python3.${py}
+    then
+        export EMSDK_PYTHON=$(command -v python3.${py})
+        break
+    fi
+done
 if echo \$@|grep -q shared
 then
     # $COPTS
