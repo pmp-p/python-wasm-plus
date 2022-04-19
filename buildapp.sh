@@ -12,8 +12,9 @@ then
     mkdir -p $APK_DEFAULT
     pushd $APK_DEFAULT
     cp -Ru $ROOT/devices/x86_64/usr/lib/python3.?? ./
-    rm -rf ./python3.??/lib-dynload ./python3.??/site-packages ./python3.??/config-3*
+    rm -rf ./python3.??/lib-dynload/* ./python3.??/site-packages/* ./python3.??/config-*
     cp -vf $ROOT/devices/emsdk/usr/lib/python3.??/_sysconfigdata* ./python3.??/
+    cp -vRf $ROOT/devices/emsdk/usr/lib/python3.??/config-* ./python3.??/
     ../../scripts/re-pack-apk.sh demo
     popd
 else

@@ -543,6 +543,17 @@ main(int argc, char **argv)
        LOG_V("no 'dev/fd' directory, creating one ...");
     }
 
+
+    if (!mkdir("proc", 0700)) {
+       LOG_V("no 'proc' directory, creating one ...");
+    }
+    if (!mkdir("proc/self", 0700)) {
+       LOG_V("no 'proc/self' directory, creating one ...");
+    }
+    if (!mkdir("proc/self/fd", 0700)) {
+       LOG_V("no 'proc/self/fd' directory, creating one ...");
+    }
+
     if (!mkdir("tmp", 0700)) {
        LOG_V("no 'tmp' directory, creating one ...");
     }

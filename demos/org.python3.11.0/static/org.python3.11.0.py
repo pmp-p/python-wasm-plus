@@ -39,8 +39,22 @@ sys.exit = sys_exit
 
 def skip_list():
     SKIP = """
+test.test_sys.SysModuleTest.test_exit
 test.test_exceptions.ExceptionTests.testRaising
+test.test_sysconfig.TestSysConfig.test_get_config_h_filename
+
+test.test_uu.UUFileTest.test_decode_mode
+test.test_float.HexFloatTestCase.test_from_hex
+test.test_capi.SubinterpreterTest.test_module_state_shared_in_global
 test.test_cmath.CMathTests.test_specific_values
+
+
+test.test_zipfile.TestsWithMultipleOpens.test_many_opens
+test.test_zipfile.EncodedMetadataTests.test_cli_with_metadata_encoding
+test.test_zipfile.OtherTests.test_comments
+test.test_zipfile.StoredTestsWithSourceFile.test_add_file_before_1980
+
+
 test.test_bytes.BytesTest.test_from_format
 test.test_decimal.CWhitebox.test_maxcontext_exact_arith
 ctypes.test.test_as_parameter.AsParamPropertyWrapperTestCase.test_byval
@@ -248,27 +262,29 @@ def test(*argv):
 """
 
 
-
+    FAILS = []
 
     # those are fatal
-    FAILS = ["test_code"]
+    FAILS += ["test_code"]
+
+    # those are extremely slow and fail
+    FAILS += ["test_zipfile"]
 
 
     # known to fail
 
     for t in """
-test_builtin test_argparse test_capi test_cgi test_code_module
-test_dbm_dumb test_distutils test_ensurepip test_exceptions test_fileio
-test_float test_genericpath test_getpath test_importlib test_inspect
+test_builtin test_argparse test_cgi test_code_module
+test_dbm_dumb test_distutils test_ensurepip test_fileio
+test_genericpath test_getpath test_importlib test_inspect
 test_io test_mailbox test_mailcap test_math test_mimetypes test_multibytecodec
 test_netrc test_ntpath test_numeric_tower test_os test_pathlib test_pickle
 test_plistlib test_posix test_posixpath test_profile test_pydoc test_random
 test_rlcompleter test_sax test_shelve test_shutil test_signal test_stat
-test_strftime test_strtod test_sunau test_support test_sys test_sysconfig
-test_tarfile test_tempfile test_trace test_traceback test_tracemalloc
-test_unicode test_unicode_file_functions test_unittest test_univnewlines
-test_urllib test_uu test_warnings test_wave test_xml_etree test_zipapp
-test_zipfile test_zipimport
+test_strftime test_strtod test_sunau test_support test_sys test_tarfile
+test_tempfile test_trace test_traceback test_tracemalloc test_unicode
+test_unicode_file_functions test_unittest test_univnewlines test_urllib
+test_wave test_zipapp
 """.replace('\n',' ').split(' '):
         if t and not t in FAILS:
             FAILS.append(t)
@@ -289,10 +305,27 @@ test_zipfile test_zipimport
     asyncio.run( run_tests( tlist ) )
 
 
-#aio.defer( testv, ("test_exceptions",),{}, 500)
+if 0:
+    print("starting one verbose test")
+    aio.defer( testv, ("test_zipapp",),{}, 2000)
+else:
+    print(" - starting full testsuite in a few seconds -")
+    aio.defer( test, (),{}, 10000)
 
-print(" - starting full testsuite in a few seconds -")
-aio.defer( test, (),{}, 5000)
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
 
 
 
