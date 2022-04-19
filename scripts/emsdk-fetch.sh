@@ -18,7 +18,6 @@ then
             ./emsdk activate tot
             popd
         fi
-        tar xvf emsdk-fix.tar
     fi
 
 
@@ -71,6 +70,8 @@ then
             embuilder build $one
         done
         touch embuild.done
+        tar xvfp emsdk-fix.tar
+        sync
     fi
 
     if echo $PATH|grep -q $EMSDK/upstream/emscripten/system/bin
