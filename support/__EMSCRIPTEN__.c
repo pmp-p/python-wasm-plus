@@ -5,6 +5,8 @@ static void pymain_free(void);
 
 
 TODO:
+    solve pclinuxos:
+        import ctypes;ctypes.CFUNCTYPE(ctypes.c_int)(lambda: None)
 
     fpcast:
         https://github.com/pyodide/pyodide/pull/2019
@@ -536,6 +538,8 @@ main(int argc, char **argv)
         return 1;
     }
 
+    chdir("/");
+
     if (!mkdir("dev", 0700)) {
        LOG_V("no 'dev' directory, creating one ...");
     }
@@ -662,7 +666,6 @@ EM_ASM({
         SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, target);
 
 
-
 /* note for self : typical sdl2 init ( emscripten samples are sdl1 )
             SDL_CreateWindow("default", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, 0);
     window = SDL_CreateWindow("CheckKeys Test",
@@ -677,7 +680,7 @@ EM_ASM({
 
     }
 
-    chdir("/");
+
 
 /*
     sys.path.append('/assets/site-packages')

@@ -44,42 +44,63 @@ then
     mv $TEMP assets
 
     zip -r9 ${APK} . --exclude .git/\* -x .gitignore | wc -l
-    mv ../$APK-static static
+    sync
+    if du -hs ${APK}
+    then
+
+        mv ../$APK-static static
 
 
-    mv assets ./$TEMP/
-    mv ./$TEMP/* ./
-    rmdir ./$TEMP
+        mv assets ./$TEMP/
+        mv ./$TEMP/* ./
+        rmdir ./$TEMP
 
-    cat > static/$CN.html <<END
-    <html>
-    <pre>
-    Github: <a href="$CREDITS_GH">$CREDITS_GH</a>
+        cat > static/$CN.html <<END
+        <html>
+        <pre>
+        Github: <a href="$CREDITS_GH">$CREDITS_GH</a>
 END
 
 
-    if [ -d .git ]
-    then
-        git status 2>&1 |grep -v \(use |grep -v ^$|grep -v :$|\
-            grep -v ^Your |grep -v ^On | grep -v apk$ |grep -v static/ >> static/$CN.html
+        if [ -d .git ]
+        then
+            git status 2>&1 |grep -v \(use |grep -v ^$|grep -v :$|\
+                grep -v ^Your |grep -v ^On | grep -v apk$ |grep -v static/ >> static/$CN.html
+        else
+            cat package.toml >> static/$CN.html
+        fi
+
+        cat >> static/$CN.html <<END
+        </pre>
+        </html>
+END
+
+        if [ -f inline.html ]
+        then
+            cat inline.html >> static/$CN.html
+        fi
+
+
+        mv $APK ../../build/$WEB/
+        ln static/* ../../build/$WEB/
+        sync
     else
-        cat package.toml >> static/$CN.html
+        echo "
+
+
+        *****************************************************************************
+
+
+
+
+                ZIP failure at $(pwd) for ${APK}
+
+
+
+
+        *****************************************************************************
+"
     fi
-
-    cat >> static/$CN.html <<END
-    </pre>
-    </html>
-END
-
-    if [ -f inline.html ]
-    then
-        cat inline.html >> static/$CN.html
-    fi
-
-
-    ln $APK ../../build/$WEB/
-    ln static/* ../../build/$WEB/
-
 else
     echo "no folder 'static' found, Are you in app folder ?"
 fi
