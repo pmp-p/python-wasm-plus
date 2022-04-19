@@ -90,12 +90,15 @@ https://github.com/pygame/pygame/issues/718
 add `support/__EMSCRIPTEN__.yml` to your `.github/workflows/` folder
 create a folder name `static` at base of your repo
 
-in that folder add `index.html`
+in that folder add `static/index.html`
 containing eg :
 
 `<html><a href=python311.html?org.python.myapp>My App</a></html>`
 
-and the main.py but as as the fully qualified domain name eg `org.python.myapp.py`
+and the main.py but as as the fully qualified domain name eg `static/org.python.myapp.py`
+
+everything in the "static" folder will be accessible as single files for the webserver, everything else will go
+inside folder "assets" in the apk zip file named after fqdn eg here `org.python.myapp.apk` .
 
 After CI completed  ( expect a bit more than 30 minutes ) go to  `https://<yourname>.github.io/<repo>/`
 

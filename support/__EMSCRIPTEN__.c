@@ -43,9 +43,12 @@ TODO:
     size:
         keep .py but remove docstrings. use only minimal files in .data
 
-    virtual kbd
+    virtual kbd / gamepad
         https://github.com/emscripten-ports/SDL2/issues/80
         https://www.beuc.net/tmp/ti1.html
+
+        https://greggman.github.io/html5-gamepad-test/
+
 
     display:
         osmesa / tinygl / tinygles / angle
@@ -80,8 +83,6 @@ TODO:
 
     tools:
         https://github.com/petersalomonsen/wasm-git
-
-        https://greggman.github.io/html5-gamepad-test/
 
 
     bookmarks:
