@@ -26,7 +26,7 @@ then
     pushd build/cpython-host
 
 
-    export OPT="$COPTS -DNDEBUG -fwrapv"
+    export OPT="$CPOPTS -DNDEBUG -fwrapv"
 
     PYOPTS="--with-c-locale-coercion --disable-ipv6 \
      --without-pymalloc --without-pydebug \

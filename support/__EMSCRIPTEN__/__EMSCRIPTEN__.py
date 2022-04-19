@@ -215,6 +215,78 @@ def init_platform(embed):
 
 
 
+
+
+def explore(pushpopd, newpath):
+    global prelist, preloadedWasm, preloadedImages, preloadedAudios, counter
+
+    import shutil
+
+    if newpath.endswith(".git"):
+        return
+
+    for dirname, dirnames, filenames in os.walk(newpath):
+        try:
+            os.chdir(dirname)
+            # print(f"\nNow in {os.getcwd()[LSRC:] or '.'}")
+
+        except:
+            print("Invalid Folder :", pushpopd, newpath)
+
+        for f in filenames:
+            if not os.path.isfile(f):
+                continue
+
+            ext = f.rsplit(".", 1)[-1].lower()
+
+            if (
+                ext.lower()
+                not in f"{preloadedImages} {preloadedAudios} {preloadedWasm}"
+            ):
+                continue
+
+            src = os.path.join(os.getcwd(), f)
+            dst = "/tmp/pre" + str(counter).zfill(4) + "." + ext
+            shutil.copyfile(src, dst)
+            prelist[src] = dst
+            embed.preload(dst)
+            counter += 1
+
+        for subdir in dirnames:
+            explore(os.getcwd(), subdir)
+
+    os.chdir(pushpopd)
+
+
+
+def fix_preload_table():
+    global prelist, preloadedWasm, preloadedImages, preloadedAudios
+
+    if embed.counter() < 0:
+        pdb("asset manager not ready 0>", embed.counter())
+        aio.defer(fix_preload_table, deadline=60)
+    else:
+        pdb("all assets were ready at", embed.counter())
+
+    for (
+        src,
+        dst,
+    ) in prelist.items():
+        ext = dst.rsplit(".", 1)[-1]
+        if ext in preloadedImages:
+            ptype = "preloadedImages"
+        elif ext in preloadedAudios:
+            ptype = "preloadedAudios"
+        elif ext == "so":
+            ptype = "preloadedWasm"
+
+        src = f"{ptype}[{repr(src)}]"
+        dst = f"{ptype}[{repr(dst)}]"
+        swap = f"({src}={dst}) && delete {dst}"
+        embed.js(swap, -1)
+        # print(swap)
+
+
 def PyConfig_InitPythonConfig(PyConfig):
     global preloadedWasm, preloadedImages, preloadedAudios
 
@@ -230,14 +302,13 @@ def PyConfig_InitPythonConfig(PyConfig):
 
     sys.executable = PyConfig["executable"]
 
-    import shutil
-
     preloadedWasm = "so"
     preloadedImages = "png jpeg jpg gif"
     preloadedAudios = "wav ogg mp4"
 
-    def preload(p=None):
-        global preload, prelist, ROOTDIR, preloadedWasm, preloadedImages, preloadedAudios
+    def preload_apk(p=None):
+        global counter, prelist, ROOTDIR
+        global explore, preloadedWasm, preloadedImages, preloadedAudios
         ROOTDIR = p or f"/data/data/{sys.argv[0]}"
         if os.path.isdir(ROOTDIR):
             os.chdir(ROOTDIR)
@@ -250,45 +321,6 @@ def PyConfig_InitPythonConfig(PyConfig):
         counter = 0
         prelist = {}
 
-        def explore(pushpopd, newpath):
-            global prelist, preloadedWasm, preloadedImages, preloadedAudios
-            nonlocal counter
-
-            if newpath.endswith(".git"):
-                return
-
-            for dirname, dirnames, filenames in os.walk(newpath):
-                try:
-                    os.chdir(dirname)
-                    # print(f"\nNow in {os.getcwd()[LSRC:] or '.'}")
-
-                except:
-                    print("Invalid Folder :", pushpopd, newpath)
-
-                for f in filenames:
-                    if not os.path.isfile(f):
-                        continue
-
-                    ext = f.rsplit(".", 1)[-1].lower()
-
-                    if (
-                        ext.lower()
-                        not in f"{preloadedImages} {preloadedAudios} {preloadedWasm}"
-                    ):
-                        continue
-
-                    src = os.path.join(os.getcwd(), f)
-                    dst = "/tmp/pre" + str(counter).zfill(4) + "." + ext
-                    shutil.copyfile(src, dst)
-                    prelist[src] = dst
-                    embed.preload(dst)
-                    counter += 1
-
-                for subdir in dirnames:
-                    explore(os.getcwd(), subdir)
-
-            os.chdir(pushpopd)
-
         if os.path.isdir("assets"):
             explore(ROOTDIR, "assets")
             os.chdir(f"{ROOTDIR}/assets")
@@ -298,7 +330,9 @@ def PyConfig_InitPythonConfig(PyConfig):
             embed.run()
 
         sys.path.insert(0, os.getcwd())
+
         return True
+
 
     import aio.clock
 
@@ -307,34 +341,11 @@ def PyConfig_InitPythonConfig(PyConfig):
 
     # org.python no preload !
 
-    if (sys.argv[0] != 'org.python') and preload():
+    if (sys.argv[0] != 'org.python') and preload_apk():
 
-        def fix_preload_table():
-            global aio, prelist, preloadedWasm, preloadedImages, preloadedAudios
-
-            if embed.counter() < 0:
-                pdb("asset manager not ready 0>", embed.counter())
-                aio.defer(fix_preload_table, deadline=60)
-            else:
-                pdb("all assets were ready at", embed.counter())
-
-            for (
-                src,
-                dst,
-            ) in prelist.items():
-                ext = dst.rsplit(".", 1)[-1]
-                if ext in preloadedImages:
-                    ptype = "preloadedImages"
-                elif ext in preloadedAudios:
-                    ptype = "preloadedAudios"
-                elif ext == "so":
-                    ptype = "preloadedWasm"
-
-                src = f"{ptype}[{repr(src)}]"
-                dst = f"{ptype}[{repr(dst)}]"
-                swap = f"({src}={dst}) && delete {dst}"
-                embed.js(swap, -1)
-                # print(swap)
+        def fix_preload_table_apk():
+            global fix_preload_table
+            fix_preload_table()
 
             if os.path.isfile("main.py"):
                 def runmain(py):
@@ -352,15 +363,50 @@ def PyConfig_InitPythonConfig(PyConfig):
             aio.defer(embed.prompt,(),{},200)
 
         # C should unlock aio loop when preload count reach 0.
-        aio.defer(fix_preload_table, deadline=60)
 
     else:
-        def fix_preload_table():
+        def fix_preload_table_apk():
+            global fix_preload_table_apk
             pdb("no assets preloaded")
+            aio.defer(embed.prompt)
 
+        # unlock embed looper because no preloading
         embed.run()
-        aio.defer(embed.prompt)
 
+    aio.defer(fix_preload_table_apk, deadline=60)
 
     # go pods !
     aio.started = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#

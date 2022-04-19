@@ -311,7 +311,6 @@ embed_get_sdl_version(PyObject *self, PyObject *_null)
 
 
 static PyMethodDef mod_embed_methods[] = {
-    //{"get_sdl_version", embed_get_sdl_version, METH_VARARGS, "get_sdl_version"},
     {"run", (PyCFunction)embed_run, METH_VARARGS | METH_KEYWORDS, "start aio stepping"},
     {"dlopen", (PyCFunction)embed_dlopen, METH_VARARGS | METH_KEYWORDS, ""},
     {"dlcall", (PyCFunction)embed_dlcall, METH_VARARGS | METH_KEYWORDS, ""},
@@ -458,22 +457,8 @@ main_iteration(void) {
 
             }
 
-// TODO: raw mode auto flush
-        //fprintf( stdout, "%c", 4);
-        //fprintf( stderr, "%c", 4);
+        // TODO: raw mode auto flush
 
-/*
-            PyRun_SimpleString(
-                "print(chr(4),file=sys.__stdout__);"
-                "print(chr(4),file=sys.__stderr__);"
-                "sys.__stdout__.flush();"
-                "sys.__stderr__.flush()\n"
-            );
-
-*/
-
-//            if (i>20)
-  //              wa_break;
         }
     } else {
 
@@ -505,10 +490,6 @@ PyInit__chipmunk(void);
 
 
 */
-
-
-
-
 
 
 

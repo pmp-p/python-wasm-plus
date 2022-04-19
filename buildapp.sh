@@ -6,7 +6,7 @@ reset
 EXE=python311
 
 # web application template
-TMPL=${1:- templates/no-worker-fs}
+TMPL=${1:- templates/no-worker}
 TMPL=$(realpath $TMPL)
 shift
 
@@ -167,7 +167,7 @@ pushd build/cpython-wasm
 # gnu99 not c99 for EM_ASM() js calls functions.
 
 emcc -D__PYDK__=1 -DNDEBUG\
- -c -fwrapv -Wall -fPIC $COPTS -std=gnu99 -Werror=implicit-function-declaration -fvisibility=hidden\
+ -c -fwrapv -Wall -fPIC $CPOPTS -std=gnu99 -Werror=implicit-function-declaration -fvisibility=hidden\
  -I$ROOT/src/cpython/Include/internal -IObjects -IInclude -IPython -I. -I$ROOT/src/cpython/Include -DPy_BUILD_CORE\
  -o Programs/${MODE}.o $ROOT/src/cpython/Programs/python.c
 

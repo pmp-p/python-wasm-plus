@@ -86,18 +86,19 @@ else
 
 
 
-
     mkdir -p build/cpython-wasm $PREFIX
     pushd build/cpython-wasm
 
 #     --with-tzpath="/usr/share/zoneinfo" \
 
+    export EMCC_CFLAGS="$CPOPTS"
 
-    export OPT="$COPTS -DNDEBUG -fwrapv"
+    export OPT="$CPOPTS -DNDEBUG -fwrapv"
 
     CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten OPT="$OPT" \
   eval emconfigure $ROOT/src/cpython/configure  -C --without-pymalloc --disable-ipv6 \
     --cache-file=${PYTHONPYCACHEPREFIX}/config.cache \
+    --with-c-locale-coercion --without-pydebug \
     --enable-wasm-dynamic-linking \
     --host=$PYDK_PYTHON_HOST_PLATFORM \
     --build=$($ROOT/src/cpython/config.guess) \
@@ -153,10 +154,10 @@ cat > $HOST_PREFIX/bin/cc <<END
 if echo \$@|grep -q shared
 then
     # $COPTS
-    emcc -O0 -g3 -fPIC -sSIDE_MODULE -gsource-map --source-map-base / \$@
+    emcc $COPTS -sSIDE_MODULE -gsource-map --source-map-base / \$@
 else
     # $COPTS
-    emcc -O0 -g3 -fPIC -DBUILD_STATIC \$@
+    emcc $COPTS -DBUILD_STATIC \$@
 fi
 END
 

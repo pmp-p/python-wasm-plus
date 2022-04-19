@@ -11,7 +11,7 @@ FS=$PYTHONPYCACHEPREFIX/fs
 
 $HPY -v <<END 2>&1 |grep py$ > $FS
 import sys, os, json, builtins, shutil, zipimport, tomllib, time
-import trace, traceback, asyncio, inspect, _thread
+import trace, traceback, asyncio, inspect, _thread, importlib
 sys.stdout.reconfigure(encoding='utf-16')
 import ctypes
 #pymunk4

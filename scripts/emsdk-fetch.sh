@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# missing version.h ?
-# cat upstream/emscripten/cache/sysroot/include/emscripten/version.h
-# > upstream/emscripten/system/include/emscripten/version.h
-
 if [[ -z ${EMSDK+z} ]]
 then
 

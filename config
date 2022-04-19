@@ -12,9 +12,12 @@ export PIP=$(echo -n ${HOST_PREFIX}/bin/pip3.??)
 
 export CI=${CI:-false}
 
+# cpython build opts
+export CPOPTS="-Os -g0 -fPIC"
+
 if [ -f dev ]
 then
-    export COPTS="-Os -g0 -fPIC"
+    export COPTS="-O0 -g3 -fPIC"
     export VERBOSE=""
 else
     export COPTS="-Os -g0 -fPIC"
