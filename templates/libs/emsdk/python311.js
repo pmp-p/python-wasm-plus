@@ -184,20 +184,20 @@ readline.complete = function (line) {
 
 export class WasmTerminal {
 
-  constructor() {
+  constructor(hostid, cols, rows) {
     this.input = ''
     this.resolveInput = null
     this.activeInput = true
     this.inputStartCursor = null
 
     this.xterm = new Terminal(
-      { scrollback: 10000, fontSize: 14, theme: { background: '#1a1c1f' }, cols: 100}
+      { scrollback: 10000, fontSize: 14, theme: { background: '#1a1c1f' }, cols: (cols || 100), rows: (rows || 25) }
     );
 
     const imageAddon = new ImageAddon.ImageAddon("./xtermjsixel/xterm-addon-image-worker.js", {sixelSupport: true});
 
     this.xterm.loadAddon(imageAddon);
-    this.xterm.open(document.getElementById('terminal'))
+    this.xterm.open(document.getElementById(hostid || 'terminal'))
 
     // hack to hide scrollbar inside box
     document.getElementsByClassName('xterm-viewport')[0].style.left="-15px"

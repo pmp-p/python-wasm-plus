@@ -71,7 +71,15 @@
       <progress value="0" max="100" id="progress" hidden=1></progress>
     </div>
 
-    <!-- <div class="thick_border" align=center > -->
+
+    <div id="terminal" tabIndex=1><p></div>
+    <div class="button-container">
+      VT340
+      <button id="repl" disabled>Start REPL</button>
+      <button id="clearvt" disabled>Clear</button>
+      &nbsp;
+    </div>
+
         <div class="emscripten_border" align=center >
             <canvas class="emscripten" id="canvas"
 width="800px" height="600px"
@@ -86,16 +94,6 @@ style="width: 576px; height: 432px;"
                 &nbsp;
             </div>
 
-        </div>
-
-        <div class="emscripten_border">
-            <div id="terminal" tabIndex=1><p></div>
-            <div class="button-container">
-              VT340
-              <button id="repl" disabled>Start REPL</button>
-              <button id="clearvt" disabled>Clear</button>
-              &nbsp;
-            </div>
         </div>
 
         <div id=info class=topright style="width: 640px;height=100px;">
@@ -308,7 +306,7 @@ ${pycode}
             wasmterm = { print : console.log, sixel : function(){}}
         } else {
             // it uses  document.getElementById('terminal') to get its host
-            wasmterm = new WasmTerminal( document.getElementById('terminal') )
+            wasmterm = new WasmTerminal( 'terminal', 132, 50 )
 
             window.xterm = wasmterm.xterm
 

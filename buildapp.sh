@@ -10,8 +10,23 @@ TMPL=${1:- templates/no-worker}
 TMPL=$(realpath $TMPL)
 shift
 
+if $CI
+then
+    APK_DEFAULT="demos/org.python.3.11.0"
+    mkdir -p $APK_DEFAULT
+    pushd $APK_DEFAULT
+
+
+
+    popd
+else
+    APK_DEFAULT="demos/1-touchpong"
+fi
+
 # source code + assets of app
-APK=${1:-demos/1-touchpong}
+APK=${1:-$APK_DEFAULT}
+
+
 APK=$(realpath $APK)
 shift
 

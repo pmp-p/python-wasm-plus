@@ -99,7 +99,7 @@ else
   eval emconfigure $ROOT/src/cpython/configure  -C --without-pymalloc --disable-ipv6 \
     --cache-file=${PYTHONPYCACHEPREFIX}/config.cache \
     --with-c-locale-coercion --without-pydebug \
-    --enable-wasm-dynamic-linking \
+    --enable-wasm-dynamic-linking --enable-test-modules\
     --host=$PYDK_PYTHON_HOST_PLATFORM \
     --build=$($ROOT/src/cpython/config.guess) \
     --with-emscripten-target=browser \
