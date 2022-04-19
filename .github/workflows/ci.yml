@@ -21,12 +21,20 @@ jobs:
             grep "^Pkg.Revision =" ${ANDROID_HOME}/ndk-bundle/source.properties
             sudo apt-get update
             sudo apt-get install bash wget
-            cd /home/runner/work/python-wasm-plus/python-wasm-plus
+            cd $GITHUB_WORKSPACE
             echo adding emscripten support
             git clone https://github.com/emscripten-core/emsdk.git
             cd emsdk && ./emsdk install tot && ./emsdk activate tot
-            cd /home/runner/work/python-wasm-plus/python-wasm-plus
+            cd $GITHUB_WORKSPACE
             echo " === Building  ===="
             time bash ./python-wasm-plus.sh
             time bash ./buildapp.sh
+            cd $GITHUB_WORKSPACE
+            mv build/demo $GITHUB_WORKSPACE/
+            du -hs demo/*
 
+    - name : "Upload to GitHub pages"
+      uses: JamesIves/github-pages-deploy-action@4.1.7
+      with:
+        branch: gh-pages
+        folder: demo

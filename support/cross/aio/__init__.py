@@ -113,12 +113,12 @@ asyncio.events._set_running_loop(loop)
 sys.modules["asyncio"] = __import__(__name__)
 
 
-def defer(fn, argv=(), kw={}, deadline=0):
+def defer(fn, argv=(), kw={}, deadline=0, framerate=60):
     global ticks, oneshots
     # FIXME: set ticks + deadline for alarm
     oneshots.append(
         [
-            ticks + deadline,
+            ticks + int(deadline/framerate),
             fn,
             argv,
             kw,

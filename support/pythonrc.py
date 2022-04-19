@@ -272,25 +272,4 @@ random.seed(1)
 #======================================================
 
 
-if __WASM__:
-    if 0:
-        from cffi import FFI
-        ffi = FFI()
-
-    if  0:
-        print("===================== TEST ===================", __file__)
-
-        def test():
-            print("i'm a test")
-
-        open('/fic','w').write( b'\xe2\x94\x8c\xe2\x94\x80\xe2\x94\x90'.decode() + "\n" )
-
-
-        data = b'\xe2\x94\x8c\xe2\x94\x80\xe2\x94\x90'
-        txt = data.decode('UTF-8')
-        print( data )
-        print(txt)
-        # "┌─┐"
-
-
 #

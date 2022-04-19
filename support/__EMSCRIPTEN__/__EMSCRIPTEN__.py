@@ -360,7 +360,7 @@ def PyConfig_InitPythonConfig(PyConfig):
             else:
                 pdb(f"no main found for {sys.argv[0]}")
 
-            aio.defer(embed.prompt,(),{},200)
+            aio.defer(embed.prompt,(),{},2000)
 
         # C should unlock aio loop when preload count reach 0.
 
@@ -373,7 +373,7 @@ def PyConfig_InitPythonConfig(PyConfig):
         # unlock embed looper because no preloading
         embed.run()
 
-    aio.defer(fix_preload_table_apk, deadline=60)
+    aio.defer(fix_preload_table_apk, deadline=1000)
 
     # go pods !
     aio.started = True

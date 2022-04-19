@@ -5,41 +5,45 @@ reset
 
 EXE=python311
 
-# web application template
-TMPL=${1:- templates/no-worker}
-TMPL=$(realpath $TMPL)
-shift
-
 if $CI
 then
-    APK_DEFAULT="demos/org.python.3.11.0"
+    TMPL_DEFAULT="templates/no-worker"
+    APK_DEFAULT="demos/org.python3.11.0"
     mkdir -p $APK_DEFAULT
     pushd $APK_DEFAULT
-
-
-
+    cp -Ru $ROOT/devices/x86_64/usr/lib/python3.?? ./
+    rm -rf ./python3.??/lib-dynload ./python3.??/site-packages ./python3.??/config-3*
+    cp -vf $ROOT/devices/emsdk/usr/lib/python3.??/_sysconfigdata* ./python3.??/
+    ../../scripts/re-pack-apk.sh demo
     popd
 else
     APK_DEFAULT="demos/1-touchpong"
+    TMPL_DEFAULT="templates/no-worker-fs"
 fi
+
+
+# web application template
+TMPL=${1:-$TMPL_DEFAULT}
+shift
 
 # source code + assets of app
 APK=${1:-$APK_DEFAULT}
-
-
-APK=$(realpath $APK)
 shift
 
 # final app name in build folder
 CN=${1:-demo}
 shift
 
+
+TMPL=$(realpath $TMPL)
+APK=$(realpath $APK)
+
+
 # plat stdlib
 PLATFORM=$(realpath support/__EMSCRIPTEN__)
 
 # crosstools, aio and simulator
 CROSS=$(realpath support/cross)
-
 
 
 # clean up untested modules
