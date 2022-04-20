@@ -5,8 +5,10 @@ reset
 
 EXE=python311
 
-if $CI
+# check if initial repo
+if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus/
 then
+    # in this special case build testsuite
     TMPL_DEFAULT="templates/no-worker"
     APK_DEFAULT="demos/org.python3.11.0"
     mkdir -p $APK_DEFAULT
@@ -15,7 +17,6 @@ then
     rm -rf ./python3.??/lib-dynload/* ./python3.??/site-packages/* ./python3.??/config-*
     cp -vf $ROOT/devices/emsdk/usr/lib/python3.??/_sysconfigdata* ./python3.??/
     cp -vRf $ROOT/devices/emsdk/usr/lib/python3.??/config-* ./python3.??/
-    ../../scripts/re-pack-apk.sh demo
     popd
 else
     APK_DEFAULT="demos/1-touchpong"
@@ -219,6 +220,10 @@ popd
 mv -vf build/cpython-wasm/${MODE}.* build/${CN}/${EXE}/
 mv build/${CN}/${EXE}/*.map build/${CN}/
 
+
+pushd $APK
+../../scripts/re-pack-apk.sh demo
+popd
 
 if $CI
 then
