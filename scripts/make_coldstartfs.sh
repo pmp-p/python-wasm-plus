@@ -15,7 +15,14 @@ import trace, traceback, asyncio, inspect, _thread, importlib
 sys.stdout.reconfigure(encoding='utf-16')
 import ctypes
 #pymunk4
-import imp, platform
+import imp
+#pymunk4 ( but really not usefull)
+import platform
+
+#numpy
+import pathlib
+
+
 #pymunk6
 import numbers, random
 #pymunk tests

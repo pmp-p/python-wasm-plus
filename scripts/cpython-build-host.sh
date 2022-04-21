@@ -26,12 +26,11 @@ then
     pushd build/cpython-host
 
 
-    export OPT="$CPOPTS -DNDEBUG -fwrapv"
-
-    PYOPTS="--with-c-locale-coercion --disable-ipv6 \
-     --without-pymalloc --without-pydebug \
+#export OPT="$CPOPTS -DNDEBUG -fwrapv"
+    PYOPTS="--disable-ipv6 \
+     --with-c-locale-coercion --without-pymalloc --without-pydebug \
      --with-ensurepip\
-     --with-decimal-contextvar --enable-shared \
+     --with-decimal-contextvar --disable-shared \
      --with-computed-gotos"
 
     # Prevent freezing bytecode with a different magic
@@ -40,7 +39,6 @@ then
     if which python3.11|grep -q python
     then
         echo "
-
 
 
     ===================================================================================
@@ -54,20 +52,15 @@ then
         sleep 3
     fi
 
-    # CFLAGS="-DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1"
+# OPT="$OPT"
 
     if \
-    CC=clang CXX=clang++ OPT="$OPT" \
+    CC=clang CXX=clang++ CFLAGS="-DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1" \
     eval ${ROOT}/src/cpython/configure \
      --prefix=$HOST_PREFIX $PYOPTS $VERBOSE
     then
         eval make -j$(nproc) install $VERBOSE
         rm -rf $(find $ROOT/devices/ -type d|grep __pycache__$)
-
-        #2>&1 \
-         #|grep --line-buffered -v ^Compiling\
-         #|grep --line-buffered -v ^Listing\
-         #|grep --line-buffered -v ^install
 
         cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/. $HOST_PREFIX/lib/python3.??/
     else

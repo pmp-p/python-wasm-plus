@@ -53,7 +53,7 @@ else
 
     export EMCC_CFLAGS="$COPTS"
 
-     CFLAGS="$COPTS"\
+     CFLAGS="$COPTS" \
       emconfigure $ROOT/src/libffi/configure --host=wasm32-tot-linux\
       --prefix=$PREFIX --enable-static --disable-shared --disable-dependency-tracking\
       --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs\
@@ -103,7 +103,8 @@ else
 
     export OPT="$CPOPTS -DNDEBUG -fwrapv"
 
-    CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten OPT="$OPT" \
+    CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten\
+    OPT="$OPT" CFLAGS="-DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1" \
     eval emconfigure $ROOT/src/cpython/configure -C --without-pymalloc --disable-ipv6 \
      --cache-file=${PYTHONPYCACHEPREFIX}/config.cache \
      --with-c-locale-coercion --without-pydebug \
