@@ -19,6 +19,7 @@ APK=$APK
 
 Web Service Folder : $WEB
 
+assets folder: $(pwd)
 
 CREDITS:
     GH $CREDITS_GH
@@ -26,7 +27,6 @@ CREDITS:
 "
 
 export TEMP=some_name_no_one_would_choose
-
 
 
 if [ -d static ]

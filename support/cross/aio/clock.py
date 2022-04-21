@@ -34,7 +34,7 @@ def step(x=70, y=0, z=2):
 
     with tui() as print:
         # draw a clock
-        t = "%2d:%2d:%2d ☢ 99%% " % time.localtime()[3:6]
+        t = "%02d:%02d:%02d ☢ 99%% " % time.localtime()[3:6]
         box(t, x=x, y=y, z=z)
 
 

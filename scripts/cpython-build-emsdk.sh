@@ -72,6 +72,14 @@ echo "
 "
 fi
 
+# in this special case build testsuite
+if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus/
+then
+    TESTSUITE="--enable-test-modules"
+else
+    TESTSUITE=""
+fi
+
 
 if [ -f build/cpython-wasm/libpython3.??.a ]
 then
@@ -96,25 +104,25 @@ else
     export OPT="$CPOPTS -DNDEBUG -fwrapv"
 
     CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten OPT="$OPT" \
-  eval emconfigure $ROOT/src/cpython/configure  -C --without-pymalloc --disable-ipv6 \
-    --cache-file=${PYTHONPYCACHEPREFIX}/config.cache \
-    --with-c-locale-coercion --without-pydebug \
-    --enable-wasm-dynamic-linking --enable-test-modules\
-    --host=$PYDK_PYTHON_HOST_PLATFORM \
-    --build=$($ROOT/src/cpython/config.guess) \
-    --with-emscripten-target=browser \
-    --prefix=$PREFIX \
-    --with-build-python=${PYTHON_FOR_BUILD} $VERBOSE
+    eval emconfigure $ROOT/src/cpython/configure -C --without-pymalloc --disable-ipv6 \
+     --cache-file=${PYTHONPYCACHEPREFIX}/config.cache \
+     --with-c-locale-coercion --without-pydebug \
+     --enable-wasm-dynamic-linking $TESTSUITE\
+     --host=$PYDK_PYTHON_HOST_PLATFORM \
+     --build=$($ROOT/src/cpython/config.guess) \
+     --with-emscripten-target=browser \
+     --prefix=$PREFIX \
+     --with-build-python=${PYTHON_FOR_BUILD} $VERBOSE
 
-
-    EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" eval emmake make -j$(nproc) $VERBOSE
-    EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" eval emmake make install $VERBOSE
+    if EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" eval emmake make -j$(nproc) $VERBOSE
+    then
+        EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" eval emmake make install $VERBOSE
+    else
+        echo " **** cpython wasm build failed *** "
+        exit 1
+    fi
 
     rm -rf $(find $ROOT/devices/ -type d|grep __pycache__$)
-#    2>&1 \
-#     |grep --line-buffered -v ^Compiling\
-#     |grep --line-buffered -v ^Listing\
-#     |grep --line-buffered -v ^install
 
     popd
 

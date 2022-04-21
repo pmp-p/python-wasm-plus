@@ -1,5 +1,12 @@
 . ${CONFIG:-config}
 
+# https://stackoverflow.com/questions/6301003/stopping-setup-py-from-installing-as-egg
+
+# python3 setup.py install --single-version-externally-managed --root=/
+
+# pip install .
+
+
 export CC=clang
 
 rm -fr $ROOT/build/pycache/*

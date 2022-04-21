@@ -18,8 +18,11 @@ export PYTHONPYCACHEPREFIX="$(realpath build/pycache)"
 ./scripts/emsdk-fetch.sh
 
 # use ./ or emsdk will pollute env
-
-./scripts/cpython-build-emsdk.sh
-./scripts/pygame-all.sh
+if ./scripts/cpython-build-emsdk.sh
+then
+    ./scripts/pygame-all.sh
+else
+    echo " cpython-build-emsdk failed"
+fi
 
 echo done

@@ -15,6 +15,7 @@ export CI=${CI:-false}
 # cpython build opts
 export CPOPTS="-Os -g0 -fPIC"
 
+# module build opts
 if [ -f dev ]
 then
     export COPTS="-O0 -g3 -fPIC"
@@ -25,7 +26,7 @@ else
 fi
 
 #stable
-EMFLAVOUR=latest
+# EMFLAVOUR=latest
 #git
 EMFLAVOUR=tot
 

@@ -20,58 +20,6 @@ if not defined("__WASM__"):
 # those can
 
 
-if sys.platform == "emscripten":
-    platform = defined("__EMSCRIPTEN__")
-    if not platform:
-        print("importing platform __EMSCRIPTEN__")
-        try:
-            import __EMSCRIPTEN__ as platform
-        except Exception as e:
-            if hasattr(sys, "print_exception"):
-                sys.print_exception(e)
-            else:
-                __import__("traceback").print_exc()
-
-            pdb("__EMSCRIPTEN__ faild to load, assuming simulator instead of error :")
-            del platform
-
-            # fake it
-            platform == __import__("__main__")
-        define("__EMSCRIPTEN__", platform)
-
-    driver = defined("embed")
-    try:
-        if not driver:
-            import embed as driver
-
-            print("platform embedding module driver :", driver)
-    except:
-        # use the simulator defined platform value as the embed.
-        driver = platform
-
-    # just in case it was not a module
-    sys.modules.setdefault("embed", driver)
-
-    try:
-        # check it the embedding module was finished for that platform.
-        # the least shoulbe syslog ( js console / adb logcat )
-        driver.log
-    except:
-        pdb(
-            """\
-WARNING: embed softrt/syslog functions not found
-WARNING: also not in __main__ or simulator provided platform module
-"""
-        )
-        driver.enable_irq = print
-        driver.disable_irq = print
-        driver.log = print
-
-    define("embed", driver)
-
-    platform.init_platform(driver)
-
-
 if not defined("__wasi__"):
     if __import__("sys").platform in ["wasi"]:
         import __wasi__
@@ -89,6 +37,106 @@ if not defined("__wasi__"):
 
     sys.print_exception = print_exception
     del print_exception
+
+
+# this *is* the cpython way
+if hasattr(sys, "getandroidapilevel"):
+    platform = defined("__ANDROID__")
+    if not platform:
+        print("importing platform __ANDROID__")
+        try:
+            import __ANDROID__ as platform
+        except Exception as e:
+            if hasattr(sys, "print_exception"):
+                sys.print_exception(e)
+            else:
+                __import__("traceback").print_exc()
+
+            pdb("__ANDROID__ failed to load, assuming simulator instead of error :")
+            del platform
+
+            # fake it
+            platform == __import__("__main__")
+        define("__ANDROID__", platform)
+    try:
+        __ANDROID_API__
+    except:
+        defined("__ANDROID_API__", sys.getandroidapilevel())
+
+
+
+if sys.platform == "emscripten":
+    platform = defined("__EMSCRIPTEN__")
+    if not platform:
+        print("importing platform __EMSCRIPTEN__")
+        try:
+            import __EMSCRIPTEN__ as platform
+        except Exception as e:
+            if hasattr(sys, "print_exception"):
+                sys.print_exception(e)
+            else:
+                __import__("traceback").print_exc()
+
+            pdb("__EMSCRIPTEN__ failed to load, assuming simulator instead of error :")
+            del platform
+
+            # fake it
+            platform == __import__("__main__")
+        define("__EMSCRIPTEN__", platform)
+
+
+driver = defined("embed")
+try:
+    if not driver:
+        import embed as driver
+
+        print("platform embedding module driver :", driver)
+except:
+    # use the simulator defined platform value as the embed.
+    driver = platform
+
+# just in case it was not a module
+sys.modules.setdefault("embed", driver)
+
+try:
+    # check it the embedding module was finished for that platform.
+    # the least shoulbe syslog ( js console / adb logcat )
+    driver.log
+except:
+    pdb(
+        """\
+WARNING: embed softrt/syslog functions not found
+WARNING: also not in __main__ or simulator provided platform module
+"""
+    )
+    driver.enable_irq = print
+    driver.disable_irq = print
+    driver.log = print
+
+define("embed", driver)
+
+platform.init_platform(driver)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # ================== leverage known python implementations ====================

@@ -5,7 +5,7 @@ static void pymain_free(void);
 
 
 TODO:
-    solve pclinuxos:
+    solve pclinuxos ffi weirdness :
         import ctypes;ctypes.CFUNCTYPE(ctypes.c_int)(lambda: None)
 
     fpcast:
@@ -19,6 +19,14 @@ TODO:
             https://github.com/pyodide/pyodide/issues/1219
 
         https://github.com/pyodide/pyodide/issues/1503
+
+    wasi:
+        https://github.com/singlestore-labs/python-wasi
+        https://github.com/singlestore-labs/wasix
+        https://github.com/turbolent/w2c2
+        https://wicg.github.io/file-system-access/
+        https://github.com/GoogleChromeLabs/wasi-fs-access
+
 
     sab:
         https://exploringjs.com/es2016-es2017/ch_shared-array-buffer.html
@@ -52,10 +60,18 @@ TODO:
         https://greggman.github.io/html5-gamepad-test/
 
 
+    sdl:
+        https://github.com/Petlja/pygame4skulpt/tree/master/test
+        https://github.com/jggatc/pyjsdl
+
+
     display:
         osmesa / tinygl / tinygles / angle
         sixel and/or https://nick-black.com/dankwiki/index.php/Notcurses
         ****>>>>>>> https://github.com/gfx-rs/wgpu + https://pypi.org/project/wgpu/ <<<<<<*****
+        https://ctx.graphics/uctx/#/main.py  (pippin #micropython)
+
+
 
     audio:
         https://developers.google.com/web/updates/2017/12/audio-worklet
@@ -89,6 +105,12 @@ TODO:
 
     bookmarks:
 
+        https://rdb.name/panda3d-webgl.md.html
+
+        https://fstring.help/ https://pyformat.info/
+
+        https://www.w3.org/TR/wasm-core-2/ https://webassembly.github.io/spec/core/appendix/changes.html
+
         https://github.com/CTPUG/pygame_cffi  (stalled)
 
         https://github.com/sunfishcode/wasm-reference-manual/blob/master/WebAssembly.md
@@ -108,11 +130,18 @@ TODO:
         https://github.com/pioul/Minimalist-Online-Markdown-Editor
         https://github.com/CribberSix/pygame-markdown
 
+        https://github.com/servo/servo#cross-compilation-for-android
 
 NOTES:
-    window.location.href loads page from browser's cache and does not always send the request to the server. So, if you have an old version of the page available in the cache then it will redirect to there instead of loading a fresh page from the server.
-    window.location.assign() method for redirection if you want to allow the user to use the back button to go back to the original document.
-    window.location.replace() method if you want to want to redirect to a new page and don't allow the user to navigate to the original page using the back button.
+    window.location.href loads page from browser's cache and does not always send the request to the server.
+            So, if you have an old version of the page available in the cache then it will redirect to there
+            instead of loading a fresh page from the server.
+
+    window.location.assign() method for redirection if you want to allow the user to use the back button
+            to go back to the original document.
+
+    window.location.replace() method if you want to want to redirect to a new page
+            and don't allow the user to navigate to the original page using the back button.
 
     https://wiki.libsdl.org/SDL_RWseek  64bits values ?
 
@@ -121,13 +150,6 @@ NOTES:
 not portable ?
     https://github.com/pyglet/pyglet
     https://github.com/mcfletch/pyopengl
-
-
-
-
-
-
-
 */
 
 #if __EMSCRIPTEN__
@@ -140,6 +162,9 @@ not portable ?
     #define SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT   "SDL_EMSCRIPTEN_KEYBOARD_ELEMENT"
 
     #define HOST_RETURN(value)  return value
+
+    #include "__EMSCRIPTEN__.embed/emscriptenmodule.c"
+    #include "__EMSCRIPTEN__.embed/browsermodule.c"
 
 #else
     #error "wasi unsupported yet"
@@ -277,6 +302,16 @@ embed_run_script(PyObject *self, PyObject *argv) {
 }
 
 static PyObject *
+embed_coroutine(PyObject *self, PyObject *argv) {
+    char *code = NULL;
+    if (!PyArg_ParseTuple(argv, "s", &code)) {
+        return NULL;
+    }
+    return Py_BuildValue("i", emscripten_run_script_int(code) );
+}
+
+
+static PyObject *
 embed_eval(PyObject *self, PyObject *argv) {
     char *code = NULL;
     if (!PyArg_ParseTuple(argv, "s", &code)) {
@@ -322,6 +357,7 @@ static PyMethodDef mod_embed_methods[] = {
     {"preload", (PyCFunction)embed_preload,  METH_VARARGS, "emscripten_run_preload_plugins"},
     {"symlink", (PyCFunction)embed_symlink,  METH_VARARGS, "FS.symlink"},
     {"run_script", (PyCFunction)embed_run_script,  METH_VARARGS, "run js"},
+    {"coroutine", (PyCFunction)embed_coroutine,  METH_VARARGS, "run js coro"},
     {"eval", (PyCFunction)embed_eval,  METH_VARARGS, "run js eval()"},
     {"readline", (PyCFunction)embed_readline,  METH_NOARGS, "get current line"},
     {"flush", (PyCFunction)embed_flush,  METH_NOARGS, "flush stdio+stderr"},
@@ -512,6 +548,8 @@ main(int argc, char **argv)
     };
 
     PyImport_AppendInittab("embed", init_embed);
+    PyImport_AppendInittab("embed_emscripten", PyInit_emscripten);
+    PyImport_AppendInittab("embed_browser", PyInit_browser);
     PyGame_static_init();
 
     //PyImport_AppendInittab("pymunk_static", PyInit__chipmunk);
@@ -548,6 +586,15 @@ main(int argc, char **argv)
        LOG_V("no 'dev/fd' directory, creating one ...");
     }
 
+/* ????
+>>> ls /proc/self/fd
+[Errno 54] Not a directory: '/proc/self/fd'
+>>> cat /proc/self/fd
+[Errno 31] Is a directory
+>>> cd /proc/self/fd
+[  /proc/self/fd  ]
+>>> ls
+[Errno 54] Not a directory: '.'
 
     if (!mkdir("proc", 0700)) {
        LOG_V("no 'proc' directory, creating one ...");
@@ -558,7 +605,7 @@ main(int argc, char **argv)
     if (!mkdir("proc/self/fd", 0700)) {
        LOG_V("no 'proc/self/fd' directory, creating one ...");
     }
-
+*/
     if (!mkdir("tmp", 0700)) {
        LOG_V("no 'tmp' directory, creating one ...");
     }

@@ -63,7 +63,7 @@ ALWAYS_CODE=$(realpath tests/code)
 
 
 
-LOPTS="-sMAIN_MODULE"
+LOPTS="-sMAIN_MODULE --bind -fno-rtti"
 
 # O0/g3 is much faster to build and easier to debug
 
@@ -220,8 +220,8 @@ popd
 mv -vf build/cpython-wasm/${MODE}.* build/${CN}/${EXE}/
 mv build/${CN}/${EXE}/*.map build/${CN}/
 
-
-pushd $APK
+echo " * packing assets"
+pushd $APK 2>&1 >/dev/null
 ../../scripts/re-pack-apk.sh demo
 popd
 

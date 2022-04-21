@@ -1,8 +1,7 @@
 # builtins.__EMSCRIPTEN__
 # builtins.__WASI__
 # builtins.__ANDROID__   also defines __ANDROID_API__
-# builtins.__UPY__
-# can point to this module
+# builtins.__UPY__ too can point to this module
 
 import sys, os, builtins
 
@@ -94,6 +93,7 @@ except:
     else:
         builtins.__UPY__ = None
 
+
 try:
     __EMSCRIPTEN__
 except:
@@ -101,27 +101,11 @@ except:
         builtins.__EMSCRIPTEN__ = this
     else:
         builtins.__EMSCRIPTEN__ = None
-
-try:
-    __WASI__
-except:
-    if sys.platform in (
-        "wasm",
-        "wasi",
-    ):
-        builtins.__WASI__ = this
+    if not __UPY__:
+        from embed_browser import *
+        from embed_emscripten import *
     else:
-        builtins.__WASI__ = None
-
-try:
-    __ANDROID__
-except:
-    # this *is* the cpython way
-    if hasattr(sys, "getandroidapilevel"):
-        builtins.__ANDROID__ = this
-        builtins.__ANDROID_API__ = sys.getandroidapilevel()
-    else:
-        builtins.__ANDROID__ = False
+        pdb(__file__,":107 no browser/emscripten modules yet")
 
 
 # force use a fixed, tested version of uasyncio to avoid non-determinism
@@ -145,41 +129,7 @@ else:
 sys.modules["uasyncio"] = uasyncio
 
 
-# this should be done in site.py / main.c but that's not so easy.
-# last chance to do it since required by aio.*
-try:
-    undefined
-except:
 
-    class sentinel:
-        def __bool__(self):
-            return False
-
-        def __repr__(self):
-            return "∅"
-
-        def __nonzero__(self):
-            return 0
-
-        def __call__(self, *argv, **kw):
-            if len(argv) and argv[0] is self:
-                return True
-            print("Null Pointer Exception")
-
-    sentinel = sentinel()
-    builtins.undefined = sentinel
-    del sentinel
-
-
-def overloaded(i, *attrs):
-    for attr in attrs:
-        if attr in vars(i.__class__):
-            if attr in vars(i):
-                return True
-    return False
-
-
-builtins.overloaded = overloaded
 
 
 def init_platform(embed):

@@ -70,8 +70,38 @@ except:
 
 #==================================================================
 
+try:
+    undefined
+except:
+    class sentinel:
+        def __bool__(self):
+            return False
+
+        def __repr__(self):
+            return "∅"
+
+        def __nonzero__(self):
+            return 0
+
+        def __call__(self, *argv, **kw):
+            if len(argv) and argv[0] is self:
+                return True
+            print("Null Pointer Exception")
+
+    sentinel = sentinel()
+    define("undefined", sentinel)
+    del sentinel
 
 
+def overloaded(i, *attrs):
+    for attr in attrs:
+        if attr in vars(i.__class__):
+            if attr in vars(i):
+                return True
+    return False
+
+define("overloaded", overloaded)
+del overloaded
 
 
 started = False
@@ -83,8 +113,6 @@ ticks = 0
 protect = []
 last_state = None
 tasks = []
-
-
 
 
 
