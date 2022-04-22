@@ -53,23 +53,40 @@ try:
     execfile
 except:
     def execfile(filename):
+        global pgzrun
+
+        imports = []
+
         with __import__('tokenize').open(filename) as f:
             __prepro = []
             myglobs = ['setup', 'loop', 'main']
             tmpl = []
 
+            pgzrun = None
+
             for l in f.readlines():
-                testglob = l.split('#')[0].strip(" \r\n,\t")
-                if testglob.startswith('global ') and (
-                        testglob.endswith(' setup')
+                if pgzrun is None:
+                    pgzrun = l.find('pgzrun')>0
+
+                testline = l.split('#')[0].strip(" \r\n,\t")
+
+                if testline.startswith('global ') and (
+                        testline.endswith(' setup')
                         or
-                        testglob.endswith(' loop')
+                        testline.endswith(' loop')
                         or
-                        testglob.endswith(' main')
+                        testline.endswith(' main')
                     ):
                         tmpl.append( [len(__prepro),l.find('g')] )
                         __prepro.append("#globals")
                         continue
+                elif testline.startswith('import '):
+                    testline = testline.replace('import ','').strip()
+                    imports.extend( map(str.strip, testline.split(',') ) )
+                elif testline.startswith('from '):
+                    testline = testline.replace('from ','').strip()
+                    imports.append( testline.split(' import ')[0].strip() )
+
 
                 __prepro.append(l)
 
@@ -148,7 +165,16 @@ except:
                 code=None
 
             if code:
-                exec( code, __main__dict, __main__dict )
+                if pgzrun:
+                    sys.argv.append(filename)
+                    import pgzero
+                    import pgzero.runner
+                    print("*"*40)
+                    print(imports)
+                    print("*"*40)
+                    pgzero.runner.main()
+                else:
+                    exec( code, __main__dict, __main__dict )
         return __import__("__main__")
 
 
@@ -255,7 +281,7 @@ try:
     aio.cross.simulator = ( __EMSCRIPTEN__ or __wasi__ or __WASM__).PyConfig_InitPythonConfig( PyConfig )
 #except NameError:
 except Exception as e:
-    sys.print_execption(e)
+    sys.print_exception(e)
 #   TODO: get a pyconfig from C here
 #    <vstinner> pmp-p: JSON au C : connais les API secrète
 # _PyConfig_FromDict(), _PyInterpreterState_SetConfig() et _testinternalcapi.set_config()?
