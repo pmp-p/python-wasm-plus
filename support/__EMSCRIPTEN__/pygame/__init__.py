@@ -144,6 +144,8 @@ mixer.music = music
 import pygame._sdl2
 sys.modules["pygame._sdl2.video"]=pygame._sdl2.video
 
+print(__file__,"pygame.fastevent")
+print(__file__,"pygame.context")
 
 import pygame_sprite
 sprite = clean_mod("pygame.sprite")

@@ -1,0 +1,187 @@
+from . import storage
+from . import clock
+from . import loaders
+from .game import PGZeroGame, DISPLAY_FLAGS
+from types import ModuleType
+from argparse import ArgumentParser
+import warnings
+import sys
+import os
+import pygame
+from contextlib import contextmanager
+pygame.mixer.pre_init(frequency=22050, size=-16, channels=2)
+pygame.init()
+
+
+def _check_python_ok_for_pygame():
+    """If we're on a Mac, is this a full Framework python?
+
+    There is a problem with PyGame on Macs running in a virtual env.
+    If the Python used is from the venv, it will not allow full window and
+    keyboard interaction. Instead, we need the original framework Python
+    to get PyGame working properly.
+
+    The problem doesn't occur on Linux and Windows.
+    """
+    if sys.platform == 'darwin':  # This is a Mac
+        return 'Library/Frameworks' in sys.executable
+    else:
+        return True
+
+
+def _substitute_full_framework_python():
+    """Need to change the OS/X Python executable to the full Mac version,
+    while maintaining the virtualenv environment, so things still run
+    in an encapsulated way.
+
+    We do this by extract the paths that virtualenv has added to the system
+    path, and prefixing them to the current PYTHONPATH.
+
+    Then we use os.execv() to start a replacement process that uses the
+    same environment as the previous one.
+    """
+    PYVER = '{}.{}'.format(*sys.version_info[:2])
+    base_fw = '/Library/Frameworks/Python.framework/Versions/'
+    framework_python = base_fw + '{pv}/bin/python{pv}'.format(pv=PYVER)
+    venv_base = os.environ.get('VIRTUAL_ENV')
+    if not venv_base or not os.path.exists(framework_python):
+        # Do nothing if virtual env hasn't been set up or if we can't
+        # find the framework Python interpreter
+        return
+    venv_paths = [p for p in sys.path if p.startswith(venv_base)]
+    # Need to allow for PYTHONPATH not already existing in environment
+    os.environ['PYTHONPATH'] = ':'.join(venv_paths + [
+        os.environ.get('PYTHONPATH', '')]).rstrip(':')
+    # Pass command line args to the new process
+    os.execv(framework_python, ['python', '-m', 'pgzero'] + sys.argv[1:])
+
+
+def main():
+
+    # Pygame won't run from a normal virtualenv copy of Python on a Mac
+    if not _check_python_ok_for_pygame():
+        _substitute_full_framework_python()
+
+    parser = ArgumentParser()
+    parser.add_argument(
+        '--fps',
+        action='store_true',
+        help="Print periodic FPS measurements on the terminal."
+    )
+    parser.add_argument(
+        'program',
+        help="The Pygame Zero program to run."
+    )
+    args = parser.parse_args()
+
+    if __debug__:
+        warnings.simplefilter('default', DeprecationWarning)
+
+    load_and_run(args.program, fps=args.fps)
+
+
+def load_and_run(path, *, fps: bool = False):
+    """Load and run the given Python file as the main PGZero game module.
+
+    Note that the 'import pgzrun' IDE mode doesn't pass through this entry
+    point, as the module is already loaded.
+
+    """
+    with open(path, 'rb') as f:
+        src = f.read()
+
+    code = compile(src, os.path.basename(path), 'exec', dont_inherit=True)
+
+    name, _ = os.path.splitext(os.path.basename(path))
+    mod = ModuleType(name)
+    mod.__file__ = path
+    mod.__name__ = name
+    sys.modules[name] = mod
+
+    # Indicate that we're running with the pgzrun runner
+    # This disables the 'import pgzrun' module
+    sys._pgzrun = True
+
+    prepare_mod(mod)
+    with temp_window():
+        exec(code, mod.__dict__)
+
+    pygame.display.init()
+    PGZeroGame.show_default_icon()
+    try:
+        run_mod(mod, fps=fps)
+    finally:
+        def at_exit():
+            pygame.display.quit()
+            clock.clock.clear()
+            del sys.modules[name]
+
+        # Clean some of the state we created, useful in testing
+        if sys.platform == 'emscripten':
+            import atexit
+            atexit.register(at_exit)
+        else:
+            at_exit()
+
+
+@contextmanager
+def temp_window():
+    """Create a temporary hidden window for the duration of the context.
+
+    Several Pygame surface operations access the state of the screen as a
+    global:
+
+    * Surface.convert_alpha() without arguments converts a surface for fast
+      blitting to the display.
+    * Surface() without flags creates a surface identical to the display
+      format.
+
+    There's no good API to expose what the display format is until we create
+    a window, so we create a temporary window, which let us use these
+    functions. The expectation is that when we create a real window this will
+    have the same display format and blits etc will still be fast.
+
+    After the initial load we dispose of this window and start again. Resizing
+    the initial window has a problem: it doesn't recenter the window on the
+    screen.
+
+    """
+    # An icon needs to exist before the window is created.
+    PGZeroGame.show_default_icon()
+    pygame.display.set_mode(
+        (100, 100),
+        flags=(DISPLAY_FLAGS & ~pygame.SHOWN) | pygame.HIDDEN,
+    )
+    try:
+        yield
+    finally:
+        pygame.display.quit()
+
+
+def prepare_mod(mod):
+    """Prepare to execute the module code for Pygame Zero.
+
+    To allow the module to load assets, we configure the loader path to
+    load relative to the module's __file__ path.
+
+    When executing the module some things need to already exist:
+
+    * Our extra builtins need to be defined (by copying them into Python's
+      `builtins` module)
+    * A screen needs to be created (because we use convert_alpha() to convert
+      Sprite surfaces for blitting to the screen).
+
+    """
+    storage.storage._set_filename_from_path(mod.__file__)
+    loaders.set_root(mod.__file__)
+
+    # Copy pgzero builtins into system builtins
+    from . import builtins as pgzero_builtins
+    import builtins as python_builtins
+    for k, v in vars(pgzero_builtins).items():
+        python_builtins.__dict__.setdefault(k, v)
+
+
+def run_mod(mod, **kwargs):
+    """Run the module."""
+    PGZeroGame(mod, **kwargs).run()

@@ -53,9 +53,9 @@ then
     fi
 
 # OPT="$OPT"
-
+# CFLAGS="-DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1"
     if \
-    CC=clang CXX=clang++ CFLAGS="-DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1" \
+    CC=clang CXX=clang++ \
     eval ${ROOT}/src/cpython/configure \
      --prefix=$HOST_PREFIX $PYOPTS $VERBOSE
     then

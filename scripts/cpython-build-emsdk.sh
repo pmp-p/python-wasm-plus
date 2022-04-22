@@ -103,8 +103,10 @@ else
 
     export OPT="$CPOPTS -DNDEBUG -fwrapv"
 
+# CFLAGS="-DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1"
+
     CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten\
-    OPT="$OPT" CFLAGS="-DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1" \
+    OPT="$OPT" \
     eval emconfigure $ROOT/src/cpython/configure -C --without-pymalloc --disable-ipv6 \
      --cache-file=${PYTHONPYCACHEPREFIX}/config.cache \
      --with-c-locale-coercion --without-pydebug \
@@ -170,10 +172,26 @@ do
         break
     fi
 done
+
+SHARED=""
+IS_SHARED=false
+
 if echo \$@|grep -q shared
 then
+    IS_SHARED=true
+    SHARED="-sSIDE_MODULE"
+else
+    if echo \$@|grep -q wasm32-emscripten.so
+    then
+        IS_SHARED=true
+        SHARED="-shared -sSIDE_MODULE"
+    fi
+fi
+
+if \$IS_SHARED
+then
     # $COPTS
-    emcc $COPTS -sSIDE_MODULE -gsource-map --source-map-base / \$@
+    emcc \$SHARED $COPTS -sSIDE_MODULE -gsource-map --source-map-base / \$@
 else
     # $COPTS
     emcc $COPTS -DBUILD_STATIC \$@

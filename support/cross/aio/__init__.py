@@ -14,7 +14,7 @@ except:
         print(*argv, file=sys.__stderr__)
 
     builtins.pdb = pdb
-    # builtins.embed = __import__('__main__')
+
 
 # cascade debug by default
 from . import cross
@@ -303,14 +303,6 @@ def run(coro, *, debug=False):
     elif run_called:
         pdb("273: aio.run called twice !!!")
 
-if __WASM__:
-    def __exit__(ec):
-        global loop
-        loop.close()
-        pdb("270: exited with code",ec)
-else:
-    __exit__ = sys.exit
-
 
 def exit_now(ec):
     global exit, paused
@@ -328,6 +320,17 @@ def exit_now(ec):
     pdb("291: exiting with code",ec)
     defer(__exit__,(ec,),{},0)
 
+
+# replace sys.exit on wasm
+
+if __WASM__:
+    def __exit__(ec):
+        global loop
+        loop.close()
+        pdb("270: exited with code",ec)
+else:
+    __exit__ = sys.exit
+
 def aio_exit(maybecoro):
     import inspect
 
@@ -340,8 +343,19 @@ def aio_exit(maybecoro):
             pdb("309: NOT A CORO", maybecoro)
         exit_now(maybecoro)
 
-
 sys.exit = aio_exit
+
+
+
+# check if we have a Time handler.
+try:
+    Time
+except:
+    import time as Time
+
+
+def rtclock():
+    return int(Time.time() * 1_000)
 
 
 #

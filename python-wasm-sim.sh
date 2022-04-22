@@ -32,7 +32,7 @@ export PYTHONPATH=$(pwd):$ROOT/support/cross:$ROOT/support/sim.links:$PYTHONPATH
 
 
 
-if [ -f /usr/local/bin/python3.11 ]
+if false
 then
     PYTHONPATH=$ROOT/devices/emsdk/usr/lib/python3.11:$PYTHONPATH
     PYTHONPATH=$ROOT/devices/$(arch)/usr/lib/python3.11/site-packages:$PYTHONPATH

@@ -4,6 +4,20 @@ print("= ${__FILE__} in websim  for  ${PLATFORM} =")
 # ===============================================
 import sys, os, builtins
 
+# need them earlier than aio
+
+def pdb(*argv):
+    print(*argv, file=sys.__stderr__)
+
+builtins.pdb = pdb
+
+def print_exception(e, out=sys.stderr, **kw):
+    kw["file"] = out
+    traceback.print_exc(**kw)
+
+sys.print_exception = print_exception
+
+
 # aioprompt ======== have asyncio loop runs interleaved with repl ============
 # from https://github.com/pmp-p/aioprompt
 
@@ -86,12 +100,6 @@ else:
 
 sys.path.append("${PLATFORM}")
 
-import aio
-import aio.prepro
-import aio.cross
-
-aio.cross.simulator = True
-
 
 # cannot fake a cpu __WASM__ will be False
 
@@ -123,6 +131,15 @@ class __EMSCRIPTEN__:
 
 sys.modules["__EMSCRIPTEN__"] = __EMSCRIPTEN__
 sys.modules["embed"] = __EMSCRIPTEN__
+
+
+import aio
+import aio.prepro
+import aio.cross
+
+aio.cross.simulator = True
+
+
 
 
 exec(open("${PYTHONRC}").read(), globals(), globals())
