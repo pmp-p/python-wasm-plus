@@ -305,7 +305,7 @@ ${pycode}
             // xterm js placeholder
             wasmterm = { print : console.log, sixel : function(){}}
         } else {
-            // it uses  document.getElementById('terminal') to get its host
+            // it uses  document.getElementById() to get its host
             wasmterm = new WasmTerminal( 'terminal', 132, 50 )
 
             window.xterm = wasmterm.xterm
