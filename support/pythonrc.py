@@ -246,6 +246,7 @@ if defined("embed") and hasattr(embed, "readline"):
                 if pgzrun:
                     print("a program is already running, using 'stop' cmd before retrying")
                     cls.stop()
+                    pgzrun = None
                     aio.defer(cls.exec,(cmd,*argv),env, 500)
 
                 else:
