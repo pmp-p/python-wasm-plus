@@ -197,7 +197,8 @@ export class WasmTerminal {
     const imageAddon = new ImageAddon.ImageAddon("./xtermjsixel/xterm-addon-image-worker.js", {sixelSupport: true});
 
     this.xterm.loadAddon(imageAddon);
-    this.xterm.open(document.getElementById(hostid || 'terminal'))
+    console.warn(hostid,cols,rows)
+    this.xterm.open(document.getElementById( 'terminal'))
 
     // hack to hide scrollbar inside box
     document.getElementsByClassName('xterm-viewport')[0].style.left="-15px"

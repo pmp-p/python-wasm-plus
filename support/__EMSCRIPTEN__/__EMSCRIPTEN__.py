@@ -59,7 +59,7 @@ except Exception as e:
                 pdb("- aio paused -")
 
         @classmethod
-        def defer(cls, fn, argv=(), kw={}, deadline=0):
+        def defer(cls, fn, argv, kw, deadline=0):
             # FIXME: set ticks + deadline for alarm
             cls.oneshots.append(
                 [
@@ -306,7 +306,7 @@ def PyConfig_InitPythonConfig(PyConfig):
                         # aio.steps.append(__main__.loop)
 
                 print(f"320: running {sys.argv[0]}.py as main (deferred)")
-                aio.defer(runmain, ["main.py"])
+                aio.defer(runmain, ["main.py"], {})
             else:
                 pdb(f"no main found for {sys.argv[0]}")
 
@@ -318,7 +318,7 @@ def PyConfig_InitPythonConfig(PyConfig):
         def fix_preload_table_apk():
             global fix_preload_table_apk
             pdb("no assets preloaded")
-            aio.defer(embed.prompt)
+            aio.defer(embed.prompt, (),{})
 
         # unlock embed looper because no preloading
         embed.run()

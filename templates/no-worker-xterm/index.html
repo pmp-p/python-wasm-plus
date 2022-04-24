@@ -92,7 +92,7 @@
         console.log(__FILE__, "custom_onload");
 
         // it uses  document.getElementById('terminal') to get its host
-        const wasmterm = new WasmTerminal( document.getElementById('terminal') )
+        const wasmterm = new WasmTerminal( "terminal", 132 , 35 )
 
         window.xterm = wasmterm.xterm
 

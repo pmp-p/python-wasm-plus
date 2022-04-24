@@ -19,6 +19,9 @@ import imp
 #pymunk4 ( but really not usefull)
 import platform
 
+#pgzero
+import hashlib, queue, pkgutil
+
 #numpy
 import pathlib
 

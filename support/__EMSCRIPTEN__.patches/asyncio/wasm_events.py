@@ -51,10 +51,6 @@ def coroutine(func):
     global _DEBUG
 
     if inspect.iscoroutinefunction(func):
-        # In Python 3.5 that's all we need to do for coroutines
-        # defined with "async def".
-        # Wrapping in CoroWrapper will happen via
-        # 'sys.set_coroutine_wrapper' function.
         return func
 
     if inspect.isgeneratorfunction(func):
@@ -82,23 +78,7 @@ def coroutine(func):
                         res = yield from await_meth()
             return res
 
-    if not _DEBUG:
-        wrapper = types.coroutine(coro)
-    else:
-
-        @functools.wraps(func)
-        def wrapper(*args, **kwds):
-            w = CoroWrapper(coro(*args, **kwds), func=func)
-            if w._source_traceback:
-                del w._source_traceback[-1]
-            # Python < 3.5 does not implement __qualname__
-            # on generator objects, so we set it manually.
-            # We use getattr as some callables (such as
-            # functools.partial may lack __qualname__).
-            w.__name__ = getattr(func, "__name__", None)
-            w.__qualname__ = getattr(func, "__qualname__", None)
-            return w
-
+    wrapper = types.coroutine(coro)
     wrapper._is_coroutine = _is_coroutine  # For iscoroutinefunction().
     return wrapper
 

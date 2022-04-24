@@ -21,7 +21,7 @@ from . import cross
 
 cross.DEBUG = DEBUG
 
-#=========================================================================
+# =========================================================================
 
 # TODO: dbg stuff should be in the platform module in aio.cross
 # usefull https://pymotw.com/3/sys/tracing.html
@@ -68,11 +68,12 @@ except:
         )
 
 
-#==================================================================
+# ==================================================================
 
 try:
     undefined
 except:
+
     class sentinel:
         def __bool__(self):
             return False
@@ -100,6 +101,7 @@ def overloaded(i, *attrs):
                 return True
     return False
 
+
 define("overloaded", overloaded)
 del overloaded
 
@@ -115,11 +117,9 @@ last_state = None
 tasks = []
 
 
-
 from asyncio import *
 
 import asyncio.events as events
-
 
 
 # Within a coroutine, simply use `asyncio.get_running_loop()`,
@@ -137,7 +137,6 @@ import asyncio.events
 asyncio.events._set_running_loop(loop)
 
 
-
 sys.modules["asyncio"] = __import__(__name__)
 
 
@@ -146,7 +145,7 @@ def defer(fn, argv=(), kw={}, deadline=0, framerate=60):
     # FIXME: set ticks + deadline for alarm
     oneshots.append(
         [
-            ticks + int(deadline/framerate),
+            ticks + int(deadline / framerate),
             fn,
             argv,
             kw,
@@ -165,11 +164,9 @@ def step(*argv):
     if protect:
         protect.clear()
 
-
     # this one is for full stop
     if not started:
         return
-
 
     # TODO: OPTIM: remove later
     if inloop:
@@ -177,7 +174,6 @@ def step(*argv):
         paused = True
         return
     inloop = True
-
 
     if paused is not last_state:
         if not exit:
@@ -269,9 +265,10 @@ def create_task(coro, *, name=None, context=None):
 #
 run_called = False
 
+
 def run(coro, *, debug=False):
 
-    global paused, loop, started, step, DEBUG, run_called
+    global paused, loop, started, step, DEBUG, run_called, exit
 
     debug = debug or DEBUG
 
@@ -284,6 +281,7 @@ def run(coro, *, debug=False):
         pdb("253:None coro called, just starting loop")
 
     if not started:
+        exit = False
         run_called = True
         started = True
         # the stepper fonction when in simulator
@@ -310,41 +308,46 @@ def exit_now(ec):
     exit = True
     while len(tasks):
         task = tasks.pop(0)
-        if hasattr(task, 'cancel'):
+        if hasattr(task, "cancel"):
             print(f"290: canceling {task}")
             task.cancel()
 
     #  will prevent another asyncio loop call, we exit next cycle on oneshots queue
     paused = True
-    #if not __WASM__:
-    pdb("291: exiting with code",ec)
-    defer(__exit__,(ec,),{},0)
+    # if not __WASM__:
+    pdb("291: exiting with code", ec)
+    defer(__exit__, (ec,), {}, 0)
 
 
 # replace sys.exit on wasm
 
 if __WASM__:
+
     def __exit__(ec):
         global loop
         loop.close()
-        pdb("270: exited with code",ec)
+        pdb("270: exited with code", ec)
+
 else:
     __exit__ = sys.exit
+
 
 def aio_exit(maybecoro):
     import inspect
 
     if inspect.iscoroutine(maybecoro):
+
         async def atexit(coro):
             exit_now(await coro)
+
         run(atexit(maybecoro))
     else:
         if __WASM__:
             pdb("309: NOT A CORO", maybecoro)
         exit_now(maybecoro)
 
-sys.exit = aio_exit
 
+sys.exit = aio_exit
 
 
 # check if we have a Time handler.

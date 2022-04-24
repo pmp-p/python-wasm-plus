@@ -2,6 +2,7 @@ import sys
 import time
 import asyncio
 
+
 class tui:
     # use direct access, it is absolute addressing on raw terminal.
     out = sys.__stdout__.write
@@ -39,7 +40,8 @@ def step(x=70, y=0, z=2):
 
 
 async def clock(x=70, y=0, z=2):
-    while not asyncio.exit:
+    # run as a daemon
+    while True:  # not asyncio.exit:
         step(x, y, z)
         await asyncio.sleep(1)
         sys.stdout.flush()

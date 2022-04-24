@@ -640,6 +640,8 @@ _py_destroy_worker(PyObject *self, PyObject *args) {
 /**
  * Callback wrapper for emscripten_call_worker.
  */
+
+/*
 static void
 _worker_callback(char *buffer, int size, void *data) {
   PyObject *func = (PyObject *)data;
@@ -647,11 +649,14 @@ _worker_callback(char *buffer, int size, void *data) {
   Py_DECREF(func);
   _handle_callback_result(result, "call_worker");
 }
+*/
 
 /**
  * Python wrapper for
  * void emscripten_call_worker(worker_handle worker, const char *funcname, char *data, int size, em_worker_callback_func callback, void *arg)
  */
+
+/*
 static PyObject *
 _py_call_worker(PyObject *self, PyObject *args) {
   int worker;
@@ -676,11 +681,14 @@ _py_call_worker(PyObject *self, PyObject *args) {
   }
   return NULL;
 }
+*/
 
 /**
  * Python wrapper for
  * void emscripten_worker_respond(char *data, int size)
  */
+
+/*
 static PyObject *
 _py_worker_respond(PyObject *self, PyObject *arg) {
   char *data;
@@ -692,11 +700,14 @@ _py_worker_respond(PyObject *self, PyObject *arg) {
   }
   return NULL;
 }
+*/
 
 /**
  * Python wrapper for
  * void emscripten_worker_respond_provisionally(char *data, int size)
  */
+
+/*
 static PyObject *
 _py_worker_respond_provisionally(PyObject *self, PyObject *arg) {
   char *data;
@@ -708,6 +719,7 @@ _py_worker_respond_provisionally(PyObject *self, PyObject *arg) {
   }
   return NULL;
 }
+*/
 
 /**
  * Python wrapper for

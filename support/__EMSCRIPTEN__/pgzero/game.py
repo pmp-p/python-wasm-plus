@@ -108,10 +108,16 @@ class PGZeroGame:
     @staticmethod
     def show_default_icon():
         """Show a default icon loaded from Pygame Zero resources."""
-        from io import BytesIO
+        icon = 'data/icon.png'
         from pkgutil import get_data
-        buf = BytesIO(get_data(__name__, 'data/icon.png'))
-        pygame.display.set_icon(pygame.image.load(buf))
+        if sys.platform == 'emscripten':
+            import os
+            d = os.path.dirname(sys.modules[__name__].__file__)
+            pygame.display.set_icon(pygame.image.load( os.path.join(d, icon) ))
+        else:
+            from io import BytesIO
+            buf = BytesIO(get_data(__name__, icon))
+            pygame.display.set_icon(pygame.image.load(buf))
 
     def show_icon(self):
         icon = getattr(self.mod, 'ICON', DEFAULTICON)
@@ -360,8 +366,9 @@ class PGZeroGame:
                     t = nextt
                     await asyncio.sleep(0)
             finally:
-                pygame.display.quit()
-                pygame.mixer.quit()
+                print('pygame.display.quit()')
+                print('pygame.mixer.quit()')
+
 
         def run(self):
             import asyncio

@@ -8,9 +8,9 @@ aio.paused = False
 aio.fd = {}
 aio.pstab = {}
 
-def _shutdown():
-    print(__file__,"_shutdown")
 
+def _shutdown():
+    print(__file__, "_shutdown")
 
 
 # https://docs.python.org/3/library/threading.html#threading.excepthook
@@ -20,19 +20,48 @@ def _shutdown():
 
 # TODO: default granularity with https://docs.python.org/3/library/sys.html#sys.setswitchinterval
 
+
 class Lock:
     count = 0
+
     def __enter__(self):
-        self.count += 1
+        self.acquire()
 
     def __exit__(self, *tb):
+        self.release()
+
+    def acquire(self, blocking=True, timeout=- 1):
+        self.count += 1
+        return True
+
+    def release(self):
         self.count -= 1
 
+    def locked(self):
+        return self.count>0
+
+class Condition:
+    def __init__(self, lock=None):
+        self.lock = lock or Lock()
+
+    def acquire(self, *args):
+        return self.lock.acquire()
+
+    def release(self):
+        self.lock.release()
+
+    def wait(self, timeout=None):
+        raise RuntimeError("notify not supported")
+
+    def wait_for(self, predicate, timeout=None):
+        raise RuntimeError("wait not supported")
 
 
 class Thread:
-    def __init__(self, group=None, target=None, name=None, args=(), kwargs={}, *, daemon=None):
-    #def __init__(self, group=None, target=None, name=None, args=(), kwargs={}):
+    def __init__(
+        self, group=None, target=None, name=None, args=(), kwargs={}, *, daemon=None
+    ):
+        # def __init__(self, group=None, target=None, name=None, args=(), kwargs={}):
         self.args = args
         self.kwargs = kwargs
         self.name = name
@@ -59,11 +88,9 @@ class Thread:
             self.name = "%s-%s" % (self.__class__.__name__, id(self))
         self.status = None
 
-
     async def wrap(self):
         for idle in self.run():
             await aio.sleep(0)
-
 
     async def runner(self, coro):
         self.status = True
@@ -96,8 +123,10 @@ class Thread:
                 if self.delta < 0:
                     self.delta = 0
                 # no sleep_ms on cpy
-                yield from aio.sleep_ms( float(self.slice - int(self.delta / 2)) / 1_000 ).__await__()
-                #return aio.sleep( float(self.slice - int(self.delta / 2)) / 1_000 )
+                yield from aio.sleep_ms(
+                    float(self.slice - int(self.delta / 2)) / 1_000
+                ).__await__()
+                # return aio.sleep( float(self.slice - int(self.delta / 2)) / 1_000 )
                 self.last = rtc
 
     def rt(self, slice):
@@ -109,7 +138,7 @@ class Thread:
         if self.run:
             if not inspect.iscoroutinefunction(self.run):
                 self.status = True
-                aio.create_task( self.wrap() )
+                aio.create_task(self.wrap())
             else:
                 coro = self.run(*self.args, **self.kwargs)
                 pdb("168:", self.name, "starting", coro)
@@ -131,26 +160,26 @@ class Thread:
         return self.status is True
 
 
-
 def service(srv, *argv, **kw):
     embed.log(f"starting green thread : {srv}")
-    thr =  aio.Thread(group=None, target=srv, args=argv, kwargs=kw).start()
+    thr = aio.Thread(group=None, target=srv, args=argv, kwargs=kw).start()
     srv.__await__ = thr.__await__
-    return aio.pstab.setdefault(srv, thr  )
+    return aio.pstab.setdefault(srv, thr)
+
+
 aio.task = service
 
 
 def proc(srv):
     return aio.pstab.get(srv)
 
-class Runnable:
 
+class Runnable:
     def __await__(self):
         yield from aio.pstab.get(self).__await__()
 
 
-
 # replace with green threading
 import sys
-sys.modules['threading'] =  sys.modules['aio.gthread']
 
+sys.modules["threading"] = sys.modules["aio.gthread"]

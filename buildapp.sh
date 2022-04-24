@@ -8,7 +8,7 @@ EXE=python311
 # check if initial repo
 if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus/
 then
-    # in this special case build testsuite
+    # in this special case build testsuite frontend
     TMPL_DEFAULT="templates/no-worker"
     APK_DEFAULT="demos/org.python3.11.0"
     mkdir -p $APK_DEFAULT
@@ -20,7 +20,7 @@ then
     popd
 else
     APK_DEFAULT="demos/1-touchpong"
-    TMPL_DEFAULT="templates/no-worker-fs"
+    TMPL_DEFAULT="templates/no-worker"
 fi
 
 
@@ -59,7 +59,6 @@ touch $(echo -n $PREFIX/lib/python3.??/site-packages)/README.txt
 
 ALWAYS_ASSETS=$(realpath tests/assets)
 ALWAYS_CODE=$(realpath tests/code)
-
 
 
 

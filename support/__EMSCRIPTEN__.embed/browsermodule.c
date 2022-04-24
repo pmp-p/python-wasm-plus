@@ -250,6 +250,9 @@ _py_notify_done(PromiseWrapper *wrapper, EM_VAL result_handle) {
  * Constructs a new Object, or if given a single argument, simply wraps that in
  * an Object (like how it works in JavaScript).
  */
+
+/* unused function */
+/*
 static int
 Object_init(Object *self, PyObject *args, PyObject *kwargs) {
   if (kwargs != NULL && PyDict_Size(kwargs) > 0) {
@@ -269,6 +272,7 @@ Object_init(Object *self, PyObject *args, PyObject *kwargs) {
   }
   return 0;
 }
+*/
 
 /**
  * Decrements refcount of this Object.

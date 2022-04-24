@@ -6,14 +6,18 @@ import sys, os, builtins
 
 # need them earlier than aio
 
+
 def pdb(*argv):
     print(*argv, file=sys.__stderr__)
 
+
 builtins.pdb = pdb
+
 
 def print_exception(e, out=sys.stderr, **kw):
     kw["file"] = out
     traceback.print_exc(**kw)
+
 
 sys.print_exception = print_exception
 
@@ -122,7 +126,7 @@ class __EMSCRIPTEN__:
         sys.stderr.flush()
 
     @classmethod
-    def trap(cls,*argv,**kw):
+    def trap(cls, *argv, **kw):
         pass
 
     js = pdb
@@ -138,8 +142,6 @@ import aio.prepro
 import aio.cross
 
 aio.cross.simulator = True
-
-
 
 
 exec(open("${PYTHONRC}").read(), globals(), globals())

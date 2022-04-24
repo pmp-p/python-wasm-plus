@@ -304,10 +304,11 @@ test_wave test_zipapp
                 tlist.append(t)
     asyncio.run( run_tests( tlist ) )
 
+print( sys._emscripten_info )
 
-if 0:
-    print("starting one verbose test")
-    aio.defer( testv, ("test_zipapp",),{}, 2000)
+if len(sys.argv[-1]):
+    print("starting one verbose test : ",sys.argv[-1])
+    aio.defer( testv, (sys.argv[-1],),{}, 2000)
 else:
     print(" - starting full testsuite in a few seconds -")
     aio.defer( test, (),{}, 10000)

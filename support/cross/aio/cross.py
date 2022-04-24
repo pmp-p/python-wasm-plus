@@ -64,7 +64,6 @@ if hasattr(sys, "getandroidapilevel"):
         defined("__ANDROID_API__", sys.getandroidapilevel())
 
 
-
 if sys.platform == "emscripten":
     platform = defined("__EMSCRIPTEN__")
     if not platform:
@@ -116,27 +115,6 @@ WARNING: also not in __main__ or simulator provided platform module
 define("embed", driver)
 
 platform.init_platform(driver)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # ================== leverage known python implementations ====================

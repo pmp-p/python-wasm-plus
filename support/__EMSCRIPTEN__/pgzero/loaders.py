@@ -175,8 +175,16 @@ class ImageLoader(ResourceLoader):
     EXTNS = ['png', 'gif', 'jpg', 'jpeg', 'bmp']
     TYPE = 'image'
 
-    def _load(self, path):
-        return pygame.image.load(path).convert_alpha()
+    if sys.platform == 'emscripten':
+        def _load(self, path):
+            try:
+                return pygame.image.load(path)
+            except Exception as e:
+                print(path)
+                sys.print_exception(e)
+    else:
+        def _load(self, path):
+            return pygame.image.load(path).convert_alpha()
 
     def __repr__(self):
         return "<Images images={}>".format(self.__dir__())
