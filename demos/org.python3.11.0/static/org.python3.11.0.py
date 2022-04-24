@@ -1,7 +1,8 @@
-import sys
+import sys, os
 import asyncio
-
-print(open('cpython.six').read())
+six = '/data/data/org.python/assets/cpython.six'
+if os.path.isfile(six):
+    print(open(six).read())
 
 print('CPython',sys.version,'\n', file=sys.stderr)
 

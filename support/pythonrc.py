@@ -240,9 +240,16 @@ if defined("embed") and hasattr(embed, "readline"):
 
         @classmethod
         def exec(cls, cmd, *argv, **env):
+            global pgzrun
             # TODO extract env from __main__ snapshot
             if cmd.endswith(".py"):
-                execfile(cmd)
+                if pgzrun:
+                    print("a program is already running, using 'stop' cmd before retrying")
+                    cls.stop()
+                    aio.defer(cls.exec,(cmd,*argv),env, 500)
+
+                else:
+                    execfile(cmd)
                 return True
             return False
 
@@ -255,6 +262,7 @@ if defined("embed") and hasattr(embed, "readline"):
 
         @classmethod
         def stop(cls, *argv, **env):
+            global pgzrun
             aio.exit = True
             # pgzrun will reset to None next exec
             if not pgzrun:
@@ -327,10 +335,17 @@ except Exception as e:
 
 # make simulations same each time, easier to debug
 import random
+random.seed(1)
 
 # ======================================================
+
 # import pygame
+pgzrun = None
+
 import aio.recycle
+# ============================================================
+# DO NOT ADD ANYTHING FROM HERE OR APP RECYCLING WILL TRASH IT
+
 
 
 #

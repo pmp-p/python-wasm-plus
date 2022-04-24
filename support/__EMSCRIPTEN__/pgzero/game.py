@@ -366,8 +366,7 @@ class PGZeroGame:
                     t = nextt
                     await asyncio.sleep(0)
             finally:
-                print('pygame.display.quit()')
-                print('pygame.mixer.quit()')
+                aio.recycle.cleanup()
 
 
         def run(self):
