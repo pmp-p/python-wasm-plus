@@ -12,12 +12,17 @@ FS=$PYTHONPYCACHEPREFIX/fs
 $HPY -v <<END 2>&1 |grep py$ > $FS
 import sys, os, json, builtins, shutil, zipimport, tomllib, time
 import trace, traceback, asyncio, inspect, _thread, importlib
-sys.stdout.reconfigure(encoding='utf-16')
 import ctypes
+sys.stdout.reconfigure(encoding='utf-16')
+
+#pymunk tests
+import unittest, locale
+
 #pymunk4
-import imp
-#pymunk4 ( but really not usefull)
-import platform
+import imp, platform
+
+#pymunk6
+import numbers, random
 
 #pgzero
 import hashlib, queue, pkgutil
@@ -25,14 +30,9 @@ import hashlib, queue, pkgutil
 #numpy
 import pathlib
 
-
-#pymunk6
-import numbers, random
-#pymunk tests
-import unittest, locale
-
 # cffi
 import copy
+
 if 0:
     import cffi
     from cffi import FFI
@@ -70,7 +70,7 @@ mkdir -p $PYTHONPYCACHEPREFIX/stdlib-coldstart
 pushd $PYTHONPYCACHEPREFIX/stdlib-coldstart
 tar xvf $PYTHONPYCACHEPREFIX/stdl.tar | wc -l
 rm $PYTHONPYCACHEPREFIX/stdl.tar
-du -hs $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.11
+du -hs $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.??
 popd
 
 

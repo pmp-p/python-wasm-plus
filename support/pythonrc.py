@@ -213,6 +213,29 @@ if defined("embed") and hasattr(embed, "readline"):
                     print(out)
 
         @classmethod
+        def clear(cls, *argv,**kw):
+            import pygame
+            screen = pygame.display.set_mode()
+            screen.fill( (0, 0, 0) )
+            pygame.display.update()
+
+        @classmethod
+        def display(cls,*argv,**kw):
+            import pygame
+            if not len(argv):
+                surf = _
+            else:
+                if argv[-1].lower().endswith('bmp'):
+                    surf = pygame.image.load_basic( argv[-1] )
+                else:
+                    surf = pygame.image.load_( argv[-1] )
+
+            screen = pygame.display.set_mode()
+            screen.blit( surf, (1,1) )
+            pygame.display.update()
+
+
+        @classmethod
         def pgzrun(cls, *argv):
             global pgzrun
             pgzrun = True
