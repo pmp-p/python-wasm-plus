@@ -33,13 +33,15 @@ pushd src/pygame-wasm 2>&1 >/dev/null
 
 #TODO: $HPY setup.py cython config
 
+# for libSDL2_ttf.a
+# LDFLAGS="$LDFLAGS -L$ROOT/emsdk/upstream/emscripten/cache/sysroot/lib/wasm32-emscripten/pic"
+
 # emsdk is activated via python3-wasm
-unset LDFLAGS
 
 if python3-wasm setup.py -config -auto -sdl2
 then
     if CC=emcc CFLAGS="-DBUILD_STATIC -DSDL_NO_COMPAT -ferror-limit=1 -fPIC"\
- EMCC_CFLAGS="$CFLDPFX -I$PREFIX/include/SDL2 -s USE_SDL=2 -sUSE_LIBPNG -sUSE_LIBJPEG -sUSE_SDL_TTF "\
+ EMCC_CFLAGS="$CPPFLAGS -I$PREFIX/include/SDL2 $LDFLAGS -s USE_SDL=2 -sUSE_SDL_TTF=2 -sUSE_LIBPNG -sUSE_LIBJPEG"\
  python3-wasm setup.py build
     then
         OBJS=$(find build/temp.wasm32-tot-emscripten-3.??/|grep o$)
