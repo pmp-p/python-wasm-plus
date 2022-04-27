@@ -11,16 +11,16 @@ export PYTHONPYCACHEPREFIX="$(realpath build/pycache)"
 
 . scripts/cpython-fetch.sh
 . support/__EMSCRIPTEN__.sh
-. scripts/cpython-build-host.sh
-. scripts/cpython-build-host-deps.sh
+. scripts/cpython-build-host.sh >/dev/null
+. scripts/cpython-build-host-deps.sh >/dev/null
 
 # optionnal, each sub module should call it
 ./scripts/emsdk-fetch.sh
 
 # use ./ or emsdk will pollute env
-if ./scripts/cpython-build-emsdk.sh
+if ./scripts/cpython-build-emsdk.sh >/dev/null
 then
-    ./scripts/cpython-build-emsdk-deps.sh
+    ./scripts/cpython-build-emsdk-deps.sh > /dev/null
 
     ./scripts/pygame-all.sh
 

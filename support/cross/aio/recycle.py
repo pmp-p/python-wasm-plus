@@ -31,6 +31,7 @@ def cleanup():
     random.seed(1)
 
     aio.exit = False
+    aio.paused = False
     print(" - cycling done -")
     try:
         platform.set_window_title('idle')

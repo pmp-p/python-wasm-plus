@@ -330,11 +330,11 @@ if __WASM__:
     def __exit__(ec):
         global loop, no_exit
         if no_exit:
-            aio.recycle.cleanup()
-            aio.defer(embed.prompt, (), {}, 300)
+            pdb("270: exited with code", ec)
         else:
             loop.close()
-        pdb("270: exited with code", ec)
+        aio.recycle.cleanup()
+        aio.defer(embed.prompt, (), {}, 300)
 
 else:
     __exit__ = sys.exit
@@ -350,8 +350,8 @@ def aio_exit(maybecoro):
 
         run(atexit(maybecoro))
     else:
-        if __WASM__:
-            pdb("309: NOT A CORO", maybecoro)
+        #if __WASM__:
+        #    pdb("309: NOT A CORO", maybecoro)
         exit_now(maybecoro)
 
 
