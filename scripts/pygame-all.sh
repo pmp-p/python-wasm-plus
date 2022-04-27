@@ -43,7 +43,7 @@ pushd src/pygame-wasm 2>&1 >/dev/null
 if python3-wasm setup.py -config -auto -sdl2
 then
     if CC=emcc CFLAGS="-DBUILD_STATIC -DSDL_NO_COMPAT -ferror-limit=1 -fPIC"\
- EMCC_CFLAGS="$CFLDPFX -I$PREFIX/usr/include/SDL2 -s USE_SDL=2 -sUSE_LIBPNG -sUSE_LIBJPEG -sUSE_SDL_TTF"\
+ EMCC_CFLAGS="$CFLDPFX -I$PREFIX/include/SDL2 -s USE_SDL=2 -sUSE_LIBPNG -sUSE_LIBJPEG -sUSE_SDL_TTF"\
  python3-wasm setup.py build
     then
         OBJS=$(find build/temp.wasm32-tot-emscripten-3.??/|grep o$)
