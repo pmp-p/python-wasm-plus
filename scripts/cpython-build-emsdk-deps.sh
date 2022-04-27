@@ -41,8 +41,8 @@ then
         wget -c https://download.osgeo.org/libtiff/tiff-$TIFF_VER.tar.gz && tar xfz tiff-$TIFF_VER.tar.gz
         pushd tiff-$TIFF_VER
         EMCC_CFLAGS="$ALL" $CNF
-        EMCC_CFLAGS="$ALL" emmake make
-        emmake make install
+        EMCC_CFLAGS="$ALL" emmake make 2>&1>/dev/null
+        emmake make install 2>&1>/dev/null
         popd
     fi
 fi
@@ -59,9 +59,9 @@ else
         && tar xfz libwebp-$WEBP_VER.tar.gz
     pushd libwebp-$WEBP_VER
     EMCC_CFLAGS="$ALL" $CNF \
-     --disable-threading --disable-neon --disable-sse2 --enable-libwebpdecoder
-    EMCC_CFLAGS="$ALL" emmake make
-    emmake make install
+     --disable-threading --disable-neon --disable-sse2 --enable-libwebpdecoder 2>&1>/dev/null
+    EMCC_CFLAGS="$ALL" emmake make 2>&1>/dev/null
+    emmake make install 2>&1>/dev/null
     popd
 fi
 
@@ -73,6 +73,7 @@ then
     * SDL2_image already built
 "
 else
+    [ -d SDL_image ] || git clone https://github.com/libsdl-org/SDL_image
     pushd SDL_image
     CFLAGS=$CPOPTS EMCC_CFLAGS="$ALL" $CNF \
      --disable-sdltest --disable-jpg-shared --disable-png-shared

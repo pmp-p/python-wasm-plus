@@ -8,6 +8,7 @@ import sys, os, builtins
 # are they not ?
 builtins.builtins = builtins
 
+from platform import *
 
 try:
     import aio

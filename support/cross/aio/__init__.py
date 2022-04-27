@@ -116,7 +116,7 @@ protect = []
 last_state = None
 tasks = []
 ctx = False
-
+no_exit = True
 
 from asyncio import *
 
@@ -318,8 +318,8 @@ def exit_now(ec):
 
     #  will prevent another asyncio loop call, we exit next cycle on oneshots queue
     paused = True
-    # if not __WASM__:
-    pdb("291: exiting with code", ec)
+    if not __WASM__:
+        pdb("291: exiting with code", ec)
     defer(__exit__, (ec,), {}, 0)
 
 
@@ -328,8 +328,12 @@ def exit_now(ec):
 if __WASM__:
 
     def __exit__(ec):
-        global loop
-        loop.close()
+        global loop, no_exit
+        if no_exit:
+            aio.recycle.cleanup()
+            aio.defer(embed.prompt, (), {}, 300)
+        else:
+            loop.close()
         pdb("270: exited with code", ec)
 
 else:
