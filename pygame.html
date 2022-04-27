@@ -277,29 +277,7 @@ if os.path.isfile("/data/data/pythonrc.py"):
 
 
 
-    function on_click(button_id, pycode, jsfunc) {
-        var wdg = null;
-        try {
-            wdg = document.getElementById(button_id)
-        } catch (x) {}
 
-        if (wdg) {
-            if (pycode) {
-                wdg.addEventListener('click', (e) => {
-                    // #! turns echo off
-                    Module.PyRun_SimpleString(`#!
-${pycode}
-`) // Keep the newline or linenumbering will activate
-
-                })
-            }
-            if (jsfunc)
-                jsfunc()
-            wdg.removeAttribute('disabled')
-        } else
-            console.error(__FILE__, `cannot bind code to id=${button_id}`)
-
-    }
 
     window.onload = function () {
         // nothing is ready.
@@ -312,7 +290,7 @@ ${pycode}
             wasmterm = { print : console.log, sixel : function(){}}
         } else {
             // it uses  document.getElementById('terminal') to get its host
-            wasmterm = new WasmTerminal( "terminal", 132, 35 )
+            wasmterm = new WasmTerminal( "terminal", 100, 35 )
 
             window.xterm = wasmterm.xterm
 

@@ -157,6 +157,30 @@ register(_until);
 
 }
 
+
+// events ===========================================================
+
+
+function on_click(button_id, pycode, jsfunc) {
+   const wdg = document.getElementById(button_id)
+    if (wdg) {
+        if (pycode) {
+            wdg.addEventListener('click', (e) => {
+                // #! turns echo off
+                Module.PyRun_SimpleString("#!\n${pycode}")
+            })
+        }
+        if (jsfunc)
+            jsfunc()
+        wdg.removeAttribute('disabled')
+    } else
+        console.error(__FILE__, `cannot bind code to id=${button_id}`)
+}
+register(on_click)
+
+
+
+
 // READLINE ========================================================
 
 
@@ -167,51 +191,47 @@ readline.complete = function (line) {
     if ( readline.history[ readline.history.length -1 ] != line )
         readline.history.push(line);
     readline.index = 0;
-
-// postMessage convert utf16->8
-//    python.PyRun_SimpleString(unescape(encodeURIComponent(line)) + "\n")
     python.PyRun_SimpleString(line + "\n")
 
 }
 
 
-
-
-
 // Xterm Sixel ======================================================
 
-
-
 export class WasmTerminal {
+    constructor(hostid, cols, rows) {
+        this.input = ''
+        this.resolveInput = null
+        this.activeInput = true
+        this.inputStartCursor = null
 
-  constructor(hostid, cols, rows) {
-    this.input = ''
-    this.resolveInput = null
-    this.activeInput = true
-    this.inputStartCursor = null
+        this.xterm = new Terminal(
+            {
+                scrollback: 10000,
+                fontSize: 14,
+                theme: { background: '#1a1c1f' },
+                cols: (cols || 100), rows: (rows || 25)
+            }
+        );
 
-    this.xterm = new Terminal(
-      { scrollback: 10000, fontSize: 14, theme: { background: '#1a1c1f' }, cols: (cols || 100), rows: (rows || 25) }
-    );
+        const imageAddon = new ImageAddon.ImageAddon("./xtermjsixel/xterm-addon-image-worker.js", {sixelSupport: true});
 
-    const imageAddon = new ImageAddon.ImageAddon("./xtermjsixel/xterm-addon-image-worker.js", {sixelSupport: true});
+        this.xterm.loadAddon(imageAddon);
+        console.warn(hostid,cols,rows)
+        this.xterm.open(document.getElementById( 'terminal'))
 
-    this.xterm.loadAddon(imageAddon);
-    console.warn(hostid,cols,rows)
-    this.xterm.open(document.getElementById( 'terminal'))
+        // hack to hide scrollbar inside box
+        document.getElementsByClassName('xterm-viewport')[0].style.left="-15px"
 
-    // hack to hide scrollbar inside box
-    document.getElementsByClassName('xterm-viewport')[0].style.left="-15px"
+        this.xterm.onKey((keyEvent) => {
+            // Fix for iOS Keyboard Jumping on space
+            if (keyEvent.key === " ") {
+                keyEvent.domEvent.preventDefault();
+            }
 
-    this.xterm.onKey((keyEvent) => {
-        // Fix for iOS Keyboard Jumping on space
-        if (keyEvent.key === " ") {
-            keyEvent.domEvent.preventDefault();
-        }
+        });
 
-    });
-
-    this.xterm.onData(this.handleTermData)
+        this.xterm.onData(this.handleTermData)
     }
 
     open(container) {
@@ -323,6 +343,10 @@ export class WasmTerminal {
                     this.handleCursorErase(true);
                     break;
 
+                case "\0x03": // CTRL+C
+
+                    break
+
                 // ^L for clearing VT but keep X pos.
                 case "\x0c":
                     const cy = this.xterm.buffer.active.cursorY
@@ -343,9 +367,14 @@ export class WasmTerminal {
                     break;
 
             default:
-                console.log("vt:" + ord )
-
-          }
+                switch (ord) {
+                    case 3:
+                        readline.complete("raise KeyboardInterrupt")
+                        break
+                default :
+                    console.log("vt:" + ord )
+                }
+            }
         } else {
             this.input += data;
             this.xterm.write(data)
@@ -390,7 +419,7 @@ async function mount_at(archive, path, relpath, hint) {
     hint = hint || archive
 
     function apk_cb(e, apkfs){
-        console.log(__FILE__,"mounting",archive,"onto", path)
+        console.log(__FILE__, "mounting",archive,"onto", path)
 
         BrowserFS.FileSystem.InMemory.Create(
             function(e, memfs) {
@@ -535,6 +564,7 @@ function pythonvm(canvasid, vterm) {
     register(b_utf8)
 
     function pre1(VM){
+
         function stdin() {
             return null
         }
@@ -637,10 +667,8 @@ function pythonvm(canvasid, vterm) {
 
     }
 
-
     var preRun = [ pre1 ]
-    var postRun = [ function(VM){window.python = VM}]
-
+    var postRun = [ function (VM) { window.python = VM } ]
 
     if (window.custom_prerun)
         preRun.push(custom_prerun)
@@ -730,24 +758,12 @@ function pythonvm(canvasid, vterm) {
     }
 
 
-
-
-
     if (modularized) {
         python311(Module).then( async (vm) => {
-
                 VM = vm
-
-                // for backward compat
-                //window.Module = VM
-                //window.FS = VM.FS
-
                 await _until(defined, "APK", VM)
-
                 await fshandler(VM)
-
                 await _until(defined, "main_chook")
-
                 console.log(__FILE__,"custom_site End")
             }
         );
