@@ -101,7 +101,13 @@ except:
         builtins.__EMSCRIPTEN__ = this
     else:
         builtins.__EMSCRIPTEN__ = None
+
+    is_browser = not sys._emscripten_info.runtime.startswith('Node.js')
+
+    from embed import *
+
     if not __UPY__:
+        from platform import *
         from embed_browser import *
         from embed_emscripten import *
     else:
@@ -127,9 +133,6 @@ else:
         uasyncio = aio
 
 sys.modules["uasyncio"] = uasyncio
-
-
-
 
 
 def init_platform(embed):
@@ -164,7 +167,7 @@ def init_platform(embed):
             pdb("WARNING: that wasm build does not support threads")
 
 
-
+ROOTDIR = f"/data/data/{sys.argv[0]}/assets"
 
 
 def explore(pushpopd, newpath):
@@ -256,10 +259,11 @@ def PyConfig_InitPythonConfig(PyConfig):
     preloadedImages = "png jpeg jpg gif"
     preloadedAudios = "wav ogg mp4"
 
+
     def preload_apk(p=None):
         global counter, prelist, ROOTDIR
         global explore, preloadedWasm, preloadedImages, preloadedAudios
-        ROOTDIR = p or f"/data/data/{sys.argv[0]}"
+        ROOTDIR = p or ROOTDIR
         if os.path.isdir(ROOTDIR):
             os.chdir(ROOTDIR)
         else:
@@ -294,7 +298,7 @@ def PyConfig_InitPythonConfig(PyConfig):
     if (sys.argv[0] != 'org.python') and preload_apk():
 
         def fix_preload_table_apk():
-            global fix_preload_table
+            global fix_preload_table, ROOTDIR
             fix_preload_table()
 
             if os.path.isfile("main.py"):
@@ -309,15 +313,16 @@ def PyConfig_InitPythonConfig(PyConfig):
                 aio.defer(runmain, ["main.py"], {})
             else:
                 pdb(f"no main found for {sys.argv[0]}")
-
+            os.chdir(ROOTDIR)
             aio.defer(embed.prompt,(),{},2000)
 
         # C should unlock aio loop when preload count reach 0.
 
     else:
         def fix_preload_table_apk():
-            global fix_preload_table_apk
+            global fix_preload_table_apk, ROOTDIR
             pdb("no assets preloaded")
+            os.chdir(ROOTDIR)
             aio.defer(embed.prompt, (),{})
 
         # unlock embed looper because no preloading

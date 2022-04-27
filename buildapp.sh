@@ -179,7 +179,7 @@ fi
 ./scripts/make_coldstartfs.sh
 
 
-pushd build/cpython-wasm
+pushd build/cpython-wasm 2>&1 >/dev/null
 
 [ -f ${MODE}.js ] && rm ${MODE}.*
 [ -f Programs/${MODE}.o ] && rm Programs/${MODE}.o
@@ -198,6 +198,8 @@ emcc -D__PYDK__=1 -DNDEBUG\
 STDLIBFS="--preload-file  $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.11@/usr/lib/python3.11"
 
 
+# SDL2_image turned off : -ltiff
+
 time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  -s TOTAL_MEMORY=512MB -s ALLOW_TABLE_GROWTH \
  -s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_SDL=2\
@@ -207,7 +209,7 @@ time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  --preload-file ${PLATFORM}@/data/data/org.python/assets/site-packages \
  $ALWAYS_FS \
  -o ${MODE}.js Programs/${MODE}.o ${ROOT}/prebuilt/libpython3.*.a Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a \
- ${ROOT}/prebuilt/libpygame.a -lffi -lSDL2_gfx -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lfreetype -lharfbuzz \
+ ${ROOT}/prebuilt/libpygame.a $CFLDPFX -lffi -lSDL2_gfx -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lfreetype -lharfbuzz \
  -ljpeg -lpng -ldl -lm
 # -lSDL2  -lz
 

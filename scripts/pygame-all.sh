@@ -42,30 +42,22 @@ echo "
 
 "
 
+# remove old lib
+[ -f ${ROOT}/prebuilt/libpygame.a ] && rm ${ROOT}/prebuilt/libpygame.a
 
-pushd src/pygame-wasm
+
+pushd src/pygame-wasm 2>&1 >/dev/null
 
 # regen cython files
 
 #TODO: $HPY setup.py cython config
-
-popd
-
-
-#chmod +x $(find $EMSDK|grep sdl2-config$)
-
-
-pushd src/pygame-wasm
-
-# remove old lib
-[ -f ${ROOT}/prebuilt/libpygame.a ] && rm ${ROOT}/prebuilt/libpygame.a
 
 # emsdk is activated via python3-wasm
 
 if python3-wasm setup.py -config -auto -sdl2
 then
     if CC=emcc CFLAGS="-DBUILD_STATIC -DSDL_NO_COMPAT -ferror-limit=1 -fPIC"\
- EMCC_CFLAGS="-s USE_SDL=2 -sUSE_LIBPNG -s USE_LIBJPEG -sUSE_SDL_TTF -sUSE_SDL_IMAGE"\
+ EMCC_CFLAGS="-s USE_SDL=2 -sUSE_LIBPNG -sUSE_LIBJPEG -sUSE_SDL_TTF"\
  python3-wasm setup.py build
     then
         OBJS=$(find build/temp.wasm32-tot-emscripten-3.??/|grep o$)

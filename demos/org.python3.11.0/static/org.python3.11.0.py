@@ -39,25 +39,35 @@ def sys_exit(*ec):
 sys.exit = sys_exit
 
 def skip_list():
-    SKIP = """
+    HARMLESS= """
+test.test_strftime.StrftimeTest.test_strftime
+
+test.test_decimal.CWhitebox.test_from_tuple
+
 test.test_sys.SysModuleTest.test_exit
+
 test.test_exceptions.ExceptionTests.testRaising
+
 test.test_sysconfig.TestSysConfig.test_get_config_h_filename
 
 test.test_uu.UUFileTest.test_decode_mode
-test.test_float.HexFloatTestCase.test_from_hex
-test.test_capi.SubinterpreterTest.test_module_state_shared_in_global
-test.test_cmath.CMathTests.test_specific_values
 
+test.test_float.HexFloatTestCase.test_from_hex
+
+test.test_capi.SubinterpreterTest.test_module_state_shared_in_global
+
+test.test_cmath.CMathTests.test_specific_values
 
 test.test_zipfile.TestsWithMultipleOpens.test_many_opens
 test.test_zipfile.EncodedMetadataTests.test_cli_with_metadata_encoding
 test.test_zipfile.OtherTests.test_comments
 test.test_zipfile.StoredTestsWithSourceFile.test_add_file_before_1980
 
-
+"""
+    SKIP = HARMLESS + """
 test.test_bytes.BytesTest.test_from_format
 test.test_decimal.CWhitebox.test_maxcontext_exact_arith
+
 ctypes.test.test_as_parameter.AsParamPropertyWrapperTestCase.test_byval
 ctypes.test.test_as_parameter.AsParamPropertyWrapperTestCase.test_callbacks
 ctypes.test.test_as_parameter.AsParamPropertyWrapperTestCase.test_callbacks_2
@@ -307,13 +317,23 @@ test_wave test_zipapp
 
 print( sys._emscripten_info )
 
-if len(sys.argv[-1]):
-    print("starting one verbose test : ",sys.argv[-1])
-    aio.defer( testv, (sys.argv[-1],),{}, 2000)
-else:
-    print(" - starting full testsuite in a few seconds -")
-    aio.defer( test, (),{}, 10000)
 
+if len(sys.argv[-1]):
+    if sys.argv[-1]!='all':
+        print("starting one verbose test : ",sys.argv[-1])
+        aio.defer( testv, (sys.argv[-1],),{}, 2000)
+    else:
+        print(" - starting full testsuite in a few seconds -")
+        aio.defer( test, (),{}, 10000)
+
+else:
+    print("""
+
+    test() => run whole testsuite
+    testv("test_xxxx") => run the test_xxxxx verboe
+
+
+""")
 
 
 

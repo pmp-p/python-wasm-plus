@@ -115,6 +115,7 @@ ticks = 0
 protect = []
 last_state = None
 tasks = []
+ctx = False
 
 
 from asyncio import *
@@ -157,10 +158,11 @@ inloop = False
 
 # this runs both asyncio loop and the arduino style stepper
 def step(*argv):
-    global inloop, last_state, paused, started, loop, oneshots, protect, ticks, steps, step, flush, exit
+    global inloop, last_state, paused, started, loop, oneshots, protect
+    global ticks, steps, step, flush, exit, ctx
 
     # those hold variable that could be processed by C
-    # outside the pyloop, to keep them GC
+    # outside the pyloop, to keep them from GC
     if protect:
         protect.clear()
 
@@ -210,7 +212,9 @@ def step(*argv):
             # loop.call_soon(loop.stop)
             # loop.run_forever()
             if started:
+                aio.ctx = True
                 loop._run_once()
+                aio.ctx = False
 
     except Exception as e:
         sys.print_exception(e)

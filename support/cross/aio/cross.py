@@ -115,6 +115,8 @@ WARNING: also not in __main__ or simulator provided platform module
 define("embed", driver)
 
 platform.init_platform(driver)
+sys.modules['platform'] = platform
+
 
 
 # ================== leverage known python implementations ====================

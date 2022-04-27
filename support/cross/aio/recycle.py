@@ -1,5 +1,6 @@
 import sys
 import aio
+import platform
 
 MODULES = list(sys.modules.keys())
 MAIN = list(vars(__import__("__main__")).keys())
@@ -32,6 +33,7 @@ def cleanup():
     aio.exit = False
     print(" - cycling done -")
     try:
-        embed.prompt()
+        platform.set_window_title('idle')
+        platform.prompt()
     except:
         pass

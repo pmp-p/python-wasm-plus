@@ -28,22 +28,23 @@ then
 "
         . emsdk/emsdk_env.sh 2>&1 > /dev/null
 
-        # 3.6 could have problems
-        for py in 10 9 8 7
-        do
-            if command -v python3.${py}
-            then
-                export EMSDK_PYTHON=$(command -v python3.${py})
-                break
-            fi
-        done
-
     else
         echo "
         ERROR cannot find emsdk/emsdk_env.sh in $(pwd)
 "
         exit 1
     fi
+
+    # 3.6 could have problems
+    for py in 10 9 8 7
+    do
+        if command -v python3.${py}
+        then
+            export EMSDK_PYTHON=$(command -v python3.${py})
+            break
+        fi
+    done
+
 
 
     if [ -f embuild.done ]
@@ -52,9 +53,10 @@ then
         * emsdk prereq ok
     "
     else
-        ALL="libgl libal libhtml5 libstubs libnoexit libsockets"
+        # sdl2_image
+        ALL="embind libgl libal libhtml5 libstubs libnoexit libsockets"
         ALL="$ALL libc libdlmalloc libcompiler_rt libc++-noexcept libc++abi-noexcept"
-        ALL="$ALL libpng libjpeg sdl2 sdl2_image sdl2_mixer sdl2_ttf sdl2_gfx"
+        ALL="$ALL libpng libjpeg sdl2 sdl2_mixer sdl2_ttf sdl2_gfx"
         ALL="$ALL struct_info libfetch zlib bzip2 freetype harfbuzz"
 
         echo "
@@ -67,10 +69,61 @@ then
             + $done
     "
             embuilder --pic build $one
-            embuilder build $one
+            #embuilder build $one
         done
+
+        #tar xvfp emsdk-fix.tar
+
+        cat > emsdk/upstream/emscripten/emcc <<END
+#!/bin/bash
+
+unset _PYTHON_SYSCONFIGDATA_NAME
+unset PYTHONHOME
+unset PYTHONPATH
+
+SHARED=""
+IS_SHARED=false
+
+if echo "\$@"|grep -q shared
+then
+    IS_SHARED=true
+    SHARED="-sSIDE_MODULE"
+else
+    if echo "\$@"|grep -q wasm32-emscripten.so
+    then
+        IS_SHARED=true
+        SHARED="-shared -sSIDE_MODULE"
+    fi
+fi
+
+if \$IS_SHARED
+then
+    $EMSDK_PYTHON -E \$0.py $SHARED "\$@"
+else
+    $EMSDK_PYTHON -E \$0.py "\$@"
+fi
+END
+        cat emsdk/upstream/emscripten/emcc > emsdk/upstream/emscripten/em++
+
+        cat > emsdk/upstream/emscripten/emar <<END
+#!/bin/bash
+
+unset _PYTHON_SYSCONFIGDATA_NAME
+unset PYTHONHOME
+unset PYTHONPATH
+
+$EMSDK_PYTHON -E \$0.py "\$@"
+END
+
+        cat emsdk/upstream/emscripten/emar > emsdk/upstream/emscripten/emcmake
+
+        cat > emsdk/upstream/emscripten/emconfigure <<END
+#!/bin/bash
+$EMSDK_PYTHON -E \$0.py "\$@"
+END
+
+        chmod +x emsdk/upstream/emscripten/em*
         touch embuild.done
-        tar xvfp emsdk-fix.tar
         sync
     fi
 

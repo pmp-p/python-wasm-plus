@@ -40,7 +40,7 @@ else
     then
         echo -n
     else
-        pushd src
+        pushd src 2>&1 >/dev/null
         git clone https://github.com/pmp-p/libffi-emscripten.git libffi
         popd
     fi

@@ -22,6 +22,9 @@ static void pymain_free(void);
     #error "wasi unsupported yet"
 #endif
 
+#include <unistd.h>
+
+
 extern void PyGame_static_init();
 
 static long long embed = 0;
@@ -191,6 +194,16 @@ embed_prompt(PyObject *self, PyObject *_null) {
 }
 
 static PyObject *
+embed_isatty(PyObject *self, PyObject *argv) {
+    int fd = 0;
+    if (!PyArg_ParseTuple(argv, "i", &fd)) {
+        return NULL;
+    }
+    return Py_BuildValue("i", isatty(fd) );
+}
+
+
+static PyObject *
 embed_get_sdl_version(PyObject *self, PyObject *_null)
 {
     SDL_version v;
@@ -214,6 +227,7 @@ static PyMethodDef mod_embed_methods[] = {
     {"readline", (PyCFunction)embed_readline,  METH_NOARGS, "get current line"},
     {"flush", (PyCFunction)embed_flush,  METH_NOARGS, "flush stdio+stderr"},
     {"prompt", (PyCFunction)embed_prompt,  METH_NOARGS, "output >>> "},
+    {"isatty", (PyCFunction)embed_isatty,  METH_VARARGS, "isatty(int fd)"},
     {"get_sdl_version", embed_get_sdl_version, METH_NOARGS, "get_sdl_version"},
     {NULL, NULL, 0, NULL}
 };
@@ -514,6 +528,10 @@ EM_ASM({
     } else {
         console.log("PyMain: BrowserFS not found");
     }
+
+    SYSCALLS.getStreamFromFD(0).tty = true;
+    SYSCALLS.getStreamFromFD(1).tty = true;
+    SYSCALLS.getStreamFromFD(2).tty = true;
 
 }, io_shm[io_stdin_filenum], FD_BUFFER_MAX);
 

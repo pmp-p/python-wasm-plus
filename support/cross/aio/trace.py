@@ -1,6 +1,29 @@
+STEP_INTO = False
+
+def on():
+    global STEP_INTO
+    STEP_INTO = True
+
+def off():
+    global STEP_INTO
+    STEP_INTO = False
+
+def lines(frame, event, arg):
+    if event != 'line':
+        return
+    co = frame.f_code
+    func_name = co.co_name
+    line_no = frame.f_lineno
+    filename = co.co_filename
+    print '  %s line %s' % (func_name, line_no)
+
+
 def calls(frame, event, arg):
+    global STEP_INTO
+
     if event != "call":
         return
+
     co = frame.f_code
     func_name = co.co_name
     if func_name in ("write"):
@@ -31,4 +54,27 @@ def calls(frame, event, arg):
             )
         else:
             print(f"{func_name} {func_filename}:{caller_line_no}->{func_line_no}")
+
+    if STEP_INFO:
+        return lines
     return
+
+"""
+
+def trace_calls_and_returns(frame, event, arg):
+    co = frame.f_code
+    func_name = co.co_name
+    if func_name == 'write':
+        # Ignore write() calls from print statements
+        return
+    line_no = frame.f_lineno
+    filename = co.co_filename
+    if event == 'call':
+        print 'Call to %s on line %s of %s' % (func_name, line_no, filename)
+        return trace_calls_and_returns
+    elif event == 'return':
+        print '%s => %s' % (func_name, arg)
+    return
+
+
+"""

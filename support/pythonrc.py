@@ -228,7 +228,7 @@ if defined("embed") and hasattr(embed, "readline"):
                 if argv[-1].lower().endswith('bmp'):
                     surf = pygame.image.load_basic( argv[-1] )
                 else:
-                    surf = pygame.image.load_( argv[-1] )
+                    surf = pygame.image.load( argv[-1] )
 
             screen = pygame.display.set_mode()
             screen.blit( surf, (1,1) )
@@ -321,7 +321,12 @@ if defined("embed") and hasattr(embed, "readline"):
         if isinstance(e, NameError):
             catch = True
 
-        if catch or isinstance(e, SyntaxError) and e.filename == "<stdin>":
+        if isinstance(e, KeyboardInterrupt):
+            print('\r\nKeyboardInterrupt')
+            return embed.prompt()
+
+
+        if catch or isinstance(e, SyntaxError) and (e.filename == "<stdin>"):
             catch = True
             # index = readline.get_current_history_length()
 
@@ -365,6 +370,7 @@ random.seed(1)
 
 # import pygame
 pgzrun = None
+
 
 import aio.recycle
 # ============================================================

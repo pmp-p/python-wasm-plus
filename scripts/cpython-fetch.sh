@@ -5,11 +5,11 @@
 # same goal as  "python-wasm/fetch-python.sh"
 # get python from git ( actually the only one supporting emsdk without patches)
 
-pushd src
+pushd src 2>&1 >/dev/null
 
 if [ -d cpython ]
 then
-    pushd cpython
+    pushd cpython 2>&1 >/dev/null
     # put the tree back to original state so we can pull
     # Programs/python.c Modules/readline.c
     git restore .
@@ -35,7 +35,7 @@ popd
 # do some patching
 
 
-pushd src/cpython
+pushd src/cpython 2>&1 >/dev/null
 
 # fix the readline loop so host simulator can run 60FPS
 patch -p1 <<END
