@@ -19,7 +19,7 @@ export CPPFLAGS="-I$PREFIX/include"
 export LDFLAGS="-L$PREFIX/lib"
 
 # module build opts
-export CFLDPFX="$CPPFLAGS $LDFLAGS"
+export CFLDPFX="$CPPFLAGS $LDFLAGS -Wno-unused-command-line-argument"
 # -L$PREFIX/lib"
 
 if [ -f dev ]

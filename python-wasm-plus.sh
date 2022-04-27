@@ -21,9 +21,15 @@ export PYTHONPYCACHEPREFIX="$(realpath build/pycache)"
 if ./scripts/cpython-build-emsdk.sh
 then
     ./scripts/cpython-build-emsdk-deps.sh
+
     ./scripts/pygame-all.sh
+
+    # pygame won't build if python or sdl failed
+    [ -f prebuilt/libpygame.a ] || exit 1
+
 else
     echo " cpython-build-emsdk failed"
+    exit 2
 fi
 
 echo done
