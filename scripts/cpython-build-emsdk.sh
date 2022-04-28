@@ -191,10 +191,10 @@ fi
 if \$IS_SHARED
 then
     # $COPTS
-    emcc \$SHARED $COPTS $LDFLAGS -Wno-unused-command-line-argument -sSIDE_MODULE -gsource-map --source-map-base / \$@
+    emcc \$SHARED $COPTS $LDFLAGS -sSIDE_MODULE -gsource-map --source-map-base / \$@
 else
     # $COPTS
-    emcc $COPTS $CPPFLAGS -Wno-unused-command-line-argument -DBUILD_STATIC \$@
+    emcc $COPTS $CPPFLAGS -DBUILD_STATIC \$@
 fi
 END
 
