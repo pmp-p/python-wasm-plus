@@ -11,7 +11,15 @@ def stdlib():
     __import__('importlib').invalidate_caches()
 
 
+# or test_platform will fail
+sys.modules.pop('platform', None)
+
+
 stdlib()
+
+# or test.test_rlcompleter.TestRlcompleter.test_global_matches fails
+del stdlib
+
 
 async def run_tests(tlist):
     global RT, BAD, ALL, FAILS
@@ -38,8 +46,126 @@ def sys_exit(*ec):
 
 sys.exit = sys_exit
 
-def skip_list():
-    HARMLESS= """
+
+# suspicious or too slow
+# test.test_fileio.PyAutoFileTests.testReadintoByteArray
+# test.test_mimetypes.MimetypesCliTestCase.test_invalid_option
+# test.test_getpath.MockGetPathTests.test_registry_win32 ?????? picke error on module obj
+
+
+SLOW="""
+test_pickle
+"""
+
+PROBLEMATIC = """
+test.test_mimetypes.MimetypesCliTestCase.test_invalid_option
+test.test_fileio.PyAutoFileTests.testReadintoByteArray
+"""
+
+MAYBE= """
+test.test_zipapp.ZipAppCmdlineTest.test_info_command
+
+test.test_stat.TestFilemodeCStat.test_directory
+test.test_stat.TestFilemodeCStat.test_mode
+test.test_stat.TestFilemodePyStat.test_directory
+test.test_stat.TestFilemodePyStat.test_mode
+
+test.test_posix.PosixTester.test_dup
+test.test_posix.TestPosixDirFd.test_readlink_dir_fd
+test.test_posix.TestPosixDirFd.test_chmod_dir_fd
+
+test.test_pathlib.PathTest.test_chmod_follow_symlinks_true
+test.test_pathlib.PosixPathTest.test_chmod_follow_symlinks_true
+test.test_pathlib.PathTest.test_chmod
+test.test_pathlib.PathTest.test_is_mount
+test.test_pathlib.PathTest.test_samefile
+test.test_pathlib.PathTest.test_stat
+test.test_pathlib.PosixPathTest.test_chmod
+test.test_pathlib.PosixPathTest.test_is_mount
+test.test_pathlib.PosixPathTest.test_samefile
+test.test_pathlib.PosixPathTest.test_stat
+
+
+test.test_os.TestScandir.test_attributes
+test.test_os.UtimeTests.test_utime
+test.test_os.UtimeTests.test_utime_by_indexed
+test.test_os.UtimeTests.test_utime_by_times
+test.test_os.UtimeTests.test_utime_dir_fd
+test.test_os.UtimeTests.test_utime_directory
+test.test_os.UtimeTests.test_utime_fd
+
+test.test_ntpath.NtCommonTest.test_samefile
+test.test_ntpath.NtCommonTest.test_samestat
+
+test.test_netrc.NetrcTestCase.test_security
+
+test.test_multibytecodec.Test_IncrementalEncoder.test_subinterp
+
+test.test_io.CIOTest.test_buffered_file_io
+test.test_io.CIOTest.test_raw_file_io
+test.test_io.PyIOTest.test_buffered_file_io
+test.test_io.PyIOTest.test_raw_file_io
+test.test_io.CBufferedWriterTest.test_truncate
+test.test_io.PyBufferedWriterTest.test_truncate
+test.test_io.CBufferedRandomTest.test_truncate
+test.test_io.PyBufferedRandomTest.test_truncate
+
+test.test_math.MathTests.testLog2Exact
+test.test_math.MathTests.testRemainder
+test.test_math.MathTests.test_mtestfile
+test.test_math.MathTests.test_nextafter
+test.test_math.MathTests.test_testfile
+
+
+test.test_getpath.MockGetPathTests.test_registry_win32
+
+test.test_dbm_dumb.DumbDBMTestCase.test_readonly_files
+test.test_dbm_dumb.DumbDBMTestCase.test_dumbdbm_creation_mode
+
+test.test_cgi.CgiTests.test_log
+
+builtins.float
+
+test.test_numeric_tower.ComparisonTest.test_mixed_comparisons
+
+test.test_tempfile.TestMkdtemp.test_non_directory
+test.test_tempfile.TestMkstempInner.test_non_directory
+
+test.test_strtod.StrtodTests.test_bigcomp
+test.test_strtod.StrtodTests.test_boundaries
+test.test_strtod.StrtodTests.test_parsing
+test.test_strtod.StrtodTests.test_particular
+test.test_strtod.StrtodTests.test_underflow_boundary
+
+test.test_random.MersenneTwister_TestBasicOps.test_choices_subnormal
+test.test_random.SystemRandom_TestBasicOps.test_choices_subnormal
+
+test.test_tarfile.GNUReadTest.test_sparse_file_00
+test.test_tarfile.GNUReadTest.test_sparse_file_01
+test.test_tarfile.GNUReadTest.test_sparse_file_10
+test.test_tarfile.GNUReadTest.test_sparse_file_old
+test.test_tarfile.MiscReadTest.test_extract_directory
+test.test_tarfile.MiscReadTest.test_extract_pathlike_name
+test.test_tarfile.MiscReadTest.test_extractall
+test.test_tarfile.MiscReadTest.test_extractall_pathlike_name
+
+test.test_mimetypes.MimetypesCliTestCase.test_help_option
+
+test.test_importlib.extension.test_loader.Frozen_LoaderTests.test_is_package
+test.test_importlib.extension.test_loader.Frozen_LoaderTests.test_load_module_API
+test.test_importlib.extension.test_loader.Frozen_LoaderTests.test_module
+test.test_importlib.extension.test_loader.Frozen_LoaderTests.test_module_reuse
+test.test_importlib.extension.test_loader.Source_LoaderTests.test_is_package
+test.test_importlib.extension.test_loader.Source_LoaderTests.test_load_module_API
+test.test_importlib.extension.test_loader.Source_LoaderTests.test_module
+test.test_importlib.extension.test_loader.Source_LoaderTests.test_module_reuse
+test.test_importlib.extension.test_finder.Frozen_FinderTests.test_module
+
+
+unittest.test.test_discovery.TestDiscovery.test_command_line_handling_do_discovery_too_many_arguments
+unittest.test.test_program.Test_TestProgram.test_Exit
+unittest.test.test_program.Test_TestProgram.test_ExitAsDefault
+
 test.test_strftime.StrftimeTest.test_strftime
 
 test.test_decimal.CWhitebox.test_from_tuple
@@ -64,10 +190,15 @@ test.test_zipfile.OtherTests.test_comments
 test.test_zipfile.StoredTestsWithSourceFile.test_add_file_before_1980
 
 """
-    SKIP = HARMLESS + """
-test.test_bytes.BytesTest.test_from_format
-test.test_decimal.CWhitebox.test_maxcontext_exact_arith
 
+OOM="""
+test.test_decimal.CWhitebox.test_maxcontext_exact_arith
+"""
+
+#test.test_bytes.BytesTest.test_from_format
+
+
+FATAL="""
 ctypes.test.test_as_parameter.AsParamPropertyWrapperTestCase.test_byval
 ctypes.test.test_as_parameter.AsParamPropertyWrapperTestCase.test_callbacks
 ctypes.test.test_as_parameter.AsParamPropertyWrapperTestCase.test_callbacks_2
@@ -136,6 +267,14 @@ ctypes.test.test_refcounts.RefcountTestCase.test_refcount
 ctypes.test.test_simplesubclasses.Test.test_ignore_retval
 ctypes.test.test_simplesubclasses.Test.test_int_callback
 """
+
+
+
+
+
+def skip_list(*blocks):
+    SKIP = "".join(blocks)
+
     for skip in SKIP.replace('\n',' ').split(' '):
         if skip:
             sys.argv.append("-i")
@@ -146,11 +285,9 @@ def testv(argv):
     from test.libregrtest.main import Regrtest
     RT = Regrtest()
     sys.argv.append("-v")
-    skip_list()
+    skip_list(OOM, FATAL)
     RT.parse_args({})
     RT._main([argv], {})
-
-
 
 
 def test(*argv):
@@ -161,7 +298,7 @@ def test(*argv):
     if len(argv):
         sys.argv.extend(*argv)
 
-    skip_list()
+    skip_list(SLOW, PROBLEMATIC, MAYBE, OOM, FATAL)
 
     RT.parse_args({})
 
@@ -285,17 +422,8 @@ def test(*argv):
     # known to fail
 
     for t in """
-test_builtin test_argparse test_cgi test_code_module
-test_dbm_dumb test_distutils test_ensurepip test_fileio
-test_genericpath test_getpath test_importlib test_inspect
-test_io test_mailbox test_mailcap test_math test_mimetypes test_multibytecodec
-test_netrc test_ntpath test_numeric_tower test_os test_pathlib test_pickle
-test_plistlib test_posix test_posixpath test_profile test_pydoc test_random
-test_rlcompleter test_sax test_shelve test_shutil test_signal test_stat
-test_strftime test_strtod test_sunau test_support test_sys test_tarfile
-test_tempfile test_trace test_traceback test_tracemalloc test_unicode
-test_unicode_file_functions test_unittest test_univnewlines test_urllib
-test_wave test_zipapp
+test_argparse test_code_module test_distutils test_ensurepip test_genericpath
+test_inspect test_mailbox test_mailcap test_posixpath test_pydoc test_shutil
 """.replace('\n',' ').split(' '):
         if t and not t in FAILS:
             FAILS.append(t)
