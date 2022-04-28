@@ -11,10 +11,15 @@ def stdlib():
     __import__('importlib').invalidate_caches()
 
 
+# or test_platform will fail
+sys.modules.pop('platform', None)
+
+
 stdlib()
 
 # or test.test_rlcompleter.TestRlcompleter.test_global_matches fails
 del stdlib
+
 
 async def run_tests(tlist):
     global RT, BAD, ALL, FAILS
