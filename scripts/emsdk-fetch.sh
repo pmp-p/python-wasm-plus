@@ -98,9 +98,9 @@ fi
 
 if \$IS_SHARED
 then
-    $EMSDK_PYTHON -E \$0.py $SHARED "\$@"
+    $EMSDK_PYTHON -E \$0.py $SHARED $LDFLAGS -Wno-unused-command-line-argument "\$@"
 else
-    $EMSDK_PYTHON -E \$0.py "\$@"
+    $EMSDK_PYTHON -E \$0.py $CPPFLAGS -Wno-unused-command-line-argument "\$@"
 fi
 END
         cat emsdk/upstream/emscripten/emcc > emsdk/upstream/emscripten/em++
