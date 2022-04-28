@@ -21,6 +21,10 @@ from . import cross
 
 cross.DEBUG = DEBUG
 
+
+# file+socket support
+from .filelike import *
+
 # =========================================================================
 
 # TODO: dbg stuff should be in the platform module in aio.cross
@@ -212,9 +216,9 @@ def step(*argv):
             # loop.call_soon(loop.stop)
             # loop.run_forever()
             if started:
-                aio.ctx = True
+                ctx = True
                 loop._run_once()
-                aio.ctx = False
+                ctx = False
 
     except Exception as e:
         sys.print_exception(e)
@@ -330,11 +334,14 @@ if __WASM__:
     def __exit__(ec):
         global loop, no_exit
         if no_exit:
-            pdb("270: exited with code", ec)
+            pdb(f"sys.exit({ec})")
         else:
             loop.close()
-        aio.recycle.cleanup()
-        aio.defer(embed.prompt, (), {}, 300)
+        try:
+            aio.recycle.cleanup()
+            aio.defer(embed.prompt, (), {}, 300)
+        except:
+            pass
 
 else:
     __exit__ = sys.exit
@@ -350,7 +357,7 @@ def aio_exit(maybecoro):
 
         run(atexit(maybecoro))
     else:
-        #if __WASM__:
+        # if __WASM__:
         #    pdb("309: NOT A CORO", maybecoro)
         exit_now(maybecoro)
 
@@ -367,6 +374,35 @@ except:
 
 def rtclock():
     return int(Time.time() * 1_000)
+
+
+def prompt_request():
+    try:
+        embed.prompt_request()
+    except:
+        aio.defer(embed.prompt, (), {}, 100)
+
+
+class after:
+    def __init__(self, oprom):
+        self.oprom = oprom
+
+    def then(self, fn, *argv, **kw):
+        create_task(self.executor(fn, argv, kw))
+
+    async def executor(self, fn, argv, kw):
+        import embed
+
+        mark = None
+        value = undefined
+        wit = cross.platform.window.iterator(self.oprom)
+        while mark != undefined:
+            value = mark
+            await aio.sleep(0)
+            mark = next(wit, undefined)
+        del self.oprom
+        if fn:
+            fn(*argv, **kw)
 
 
 #

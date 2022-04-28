@@ -157,6 +157,27 @@ register(_until);
 
 }
 
+// fs tools =========================================================
+
+async function _rcp(url, store) {
+    var content
+    try {
+        content = await fetch(url)
+    } catch (x) { return false }
+
+    store = store || ( "/data/data/" + url )
+    console.info(__FILE__,`rcp ${url} => ${store}`)
+    if (content.ok) {
+        const text= await content.text()
+        await FS.writeFile( store, text);
+        return true;
+    } else {
+        console.error(__FILE__,`can't rcp ${url} to ${store}`)
+        return false;
+    }
+}
+register(_rcp)
+
 
 // events ===========================================================
 
@@ -412,7 +433,24 @@ register(WasmTerminal)
 // Browser FS ====================================================
 var VM
 
+
+var prom = {}
+var prom_count = 0
+function* iterator(oprom) {
+    const mark = prom_count++;
+    var counter = 0;
+    oprom.then( (value) => prom[mark] = value )
+    while (!prom[mark]) {
+        yield counter++;
+    }
+    yield prom[mark];
+    delete prom[mark]
+}
+register(iterator)
+
+
 async function mount_at(archive, path, relpath, hint) {
+    const mark = prom_count++;
 
     var BFS = new BrowserFS.EmscriptenFS()
     relpath = relpath || '/'
@@ -430,22 +468,32 @@ async function mount_at(archive, path, relpath, hint) {
                                     }, async function(e, mfs) {
                                         await BrowserFS.initialize(mfs);
                                         await VM.FS.mount(BFS, {root: relpath}, path );
-                                        console.log(hint," Mounted !")
+                                        prom[mark] = true;
                                     })
                     }
                 );
             }
         );
     }
+/*
+    const response = await fetch(archive);
+    const zipData = await response.arrayBuffer();
+    await BrowserFS.FileSystem.ZipFS.Create(
+        {"zipData" : VM.Buffer.from(zipData),"name": hint}, apk_cb)
 
+*/
     fetch(archive).then(function(response) {
         return response.arrayBuffer();
     }).then(function(zipData) {
-        BrowserFS.FileSystem.ZipFS.Create({"zipData" : VM.Buffer.from(zipData),"name": hint}, apk_cb)
+        BrowserFS.FileSystem.ZipFS.Create({"zipData" : VM.Buffer.from(zipData),"name":"apkfs"}, apk_cb)
     })
 
+    await _until(defined, ""+mark, prom)
+    //delete prom[mark]
+    return `${hint} mounted`
 }
 register(mount_at)
+
 
 
 async function fshandler(VM) {
@@ -458,6 +506,8 @@ async function fshandler(VM) {
     } catch (x) {
         console.info("/data/data aleady there");
     }
+
+    VM.Buffer = BrowserFS.BFSRequire('buffer').Buffer;
 
 
     if (VM.APK) {
@@ -478,7 +528,7 @@ async function fshandler(VM) {
 
             var BFS = new BrowserFS.EmscriptenFS()
 
-            const Buffer = BrowserFS.BFSRequire('buffer').Buffer;
+
 
             function apk_cb(e, apkfs){
                 console.log(__FILE__,"APK", VM.APK,"maybe received")
@@ -496,7 +546,6 @@ async function fshandler(VM) {
                                                 await VM.FS.mkdir("/data/data/" + VM.APK + "/need-preload");
                                                 console.log(VM.APK," Mounted !")
                                                 VM.vfs = BFS
-                                                VM.Buffer = Buffer
                                             })
                             }
                         );
@@ -507,7 +556,7 @@ async function fshandler(VM) {
             fetch(VM.APK + ".apk").then(function(response) {
                 return response.arrayBuffer();
             }).then(function(zipData) {
-                BrowserFS.FileSystem.ZipFS.Create({"zipData" : Buffer.from(zipData),"name":"apkfs"}, apk_cb)
+                BrowserFS.FileSystem.ZipFS.Create({"zipData" : VM.Buffer.from(zipData),"name":"apkfs"}, apk_cb)
             })
 
             await _until(defined,"vfs", VM)

@@ -12,6 +12,9 @@ see the excellent slides of Christian Heimes at PyCon DE (video not yet availabl
 
   https://speakerdeck.com/tiran/python-3-dot-11-in-the-web-browser-a-journey-pycon-de-2022-keynote
 
+or those of PyCon US 2022
+ https://speakerdeck.com/tiran/language-summit-2022-webassembly-python-in-the-browser-and-beyond
+
 
 for just cpython on wasm see python-wasm https://github.com/ethanhs/python-wasm/
 

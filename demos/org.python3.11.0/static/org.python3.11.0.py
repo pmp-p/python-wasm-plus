@@ -6,19 +6,19 @@ if os.path.isfile(six):
 
 print('CPython',sys.version,'\n', file=sys.stderr)
 
-def stdlib():
-    embed.js('mount_at("org.python3.11.0.apk", "/usr/lib", "/assets")')
-    __import__('importlib').invalidate_caches()
+#def stdlib():
+#    embed.js('mount_at("org.python3.11.0.apk", "/usr/lib", "/assets")')
+#    __import__('importlib').invalidate_caches()
 
 
 # or test_platform will fail
 sys.modules.pop('platform', None)
 
 
-stdlib()
+#stdlib()
 
 # or test.test_rlcompleter.TestRlcompleter.test_global_matches fails
-del stdlib
+#del stdlib
 
 
 async def run_tests(tlist):
@@ -273,6 +273,7 @@ ctypes.test.test_simplesubclasses.Test.test_int_callback
 
 
 def skip_list(*blocks):
+    __import__('importlib').invalidate_caches()
     SKIP = "".join(blocks)
 
     for skip in SKIP.replace('\n',' ').split(' '):
@@ -282,24 +283,25 @@ def skip_list(*blocks):
 
 
 def testv(argv):
-    from test.libregrtest.main import Regrtest
-    RT = Regrtest()
     sys.argv.append("-v")
     skip_list(OOM, FATAL)
+
+    from test.libregrtest.main import Regrtest
+
+    RT = Regrtest()
     RT.parse_args({})
+
     RT._main([argv], {})
 
 
 def test(*argv):
-    global RT, tlist, FAILS, ALL
+    global RT, tlist, FAILS, ALL, STDLIB
+    if len(argv):
+        sys.argv.extend(*argv)
+    skip_list(SLOW, PROBLEMATIC, MAYBE, OOM, FATAL)
 
     from test.libregrtest.main import Regrtest
     RT = Regrtest()
-    if len(argv):
-        sys.argv.extend(*argv)
-
-    skip_list(SLOW, PROBLEMATIC, MAYBE, OOM, FATAL)
-
     RT.parse_args({})
 
     TESTS = """
@@ -446,29 +448,34 @@ test_inspect test_mailbox test_mailcap test_posixpath test_pydoc test_shutil
 print( sys._emscripten_info )
 
 
-if len(sys.argv[-1]):
-    if sys.argv[-1]!='all':
-        print("starting one verbose test : ",sys.argv[-1])
-        aio.defer( testv, (sys.argv[-1],),{}, 2000)
-    else:
-        print(" - starting full testsuite in a few seconds -")
-        aio.defer( test, (),{}, 10000)
 
-else:
-    print("""
+if sys.argv[-1].startswith('org.python3'):
+    defer = ( print,"""
 
     test() => run whole testsuite
-    testv("test_xxxx") => run the test_xxxxx verboe
+    testv("test_xxxx") => verbose run the test_xxxxx test set
 
+""")
+elif sys.argv[-1]!='all':
+    print("starting one verbose test : ",sys.argv[-1])
+    defer = ( testv, sys.argv[-1] )
+else:
+    print(" - starting full testsuite in a few seconds -")
+    defer = ( test, )
+
+
+
+print("""
+
+        Please Wait while gathering testsuite ...
 
 """)
 
 
-
-
-
-
-
+(aio
+.after( window.mount_at("org.python3.11.0.apk", "/usr/lib", "/assets") )
+.then( *defer )
+)
 
 
 
