@@ -191,15 +191,14 @@ fi
 if \$IS_SHARED
 then
     # $COPTS
-    emcc \$SHARED $COPTS -Wunused-command-line-argument -sSIDE_MODULE -gsource-map --source-map-base / \$@
+    emcc \$SHARED $COPTS $LDFLAGS -Wno-unused-command-line-argument -sSIDE_MODULE -gsource-map --source-map-base / \$@
 else
     # $COPTS
-    emcc $COPTS -Wunused-command-line-argument -DBUILD_STATIC \$@
+    emcc $COPTS $CPPFLAGS -Wno-unused-command-line-argument -DBUILD_STATIC \$@
 fi
 END
 
 chmod +x $HOST_PREFIX/bin/cc
-
 
 cat > ${PYTHONPYCACHEPREFIX}/.nanorc <<END
 set tabsize 4
