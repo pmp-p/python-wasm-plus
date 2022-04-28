@@ -1,0 +1,223 @@
+--- ncurses/Makefile	2022-04-26 00:07:51.617172493 +0200
++++ ncurses-wasm/Makefile	2022-04-26 00:12:57.704905779 +0200
+@@ -115,7 +115,7 @@
+ 	cd panel && ${MAKE} ${TOP_MFLAGS} $@
+ 	cd menu && ${MAKE} ${TOP_MFLAGS} $@
+ 	cd form && ${MAKE} ${TOP_MFLAGS} $@
+-	cd misc && ${MAKE} ${TOP_MFLAGS} $@
++#	cd misc && ${MAKE} ${TOP_MFLAGS} $@
+ 
+ libs \
+ install.libs \
+--- ncurses/ncurses/Makefile	2022-04-26 00:07:51.624172419 +0200
++++ ncurses-wasm/ncurses/Makefile	2022-04-26 00:13:43.524417020 +0200
+@@ -49,14 +49,14 @@
+ VPATH		= /data/git/python-wasm-plus/src/ncurses-6.1/ncurses
+ THIS		= Makefile
+ 
+-CF_MFLAGS 	= 
++CF_MFLAGS 	=
+ 
+ 
+-x		= 
++x		=
+ o		= .o
+ 
+ MODEL		= normal
+-DESTDIR		= 
++DESTDIR		=
+ top_srcdir	= /data/git/python-wasm-plus/src/ncurses-6.1
+ srcdir		= /data/git/python-wasm-plus/src/ncurses-6.1/ncurses
+ prefix		= /data/git/python-wasm-plus/devices/emsdk/usr
+@@ -72,14 +72,14 @@
+ 
+ PACKAGE		= ncurses
+ 
+-LIBTOOL		= 
+-LIBTOOL_OPTS	=  
+-LIBTOOL_CLEAN	= 
+-LIBTOOL_COMPILE	= 
++LIBTOOL		=
++LIBTOOL_OPTS	=
++LIBTOOL_CLEAN	=
++LIBTOOL_COMPILE	=
+ LIBTOOL_LINK	= ${CC}
+-LIBTOOL_INSTALL	= 
+-LIBTOOL_UNINSTALL = 
+-LT_UNDEF	= 
++LIBTOOL_INSTALL	=
++LIBTOOL_UNINSTALL =
++LT_UNDEF	=
+ 
+ INSTALL		= /usr/bin/install -c
+ INSTALL_LIB	= /usr/bin/install -c -m 644
+@@ -94,7 +94,7 @@
+ NM		= /data/git/python-wasm-plus/emsdk/upstream/bin/llvm-nm
+ 
+ CTAGS		= ctags
+-ETAGS		= 
++ETAGS		=
+ 
+ CC		= /data/git/python-wasm-plus/emsdk/upstream/emscripten/emcc
+ CPP		= /data/git/python-wasm-plus/emsdk/upstream/emscripten/emcc -E
+@@ -105,7 +105,7 @@
+ 
+ CCFLAGS		= $(CPPFLAGS) $(CFLAGS)
+ 
+-BUILD_CPPFLAGS	= -DHAVE_CONFIG_H -DUSE_BUILD_CC -I../ncurses -I$(srcdir) -I../include -I$(INCDIR) ${CPPFLAGS} 
++BUILD_CPPFLAGS	= -DHAVE_CONFIG_H -DUSE_BUILD_CC -I../ncurses -I$(srcdir) -I../include -I$(INCDIR) ${CPPFLAGS}
+ BUILD_CC	= ${CC}
+ BUILD_CCFLAGS	= ${CFLAGS}
+ BUILD_LDFLAGS	= ${LDFLAGS}
+@@ -115,7 +115,7 @@
+ # is compiled into the build, or are test-programs that are not installed.
+ 
+ BUILD_EXEEXT	= $x
+-x		= 
++x		=
+ 
+ CFLAGS_LIBTOOL	= $(CCFLAGS)
+ CFLAGS_NORMAL	= $(CCFLAGS)
+@@ -126,16 +126,16 @@
+ CFLAGS_DEFAULT	= $(CFLAGS_NORMAL)
+ 
+ LINK		= $(LIBTOOL)
+-LDFLAGS		= -L/data/git/python-wasm-plus/devices/emsdk/usr/lib  
++LDFLAGS		= -L/data/git/python-wasm-plus/devices/emsdk/usr/lib
+ 
+ SHLIB_DIRS	= -L../lib
+-SHLIB_LIST	= $(SHLIB_DIRS) 
+-TINFO_LIST	= $(SHLIB_DIRS) 
+-TICS_LIST	= $(SHLIB_DIRS) 
++SHLIB_LIST	= $(SHLIB_DIRS)
++TINFO_LIST	= $(SHLIB_DIRS)
++TICS_LIST	= $(SHLIB_DIRS)
+ 
+ RPATH_LIST	= ${libdir}
+-RESULTING_SYMS	= 
+-VERSIONED_SYMS	= 
++RESULTING_SYMS	=
++VERSIONED_SYMS	=
+ MK_SHARED_LIB	= ${CC} ${LDFLAGS} ${CFLAGS} -shared -Wl,-soname,`basename $@ .${REL_VERSION}`.${ABI_VERSION},-stats,-lc -o $@
+ 
+ NCURSES_MAJOR	= 6
+@@ -147,11 +147,11 @@
+ 
+ LIBRARIES	=  ../lib/libncurses.a ../lib/libncurses_g.a
+ 
+-LINT		= 
+-LINT_OPTS	= 
+-LINT_LIBS	= -lncurses 
++LINT		=
++LINT_OPTS	=
++LINT_LIBS	= -lncurses
+ 
+-FALLBACK_LIST	= 
++FALLBACK_LIST	=
+ 
+ USE_BIG_STRINGS	= 1
+ TERMINFO_CAPS	= $(top_srcdir)/include/Caps
+@@ -186,7 +186,7 @@
+ 	$(INCDIR)/nc_mingw.h
+ 
+ TEST_DEPS	= ../lib/libncurses.a
+-TEST_ARGS	= -static -L../lib -lform -lmenu -lpanel -lncurses  -dynamic 
++TEST_ARGS	= -static -L../lib -lform -lmenu -lpanel -lncurses  -dynamic
+ TEST_LDFLAGS	=  $(TEST_ARGS)   -L/data/git/python-wasm-plus/devices/emsdk/usr/lib
+ 
+ TEST_PROGS = \
+@@ -208,7 +208,7 @@
+ ################################################################################
+ all libs ::	$(AUTO_SRC) ../lib $(LIBRARIES)
+ 
+-all libs ::	report_offsets$(BUILD_EXEEXT) 
++all libs ::	report_offsets$(BUILD_EXEEXT)
+ 
+ sources:	$(AUTO_SRC)
+ 
+@@ -230,20 +230,20 @@
+ keys.list :	$(tinfo)/MKkeys_list.sh
+ 	AWK=$(AWK) $(SHELL) $(tinfo)/MKkeys_list.sh $(TERMINFO_CAPS) | LC_ALL=C sort >$@
+ 
+-make_keys$(BUILD_EXEEXT) : \
+-		$(tinfo)/make_keys.c \
+-		names.c
+-	$(BUILD_CC) -o $@ $(BUILD_CPPFLAGS) $(BUILD_CCFLAGS) $(tinfo)/make_keys.c $(BUILD_LDFLAGS) $(BUILD_LIBS)
+-
+-make_hash$(BUILD_EXEEXT) : \
+-		$(tinfo)/make_hash.c \
+-		../include/hashsize.h
+-	$(BUILD_CC) -o $@ $(BUILD_CPPFLAGS) $(BUILD_CCFLAGS) $(tinfo)/make_hash.c $(BUILD_LDFLAGS) $(BUILD_LIBS)
+-
+-report_offsets$(BUILD_EXEEXT) : \
+-		$(srcdir)/report_offsets.c
+-	$(BUILD_CC) -o $@ $(BUILD_CPPFLAGS) $(BUILD_CCFLAGS) $(srcdir)/report_offsets.c $(BUILD_LDFLAGS) $(BUILD_LIBS)
+-	./report_offsets$(BUILD_EXEEXT)
++#make_keys$(BUILD_EXEEXT) : \
++#		$(tinfo)/make_keys.c \
++#		names.c
++#	$(BUILD_CC) -o $@ $(BUILD_CPPFLAGS) $(BUILD_CCFLAGS) $(tinfo)/make_keys.c $(BUILD_LDFLAGS) $(BUILD_LIBS)
++
++#make_hash$(BUILD_EXEEXT) : \
++#		$(tinfo)/make_hash.c \
++#		../include/hashsize.h
++#	$(BUILD_CC) -o $@ $(BUILD_CPPFLAGS) $(BUILD_CCFLAGS) $(tinfo)/make_hash.c $(BUILD_LDFLAGS) $(BUILD_LIBS)
++
++#report_offsets$(BUILD_EXEEXT) : \
++#		$(srcdir)/report_offsets.c
++#	$(BUILD_CC) -o $@ $(BUILD_CPPFLAGS) $(BUILD_CCFLAGS) $(srcdir)/report_offsets.c $(BUILD_LDFLAGS) $(BUILD_LIBS)
++#	./report_offsets$(BUILD_EXEEXT)
+ 
+ ./expanded.c : $(srcdir)/curses.priv.h $(serial)/MKexpanded.sh
+ 	$(SHELL) -e $(serial)/MKexpanded.sh "$(CPP)" $(CPPFLAGS) > $@
+@@ -280,9 +280,9 @@
+ 
+ clean :: mostlyclean
+ 	-rm -f $(AUTO_SRC)
+-	-rm -f make_keys$(BUILD_EXEEXT)
+-	-rm -f make_hash$(BUILD_EXEEXT)
+-	-rm -f report_offsets$(BUILD_EXEEXT)
++#	-rm -f make_keys$(BUILD_EXEEXT)
++#	-rm -f make_hash$(BUILD_EXEEXT)
++#	-rm -f report_offsets$(BUILD_EXEEXT)
+ 	-rm -rf .libs *.dSYM *.map
+ 
+ distclean :: clean
+@@ -327,7 +327,7 @@
+ ###############################################################################
+ 
+ # Generated by CF_LIB_RULES
+-resulting.map: 
++resulting.map:
+ 	gawk 'BEGIN { skip = 1; last=""; } /deprecated in ABI6/ { next; }{ sub("NCURSES([WT]+)?", "&6"); } { if ( last != "" && ( skip == 0 || $$0 !~ /}/ ) ) { print last; } skip = 0; last = $$0; } END { print last; }' <  >$@
+ 
+ distclean::
+@@ -336,8 +336,8 @@
+ # generated by mk-0th.awk
+ #   libname:    ncurses
+ #   subsets:    ticlib+termlib+ext_tinfo+base+ext_funcs
+-#   ticlib:     
+-#   termlib:    
++#   ticlib:
++#   termlib:
+ 
+ .SUFFIXES: .c .cc .h .i .ii
+ .c.i :
+@@ -885,7 +885,7 @@
+ #   echo:       no
+ #   subset:     ticlib+termlib+ext_tinfo+base+ext_funcs
+ #   crenames:   yes
+-#   cxxrenames: 
++#   cxxrenames:
+ #   traces:     DEBUG
+ #   srcdir:     /data/git/python-wasm-plus/src/ncurses-6.1
+ 
+@@ -1902,7 +1902,7 @@
+ #   echo:       no
+ #   subset:     ticlib+termlib+ext_tinfo+base+ext_funcs
+ #   crenames:   yes
+-#   cxxrenames: 
++#   cxxrenames:
+ #   traces:     DEBUG
+ #   srcdir:     /data/git/python-wasm-plus/src/ncurses-6.1
+ 
