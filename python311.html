@@ -297,8 +297,6 @@ ${pycode}
         // nothing is ready.
 
 
-
-
         var wasmterm
 
         if (!config.xtermjs) {
@@ -310,9 +308,6 @@ ${pycode}
 
             window.xterm = wasmterm.xterm
 
-            const replButton = document.getElementById('repl')
-            const clearButton  = document.getElementById('clearvt')
-
             on_click('repl',`
 print(chr(27),"[2J",chr(27),"[H",sep='',end='')
 print(open('/assets/cpython.six').read())
@@ -321,8 +316,6 @@ print(sys.version)
 `, () => { xterm.reset() } )
 
             on_click('clearvt',"", ()=>{xterm.clear()} )
-
-            clearButton.removeAttribute('disabled')
 
         }
 
