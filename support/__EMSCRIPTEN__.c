@@ -2,6 +2,25 @@
 // from python-main.c
 static PyStatus pymain_init(const _PyArgv *args);
 static void pymain_free(void);
+
+
+
+headless tests ?
+
+    https://github.com/paulrouget/servo-embedding-example
+
+    https://chromium.googlesource.com/chromium/src/+/lkgr/headless/README.md
+
+
+webserver ?
+    https://github.com/humphd/nohost
+
+
+
+
+
+
+
 */
 
 #if __EMSCRIPTEN__
