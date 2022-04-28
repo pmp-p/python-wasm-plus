@@ -328,13 +328,22 @@ if defined("embed") and hasattr(embed, "readline"):
 
         if catch or isinstance(e, SyntaxError) and (e.filename == "<stdin>"):
             catch = True
+            cmdline = embed.readline().strip()
+
+            # TODO: far from perfect !
+            if cmdline.find('await ')>=0:
+                import aio.toplevel
+                aio.create_task( aio.toplevel.retry(cmdline, (etype, e, tb,) ) )
+                # no prompt we're going async exec on aio now
+                return
+
             # index = readline.get_current_history_length()
 
             # asyncio.get_event_loop().create_task(retry(index))
             # store trace
             # last_fail.append([etype, e, tb])
 
-            cmdline = embed.readline().strip()
+
             catch = _process_args(cmdline.strip().split(";"), {})
 
         if not catch:
@@ -370,6 +379,21 @@ random.seed(1)
 
 # import pygame
 pgzrun = None
+
+if __WASM__ and __EMSCRIPTEN__ and __EMSCRIPTEN__.is_browser:
+    from __EMSCRIPTEN__ import window,document
+
+    async def jsp(prom):
+        mark = None
+        value = undefined
+        wit = window.iterator( prom )
+        while mark!=undefined:
+            value = mark
+            await aio.sleep(0)
+            mark = next( wit , undefined )
+        return value
+else:
+    pdb("TODO: js sim")
 
 
 import aio.recycle
