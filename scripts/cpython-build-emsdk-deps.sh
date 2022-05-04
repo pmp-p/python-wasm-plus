@@ -98,15 +98,19 @@ then
     * ncurses already built
 "
 else
+
     wget -c https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.1.tar.gz && tar xfz ncurses-6.1.tar.gz
+
     pushd ncurses-6.1
     [ -f patch.done ] || patch -p1 < $ROOT/support/__EMSCRIPTEN__.deps/ncurses-6.1_emscripten.patch
     touch patch.done
     popd
 
+    mkdir ../build/ncurses
+
+
     if false
     then
-        mkdir ../build/ncurses
         pushd ../build/ncurses
         make clean
         CC=clang CFLAGS="-fpic -Wno-unused-command-line-argument" $ROOT/src/ncurses-6.1/configure \
@@ -124,7 +128,9 @@ else
                 emmake make install
             fi
         fi
+        popd
     fi
+
 fi
 
 
