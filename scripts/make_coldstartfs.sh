@@ -33,6 +33,9 @@ import pathlib
 # cffi
 import copy
 
+#curses
+import curses
+
 if 0:
     import cffi
     from cffi import FFI

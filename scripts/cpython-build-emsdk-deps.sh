@@ -85,12 +85,12 @@ fi
 
 
 # =============== ncurses ===========================
-
+# --disable-database --enable-termcap
 NCOPTS="--enable-ext-colors --enable-ext-mouse --prefix=$PREFIX --disable-echo --without-pthread \
- --disable-database --without-tests --without-tack --without-progs --without-manpages \
- --disable-db-install --enable-termcap --without-cxx --without-cxx-binding --enable-pc-files \
+  --without-tests --without-tack --without-progs --without-manpages \
+ --disable-db-install --without-cxx --without-cxx-binding --enable-pc-files \
  --with-pkg-config-libdir=$PREFIX/lib/pkgconfig \
- --without-termlib"
+ --with-termlib --enable-termcap --disable-database"
 
 if [ -f ../devices/emsdk/usr/lib/libncurses.a ]
 then
@@ -104,25 +104,29 @@ else
     touch patch.done
     popd
 
-    mkdir ../build/ncurses
-    pushd ../build/ncurses
-    make clean
-    CC=clang CFLAGS="-fpic -Wno-unused-command-line-argument" $ROOT/src/ncurses-6.1/configure \
-     $NCOPTS && make && make install
-
-    CFLAGS="-fpic -Wno-unused-command-line-argument" emconfigure \
-     $ROOT/src/ncurses-6.1/configure \
-     $NCOPTS
-
-    if patch -p1 < $ROOT/support/__EMSCRIPTEN__.deps/ncurses-6.1_emscripten_make.patch
+    if false
     then
-        emmake make clean
-        if emmake make
+        mkdir ../build/ncurses
+        pushd ../build/ncurses
+        make clean
+        CC=clang CFLAGS="-fpic -Wno-unused-command-line-argument" $ROOT/src/ncurses-6.1/configure \
+         $NCOPTS && make && make install
+
+        CFLAGS="-fpic -Wno-unused-command-line-argument" emconfigure \
+         $ROOT/src/ncurses-6.1/configure \
+         $NCOPTS
+
+        if patch -p1 < $ROOT/support/__EMSCRIPTEN__.deps/ncurses-6.1_emscripten_make.patch
         then
-            emmake make install
+            emmake make clean
+            if emmake make
+            then
+                emmake make install
+            fi
         fi
     fi
 fi
+
 
 if [ -f ../devices/emsdk/usr/lib/libncursesw.a ]
 then

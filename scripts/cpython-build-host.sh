@@ -25,6 +25,10 @@ if $REBUILD
 then
     pushd build/cpython-host
 
+    # those are for wasm
+    unset CPPFLAGS
+    unset LDFLAGS
+
 
 #export OPT="$CPOPTS -DNDEBUG -fwrapv"
     PYOPTS="--disable-ipv6 \

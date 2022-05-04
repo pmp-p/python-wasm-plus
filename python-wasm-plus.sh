@@ -18,7 +18,7 @@ export PYTHONPYCACHEPREFIX="$(realpath build/pycache)"
 ./scripts/emsdk-fetch.sh
 
 # use ./ or emsdk will pollute env
-if ./scripts/cpython-build-emsdk.sh >/dev/null
+if ./scripts/cpython-build-emsdk.sh
 then
     ./scripts/cpython-build-emsdk-deps.sh > /dev/null
 

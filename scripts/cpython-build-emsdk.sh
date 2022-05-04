@@ -16,11 +16,14 @@ rm $HOST_PREFIX/bin/cc
 . ./scripts/emsdk-fetch.sh
 
 
-if $REBUILD
+REBUILD_WASM=${REBUILD_WASMPY:-false}
+
+if $REBUILD || $REBUILD_WASMPY
 then
     rm -rf build/cpython-wasm/ build/pycache/config.cache
+    rm build/cpython-wasm/libpython3.??.a
+    REBUILD=true
 fi
-
 
 
 
@@ -73,12 +76,19 @@ echo "
 fi
 
 # in this special case build testsuite
-if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus/
+if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus
 then
     TESTSUITE="--enable-test-modules"
 else
     TESTSUITE=""
 fi
+
+echo "
+
+TESTSUITE=$TESTSUITE
+
+"
+
 
 
 if [ -f build/cpython-wasm/libpython3.??.a ]
@@ -101,12 +111,13 @@ else
 
     export EMCC_CFLAGS="$CPOPTS"
 
-    export OPT="$CPOPTS -DNDEBUG -fwrapv"
+    CPPFLAGS="$CPPFLAGS $CPPFLAGS/ncursesw"
+    CFLAGS="$CPPFLAGS $CPPFLAGS/ncursesw"
 
 # CFLAGS="-DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1"
 
     CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten\
-    OPT="$OPT" \
+    OPT="$CPOPTS -DNDEBUG -fwrapv" \
     eval emconfigure $ROOT/src/cpython/configure -C --without-pymalloc --disable-ipv6 \
      --cache-file=${PYTHONPYCACHEPREFIX}/config.cache \
      --with-c-locale-coercion --without-pydebug \
@@ -116,6 +127,8 @@ else
      --with-emscripten-target=browser \
      --prefix=$PREFIX \
      --with-build-python=${PYTHON_FOR_BUILD} $VERBOSE
+
+    #echo "#define HAVE_NCURSES_H" >> pyconfig.h
 
     if EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" eval emmake make -j$(nproc) $VERBOSE
     then

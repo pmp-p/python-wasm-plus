@@ -205,6 +205,8 @@ time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  -s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_SDL=2\
  --use-preload-plugins \
  $STDLIBFS \
+ --preload-file $ROOT/support/xterm@/etc/termcap \
+ --preload-file /usr/share/terminfo/x/xterm@/usr/share/terminfo/x/xterm \
  --preload-file ${CROSS}@/data/data/org.python/assets/site-packages \
  --preload-file ${PLATFORM}@/data/data/org.python/assets/site-packages \
  $ALWAYS_FS \

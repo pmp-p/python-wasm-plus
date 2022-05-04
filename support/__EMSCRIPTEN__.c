@@ -440,6 +440,15 @@ main(int argc, char **argv)
 
     //puts("pymain_init");
 
+    setenv("TERM","xterm", 1);
+    setenv("TERMINFO", "/usr/share/terminfo", 1);
+    setenv("COLS","132", 1);
+    setenv("LINES","30", 1);
+    setenv("NCURSES_NO_UTF8_ACS","1",1);
+
+    setenv("LANG","en_US.UTF-8");
+
+
     setenv("PYTHONHOME","/usr", 1);
     setenv("PYTHONUNBUFFERED", "1", 1);
     setenv("PYTHONINSPECT","1",1);
