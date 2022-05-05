@@ -81,6 +81,7 @@ else
     EMCC_CFLAGS="$ALL" emmake make
     emmake make install
     popd
+    [ -f $PREFIX/include/SDL2/SDL_image.h ] || exit 1
 fi
 
 
@@ -99,7 +100,7 @@ then
 "
 else
 
-    wget -c https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.1.tar.gz && tar xfz ncurses-6.1.tar.gz
+    wget -q -c https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.1.tar.gz && tar xfz ncurses-6.1.tar.gz
 
     pushd ncurses-6.1
     [ -f patch.done ] || patch -p1 < $ROOT/support/__EMSCRIPTEN__.deps/ncurses-6.1_emscripten.patch

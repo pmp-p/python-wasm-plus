@@ -59,9 +59,9 @@ else
      CFLAGS="$COPTS" \
       emconfigure $ROOT/src/libffi/configure --host=wasm32-tot-linux\
       --prefix=$PREFIX --enable-static --disable-shared --disable-dependency-tracking\
-      --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs\
+      --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs >/dev/null
 
-    emmake make install
+    emmake make install >/dev/null
 
     popd
 
