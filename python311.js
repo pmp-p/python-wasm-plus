@@ -6,6 +6,8 @@ window.__defineGetter__('__FILE__', function() {
 
 const DBG=0
 
+
+//register
 if (typeof register === 'undefined' ) {
 
 String.prototype.rsplit = function(sep, maxsplit) {
@@ -147,7 +149,7 @@ function _until(fn_solver){
             console.error('ERROR time out waiting for condition _until',argv);
             resolve();
           } else {
-            window.setTimeout(solve, 100);
+            window.setTimeout(solve, 50);
           }
         }
         solve();
@@ -155,7 +157,10 @@ function _until(fn_solver){
 }
 register(_until);
 
-}
+} // register
+
+
+
 
 // fs tools =========================================================
 
@@ -284,6 +289,7 @@ export class WasmTerminal {
                     switch ( data.charCodeAt(2) ) {
 
                         case 65:
+                            //console.log("VT UP")
                             // memo cursor pos before entering histo
                             if (!readline.index) {
                                 if (readline.last_cx < 0 ) {
@@ -302,12 +308,10 @@ export class WasmTerminal {
                                 this.xterm.write(histo)
                                 this.input = histo.substr(4)
                             }
-
-                            //console.log("VT UP")
                             break;
 
-
                         case 66:
+                            //console.log("VT DOWN")
                             if ( readline.index < 0  ) {
                                 readline.index++
                                 histo = histo + readline.history[cursor]
@@ -329,7 +333,6 @@ export class WasmTerminal {
                                     readline.last_cx = -1
                                 }
                             }
-                            //console.log("VT DOWN")
                             break;
 
                         case 67:
@@ -475,21 +478,21 @@ async function mount_at(archive, path, relpath, hint) {
             }
         );
     }
-/*
+
     const response = await fetch(archive);
     const zipData = await response.arrayBuffer();
     await BrowserFS.FileSystem.ZipFS.Create(
-        {"zipData" : VM.Buffer.from(zipData),"name": hint}, apk_cb)
+        {"zipData" : VM.Buffer.from(zipData), "name": hint}, apk_cb)
 
-*/
+/*
     fetch(archive).then(function(response) {
         return response.arrayBuffer();
     }).then(function(zipData) {
         BrowserFS.FileSystem.ZipFS.Create({"zipData" : VM.Buffer.from(zipData),"name":"apkfs"}, apk_cb)
     })
-
+*/
     await _until(defined, ""+mark, prom)
-    //delete prom[mark]
+    delete prom[mark]
     return `${hint} mounted`
 }
 register(mount_at)
