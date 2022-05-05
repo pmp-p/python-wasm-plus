@@ -82,6 +82,8 @@ else
     emmake make install
     popd
     [ -f $PREFIX/include/SDL2/SDL_image.h ] || exit 1
+    # TODO: this should not be necessary !
+    cp $PREFIX/include/SDL2/SDL_image.h ${EMSDK}/upstream/emscripten/cache/sysroot/include/SDL2/
 fi
 
 
