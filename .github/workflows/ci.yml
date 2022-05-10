@@ -20,7 +20,7 @@ jobs:
             echo
             grep "^Pkg.Revision =" ${ANDROID_HOME}/ndk-bundle/source.properties
             sudo apt-get update
-            sudo apt-get install -y bash wget libsdl2-image-dev
+            sudo apt-get install -y bash wget
             cd $GITHUB_WORKSPACE
             echo adding emscripten support
             git clone https://github.com/emscripten-core/emsdk.git
