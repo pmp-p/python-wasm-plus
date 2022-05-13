@@ -446,7 +446,7 @@ main(int argc, char **argv)
     setenv("LINES","30", 1);
     setenv("NCURSES_NO_UTF8_ACS","1",1);
 
-    setenv("LANG","en_US.UTF-8");
+    setenv("LANG","en_US.UTF-8", 0);
 
 
     setenv("PYTHONHOME","/usr", 1);

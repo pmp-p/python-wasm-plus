@@ -194,8 +194,13 @@ emcc -D__PYDK__=1 -DNDEBUG\
 #  --preload-file ${APK}/@/assets
 #  -sALLOW_MEMORY_GROWTH=1
 
-# --preload-file $ROOT/devices/emsdk/usr/lib/python3.11@/usr/lib/python3.11
-STDLIBFS="--preload-file  $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.11@/usr/lib/python3.11"
+if $CI
+then
+    STDLIBFS="--preload-file  $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.12@/usr/lib/python3.12"
+else
+    # --preload-file $ROOT/devices/emsdk/usr/lib/python3.11@/usr/lib/python3.11
+    STDLIBFS="--preload-file  $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.11@/usr/lib/python3.11"
+fi
 
 
 # SDL2_image turned off : -ltiff
