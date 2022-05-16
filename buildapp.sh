@@ -194,14 +194,14 @@ emcc -D__PYDK__=1 -DNDEBUG\
 #  --preload-file ${APK}/@/assets
 #  -sALLOW_MEMORY_GROWTH=1
 
-if $CI
-then
-    STDLIBFS="--preload-file  $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.12@/usr/lib/python3.12"
-else
-    # --preload-file $ROOT/devices/emsdk/usr/lib/python3.11@/usr/lib/python3.11
-    STDLIBFS="--preload-file  $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.11@/usr/lib/python3.11"
-fi
+#if $CI
+#then
+#    STDLIBFS="--preload-file  $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.12@/usr/lib/python3.12"
+#else
+#    # --preload-file $ROOT/devices/emsdk/usr/lib/python3.11@/usr/lib/python3.11
+#fi
 
+STDLIBFS="--preload-file $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.11@/usr/lib/python3.11"
 
 # SDL2_image turned off : -ltiff
 
@@ -218,7 +218,6 @@ time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  -o ${MODE}.js Programs/${MODE}.o ${ROOT}/prebuilt/libpython3.*.a Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a \
  ${ROOT}/prebuilt/libpygame.a $CFLDPFX -lffi -lSDL2_gfx -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lfreetype -lharfbuzz \
  -ljpeg -lpng -ldl -lm
-# -lSDL2  -lz
 
 
 popd

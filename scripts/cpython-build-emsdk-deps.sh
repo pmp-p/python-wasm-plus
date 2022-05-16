@@ -55,7 +55,7 @@ then
     * libwep $WEBP_VER already built
 "
 else
-    wget -c https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-$WEBP_VER.tar.gz \
+    wget -q -c https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-$WEBP_VER.tar.gz \
         && tar xfz libwebp-$WEBP_VER.tar.gz
     pushd libwebp-$WEBP_VER
     EMCC_CFLAGS="$ALL" $CNF \
