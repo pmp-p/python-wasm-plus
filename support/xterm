@@ -1,0 +1,16 @@
+xterm|xterm-new|xterm terminal emulator (XFree86):\
+	:am:km:mi:ms:xn:\
+	:co#80:it#8:li#24:\
+	:AL=\E[%dL:DC=\E[%dP:DL=\E[%dM:DO=\E[%dB:IC=\E[%d@:\
+	:LE=\E[%dD:\
+	:RI=\E[%dC:UP=\E[%dA:ae=^O:al=\E[L:as=^N:bl=^G:bt=\E[Z:\
+	:cd=\E[J:ce=\E[K:cl=\E[H\E[2J:cm=\E[%i%d;%dH:cr=^M:\
+	:cs=\E[%i%d;%dr:ct=\E[3g:dc=\E[P:dl=\E[M:do=^J:ec=\E[%dX:\
+	:ei=\E[4l:ho=\E[H:im=\E[4h:is=\E[!p\E[?3;4l\E[4l\E>:\
+	:kD=\177:\
+	:kb=^H:ke=\E[?1l\E>:\
+	:ks=\E[?1h\E=:le=^H:mb=\E[5m:md=\E[1m:\
+	:me=\E[m\017:mr=\E[7m:nd=\E[C:rc=\E8:sc=\E7:se=\E[27m:\
+	:sf=^J:so=\E[7m:sr=\EM:st=\EH:ta=^I:te=\E[?1047l\E[?1048l:\
+	:ti=\E[?1048h\E[?1047h:ue=\E[24m:up=\E[A:us=\E[4m:\
+	:vb=\E[?5h\E[?5l:ve=\E[?25h:vi=\E[?25l:vs=\E[?25h:
