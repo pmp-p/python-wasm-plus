@@ -5,6 +5,14 @@ static void pymain_free(void);
 
 
 
+    http://troubles.md/why-do-we-need-the-relooper-algorithm-again/
+    https://medium.com/leaningtech/solving-the-structured-control-flow-problem-once-and-for-all-5123117b1ee2
+
+    https://github.com/WebAssembly/exception-handling
+
+    https://github.com/WebAssembly/design/issues/796
+
+
 headless tests ?
 
     https://github.com/paulrouget/servo-embedding-example
@@ -19,6 +27,8 @@ webserver ?
 ZIP_LZMA ?
     https://github.com/jvilk/BrowserFS/blob/master/src/backend/ZipFS.ts
 
+self hosting:
+    https://github.com/jprendes/emception
 
 */
 
@@ -287,7 +297,7 @@ int wa_panic = 0;
 #define stdin_cstr io_shm[io_stdin_filenum]
 
 /*
-    io_shm  is a raw keyboard buffer
+    io_shm is a raw keyboard buffer
     io_fd is the readline/file/socket interface
 */
 static PyObject *
@@ -301,7 +311,8 @@ main_iteration(void) {
 
     if (!wa_panic) {
 
-        // first pass coming back from js, if anything js was planned from main() it should be done now.
+        // first pass coming back from js
+        // if anything js was planned from main() it should be done by now.
         if (embed && embed++) {
             // run a frame.
             PyRun_SimpleString("aio.step()");
@@ -408,14 +419,7 @@ on_keyboard_event(int type, const EmscriptenKeyboardEvent *event, void *user_dat
 SDL_Window *window;
 SDL_Renderer *renderer;
 
-PyMODINIT_FUNC
-PyInit__chipmunk(void);
-
-
 */
-
-
-
 
 
 int
@@ -611,7 +615,7 @@ EM_ASM({
 
 
 /* note for self : typical sdl2 init ( emscripten samples are sdl1 )
-            SDL_CreateWindow("default", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, 0);
+    SDL_CreateWindow("default", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, 0);
     window = SDL_CreateWindow("CheckKeys Test",
                               SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                               800, 600, 0);
@@ -623,15 +627,6 @@ EM_ASM({
 */
 
     }
-
-
-
-/*
-    sys.path.append('/assets/site-packages')
-    exec(open("/data/data/pythonrc.py").read(), globals(), globals())
-    "import __EMSCRIPTEN__;builtins.__EMSCRIPTEN__ = __EMSCRIPTEN__;"
-*/
-
 
 
     emscripten_set_main_loop( (em_callback_func)main_iteration, 0, 1);

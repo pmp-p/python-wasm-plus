@@ -1,6 +1,6 @@
 xterm|xterm-new|xterm terminal emulator (XFree86):\
 	:am:km:mi:ms:xn:\
-	:co#80:it#8:li#24:\
+	:co#80:it#8:li#24:colors#256:\
 	:AL=\E[%dL:DC=\E[%dP:DL=\E[%dM:DO=\E[%dB:IC=\E[%d@:\
 	:LE=\E[%dD:\
 	:RI=\E[%dC:UP=\E[%dA:ae=^O:al=\E[L:as=^N:bl=^G:bt=\E[Z:\

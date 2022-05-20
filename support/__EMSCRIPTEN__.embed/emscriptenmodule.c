@@ -377,7 +377,7 @@ _py_async_wget(PyObject *self, PyObject *args, PyObject *kw) {
 static void
 _wget2_pop_callbacks(unsigned handle, PyObject **onload, PyObject **onerror, PyObject **onprogress) {
   EM_ASM({
-    var http = Browser.wgetRequests[$0];
+    var http = (Browser.wgetRequests || wget.wgetRequests)[$0];
     if (http) {
       setValue($1, http.__py_onload, '*');
       setValue($2, http.__py_onerror, '*');
@@ -427,7 +427,7 @@ _wget2_onerror_callback(unsigned handle, void *arg, int status) {
 static void
 _wget2_onprogress_callback(unsigned handle, void *arg, int progress) {
   PyObject *onprogress = (PyObject *)EM_ASM_INT({
-    var http = Browser.wgetRequests[$0];
+    var http = (Browser.wgetRequests || wget.wgetRequests)[$0];
     return http ? http.__py_onprogress : 0;
   }, handle);
 
@@ -473,7 +473,7 @@ _py_async_wget2(PyObject *self, PyObject *args, PyObject *kw) {
                                         _wget2_onerror_callback,
                                         _wget2_onprogress_callback);
     EM_ASM({
-      var http = Browser.wgetRequests[$0];
+      var http = (Browser.wgetRequests || wget.wgetRequests)[$0];
       http.__py_onload = $1;
       http.__py_onerror = $2;
       http.__py_onprogress = $3;
@@ -522,7 +522,7 @@ _wget2_data_onerror_callback(unsigned handle, void *arg, int status, const char 
 static void
 _wget2_data_onprogress_callback(unsigned handle, void *arg, int loaded, int total) {
   PyObject *onprogress = (PyObject *)EM_ASM_INT({
-    var http = Browser.wgetRequests[$0];
+    var http = (Browser.wgetRequests || wget.wgetRequests)[$0];
     return http ? http.__py_onprogress : 0;
   }, handle);
 
@@ -567,7 +567,7 @@ _py_async_wget2_data(PyObject *self, PyObject *args, PyObject *kw) {
                                              _wget2_data_onerror_callback,
                                              _wget2_data_onprogress_callback);
     EM_ASM({
-      var http = Browser.wgetRequests[$0];
+      var http = (Browser.wgetRequests || wget.wgetRequests)[$0];
       http.__py_onload = $1;
       http.__py_onerror = $2;
       http.__py_onprogress = $3;
@@ -640,8 +640,6 @@ _py_destroy_worker(PyObject *self, PyObject *args) {
 /**
  * Callback wrapper for emscripten_call_worker.
  */
-
-/*
 static void
 _worker_callback(char *buffer, int size, void *data) {
   PyObject *func = (PyObject *)data;
@@ -649,13 +647,11 @@ _worker_callback(char *buffer, int size, void *data) {
   Py_DECREF(func);
   _handle_callback_result(result, "call_worker");
 }
-*/
 
 /**
  * Python wrapper for
  * void emscripten_call_worker(worker_handle worker, const char *funcname, char *data, int size, em_worker_callback_func callback, void *arg)
  */
-
 /*
 static PyObject *
 _py_call_worker(PyObject *self, PyObject *args) {
@@ -687,7 +683,6 @@ _py_call_worker(PyObject *self, PyObject *args) {
  * Python wrapper for
  * void emscripten_worker_respond(char *data, int size)
  */
-
 /*
 static PyObject *
 _py_worker_respond(PyObject *self, PyObject *arg) {
@@ -706,7 +701,6 @@ _py_worker_respond(PyObject *self, PyObject *arg) {
  * Python wrapper for
  * void emscripten_worker_respond_provisionally(char *data, int size)
  */
-
 /*
 static PyObject *
 _py_worker_respond_provisionally(PyObject *self, PyObject *arg) {
