@@ -14,11 +14,9 @@ export PYTHONPYCACHEPREFIX="$(realpath build/pycache)"
 . scripts/cpython-build-host.sh >/dev/null
 . scripts/cpython-build-host-deps.sh >/dev/null
 
-# optionnal, each sub module should call it
-./scripts/emsdk-fetch.sh
-
 # use ./ or emsdk will pollute env
-if ./scripts/cpython-build-emsdk.sh > /dev/null
+#  > /dev/null
+if ./scripts/cpython-build-emsdk.sh
 then
     ./scripts/cpython-build-emsdk-deps.sh > /dev/null
 

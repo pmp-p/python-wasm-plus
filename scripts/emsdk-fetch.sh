@@ -14,8 +14,8 @@ then
         if git clone https://github.com/emscripten-core/emsdk.git
         then
             pushd emsdk
-            ./emsdk install tot
-            ./emsdk activate tot
+            ./emsdk install latest
+            ./emsdk activate latest
             popd
         fi
     fi
@@ -54,10 +54,11 @@ then
     "
     else
         # sdl2_image
-        ALL="embind libgl libal libhtml5 libstubs libnoexit libsockets"
+        ALL="libembind libgl libal libhtml5 libstubs libnoexit libsockets"
         ALL="$ALL libc libdlmalloc libcompiler_rt libc++-noexcept libc++abi-noexcept"
-        ALL="$ALL libpng libjpeg sdl2 sdl2_mixer sdl2_ttf sdl2_gfx"
-        ALL="$ALL struct_info libfetch zlib bzip2 freetype harfbuzz"
+        ALL="$ALL struct_info libfetch zlib bzip2"
+        ALL="$ALL libpng libjpeg sdl2 sdl2_mixer sdl2_gfx"
+        ALL="$ALL freetype harfbuzz sdl2_ttf"
 
         echo "
         * building third parties libraries for emsdk ( can take time ... )
