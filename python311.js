@@ -763,8 +763,9 @@ function pythonvm(vterm, config) {
 
         locateFile : function(path, prefix) {
             if (path == "main.data") {
-                console.log(__FILE__,"locateData: "+path+' '+prefix);
-                return `python311/${path}`;
+                const url = (config.cdn || "" )+`python311/${path}`
+                console.log(__FILE__,"locateData: "+path+' '+prefix, "->", url);
+                return url;
             } else {
                 console.log(__FILE__,"locateFile: "+path+' '+prefix);
             }
@@ -838,7 +839,7 @@ function pythonvm(vterm, config) {
         window.Module = Module
         const jswasmloader=document.createElement('script')
         jswasmloader.setAttribute("type","text/javascript")
-        jswasmloader.setAttribute("src", "python311/main.js")
+        jswasmloader.setAttribute("src", (config.cdn || "")+ "python311/main.js")
         jswasmloader.setAttribute('async', true);
         document.getElementsByTagName("head")[0].appendChild(jswasmloader)
 
