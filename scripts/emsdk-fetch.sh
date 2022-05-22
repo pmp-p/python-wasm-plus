@@ -43,7 +43,7 @@ then
     # 3.6 could have problems
     for py in 10 9 8 7
     do
-        if command -v python3.${py}
+        if command -v python3.${py} >/dev/null
         then
             export EMSDK_PYTHON=$(command -v python3.${py})
             break
@@ -58,12 +58,12 @@ then
         * emsdk prereq ok
     "
     else
-        # sdl2_image
+        # sdl2_image is too old
         ALL="libembind libgl libal libhtml5 libstubs libnoexit libsockets"
         ALL="$ALL libc libdlmalloc libcompiler_rt libc++-noexcept libc++abi-noexcept"
         ALL="$ALL struct_info libfetch zlib bzip2"
-        ALL="$ALL libpng libjpeg sdl2 sdl2_mixer sdl2_gfx"
-        ALL="$ALL freetype harfbuzz sdl2_ttf"
+        ALL="$ALL libpng libjpeg freetype harfbuzz "
+        ALL="$ALL sdl2 sdl2_mixer sdl2_gfx sdl2_ttf"
 
         echo "
         * building third parties libraries for emsdk ( can take time ... )

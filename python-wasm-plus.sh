@@ -15,6 +15,8 @@ export PYTHONPYCACHEPREFIX="$(realpath build/pycache)"
 . scripts/cpython-build-host-deps.sh >/dev/null
 
 # use ./ or emsdk will pollute env
+./scripts/emsdk-fetch.sh
+
 echo " ------------------- building cpython wasm -----------------------"
 if ./scripts/cpython-build-emsdk.sh > /dev/null
 then

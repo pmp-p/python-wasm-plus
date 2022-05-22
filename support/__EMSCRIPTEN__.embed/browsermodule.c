@@ -666,7 +666,7 @@ Function_call(Function *self, PyObject *args, PyObject *kwargs) {
         try {
           var arg_values = [];
           for (var i = 0; i < $2; ++i) {
-            var arg_handle = getValue($3+i*4, '*');
+            var arg_handle = getValue($3+i*4, 'i32');
             arg_handles.push(arg_handle);
             arg_values.push(emval_handle_array[arg_handle].value);
           }

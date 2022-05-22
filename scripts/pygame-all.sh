@@ -30,8 +30,12 @@ echo "
 pushd src/pygame-wasm 2>&1 >/dev/null
 
 # regen cython files
+if [ -f dev ]
+then
+    #TODO: $HPY setup.py cython config
+    python3 setup.py config cython
+fi
 
-#TODO: $HPY setup.py cython config
 
 # for libSDL2_ttf.a
 # LDFLAGS="$LDFLAGS -L$ROOT/emsdk/upstream/emscripten/cache/sysroot/lib/wasm32-emscripten/pic"
