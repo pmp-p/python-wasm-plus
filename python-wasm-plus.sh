@@ -15,12 +15,14 @@ export PYTHONPYCACHEPREFIX="$(realpath build/pycache)"
 . scripts/cpython-build-host-deps.sh >/dev/null
 
 # use ./ or emsdk will pollute env
-#  > /dev/null
-if ./scripts/cpython-build-emsdk.sh
+echo " ------------------- building cpython wasm -----------------------"
+if ./scripts/cpython-build-emsdk.sh > /dev/null
 then
+    echo " ------------------- building cpython wasm plus -------------------"
     ./scripts/cpython-build-emsdk-deps.sh > /dev/null
 
-    ./scripts/pygame-all.sh
+    echo " ------------------- building cpython pygame -------------------"
+    ./scripts/pygame-all.sh > /dev/null
 
     # pygame won't build if python or sdl failed
     [ -f prebuilt/libpygame.a ] || exit 1

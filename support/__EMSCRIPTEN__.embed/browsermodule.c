@@ -1166,6 +1166,7 @@ extern PyObject *PyInit_browser();
 #endif
 
 PyObject *PyInit_browser() {
+
   if (PyType_Ready(&PromiseWrapper_Type) < 0) {
     return NULL;
   }
@@ -1206,9 +1207,10 @@ PyObject *PyInit_browser() {
   }
 
   EM_ASM({
-    setValue($0, Emval.toHandle(window), '*');
-    setValue($1, Emval.toHandle(console), '*');
-    setValue($2, Emval.toHandle(document), '*');
+
+    setValue($0, Emval.toHandle(window), "i32");
+    setValue($1, Emval.toHandle(console), "i32");
+    setValue($2, Emval.toHandle(document), "i32");
 
     window.__py_alive = new Set();
   }, &window->handle, &console->handle, &document->handle);

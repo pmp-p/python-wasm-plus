@@ -210,7 +210,7 @@ register(on_click)
 // READLINE ========================================================
 
 
-var readline = { last_cx : -1 , index : 0 }
+var readline = { last_cx : -1 , index : 0, history : ["help()"] }
 
 
 readline.complete = function (line) {
@@ -220,6 +220,8 @@ readline.complete = function (line) {
     python.PyRun_SimpleString(line + "\n")
 
 }
+
+window.readline = readline
 
 
 // Xterm Sixel ======================================================
@@ -581,7 +583,14 @@ async function fshandler(VM) {
 const modularized = (typeof python311 != 'undefined')
 
 
-function pythonvm(canvasid, vterm) {
+function pythonvm(vterm, config) {
+    var canvasid = "canvas"
+    var autorun = null
+
+    if (config){
+        canvasid = config._sdl2
+        autorun = config.archive
+    }
 
     console.log(__FILE__, "canvas found at "+ canvasid)
 
@@ -712,8 +721,13 @@ function pythonvm(canvasid, vterm) {
             VM.APK = VM.arguments[0]
             console.log(__FILE__,"preRun1",VM.arguments)
         } else {
-            console.log("no source given, interactive prompt requested")
-            VM.APK = "org.python"
+            if (autorun) {
+                VM.APK = autorun
+                console.log("AUTORUN", VM.APK )
+            } else {
+                console.log("no source given, interactive prompt requested")
+                VM.APK = "org.python"
+            }
             VM.arguments.push(VM.APK)
         }
 

@@ -184,10 +184,25 @@ pushd build/cpython-wasm 2>&1 >/dev/null
 [ -f ${MODE}.js ] && rm ${MODE}.*
 [ -f Programs/${MODE}.o ] && rm Programs/${MODE}.o
 
+
+
+# SDL2_image turned off : -ltiff
+
+if $CI
+then
+    CF_SDL="-s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_SDL_TTF=2 -sUSE_LIBJPEG -sUSE_LIBPNG"
+    LD_SDL=""
+else
+    CF_SDL="-s USE_SDL=2"
+    LD_SDL="-lSDL2_image -ljpeg -lpng -lSDL2_ttf -lharfbuzz -lfreetype"
+fi
+
+
+
 # gnu99 not c99 for EM_ASM() js calls functions.
 
-emcc -D__PYDK__=1 -DNDEBUG\
- -c -fwrapv -Wall -fPIC $CPOPTS -std=gnu99 -Werror=implicit-function-declaration -fvisibility=hidden\
+emcc -fPIC -D__PYDK__=1 -DNDEBUG $CF_SDL \
+ -c -fwrapv -Wall $CPOPTS -std=gnu99 -Werror=implicit-function-declaration -fvisibility=hidden\
  -I$ROOT/src/cpython/Include/internal -IObjects -IInclude -IPython -I. -I$ROOT/src/cpython/Include -DPy_BUILD_CORE\
  -o Programs/${MODE}.o $ROOT/src/cpython/Programs/python.c
 
@@ -203,13 +218,13 @@ emcc -D__PYDK__=1 -DNDEBUG\
 
 STDLIBFS="--preload-file $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.11@/usr/lib/python3.11"
 
-# SDL2_image turned off : -ltiff
 
 #  --preload-file /usr/share/terminfo/x/xterm@/usr/share/terminfo/x/xterm \
 
+
 time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  -s TOTAL_MEMORY=512MB -s ALLOW_TABLE_GROWTH \
- -s USE_BZIP2=1 -s USE_ZLIB=1 -s USE_SDL=2\
+ -s USE_BZIP2=1 -s USE_ZLIB=1 $CF_SDL \
  --use-preload-plugins \
  $STDLIBFS \
  --preload-file $ROOT/support/xterm@/etc/termcap \
@@ -217,8 +232,8 @@ time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  --preload-file ${PLATFORM}@/data/data/org.python/assets/site-packages \
  $ALWAYS_FS \
  -o ${MODE}.js Programs/${MODE}.o ${ROOT}/prebuilt/libpython3.*.a Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a \
- ${ROOT}/prebuilt/libpygame.a $CFLDPFX -lffi -lSDL2_gfx -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lfreetype -lharfbuzz \
- -ljpeg -lpng -ldl -lm
+ ${ROOT}/prebuilt/libpygame.a $CFLDPFX -lffi -lSDL2_gfx -lSDL2_mixer  \
+ $LDFLAGS_SDL_IMG -ldl -lm
 
 
 popd

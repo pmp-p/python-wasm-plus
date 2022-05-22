@@ -11,11 +11,16 @@ then
         * using emsdk from $(realpath emsdk)
 "
     else
+        # emsdk could have been deleted for full rebuild
+        rm embuild.done
+
         if git clone https://github.com/emscripten-core/emsdk.git
         then
             pushd emsdk
-            ./emsdk install latest
-            ./emsdk activate latest
+            #./emsdk install latest
+            #./emsdk activate latest
+            ./emsdk install tot
+            ./emsdk activate tot
             popd
         fi
     fi

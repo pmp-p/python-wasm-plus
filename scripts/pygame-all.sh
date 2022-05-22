@@ -40,15 +40,15 @@ pushd src/pygame-wasm 2>&1 >/dev/null
 
 if $CI
 then
-    SDL_IMAGE="-s USE_SDL_IMAGE=2"
+    SDL_IMAGE="-s USE_SDL_IMAGE=2 -sUSE_LIBPNG -sUSE_LIBJPEG"
 else
-    SDL_IMAGE=""
+    SDL_IMAGE="-sUSE_LIBPNG -sUSE_LIBJPEG"
 fi
 
 if python3-wasm setup.py -config -auto -sdl2
 then
     if CC=emcc CFLAGS="-DBUILD_STATIC -DSDL_NO_COMPAT -ferror-limit=1 -Wno-unused-command-line-argument -Wno-unreachable-code-fallthrough -fPIC"\
- EMCC_CFLAGS="-I$PREFIX/include/SDL2 -s USE_SDL=2 -sUSE_SDL_TTF=2 -sUSE_LIBPNG -sUSE_LIBJPEG $SDL_IMAGE"\
+ EMCC_CFLAGS="-I$PREFIX/include/SDL2 -s USE_SDL=2 -sUSE_SDL_TTF=2 $SDL_IMAGE"\
  python3-wasm setup.py build
     then
         OBJS=$(find build/temp.wasm32-tot-emscripten-3.??/|grep o$)

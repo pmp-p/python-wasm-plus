@@ -640,6 +640,7 @@ _py_destroy_worker(PyObject *self, PyObject *args) {
 /**
  * Callback wrapper for emscripten_call_worker.
  */
+/*
 static void
 _worker_callback(char *buffer, int size, void *data) {
   PyObject *func = (PyObject *)data;
@@ -647,6 +648,7 @@ _worker_callback(char *buffer, int size, void *data) {
   Py_DECREF(func);
   _handle_callback_result(result, "call_worker");
 }
+*/
 
 /**
  * Python wrapper for

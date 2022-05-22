@@ -33,11 +33,11 @@ then
     fi
 
 else
-    rm cpython
-    wget -q -c https://www.python.org/ftp/python/3.11.0/Python-3.11.0b1.tar.xz && tar xf Python-3.11.0b1.tar.xz
+    rm cpython 2>/dev/null
+    wget -q -c https://www.python.org/ftp/python/3.11.0/Python-3.11.0b1.tar.xz
+    tar xf Python-3.11.0b1.tar.xz
     ln -s Python-3.11.0b1 cpython
 fi
-
 
 popd
 
@@ -46,23 +46,7 @@ popd
 
 pushd src/cpython 2>&1 >/dev/null
 
-# fix the readline loop so host simulator can run 60FPS
-patch -p1 <<END
---- cpython/Modules/readline.c	2022-03-10 09:17:57.598757042 +0100
-+++ cpython.wasm/Modules/readline.c	2022-01-21 04:44:22.000000000 +0100
-@@ -1326,7 +1326,9 @@
-         int has_input = 0, err = 0;
-
-         while (!has_input)
--        {               struct timeval timeout = {0, 100000}; /* 0.1 seconds */
-+        {
-+
-+            struct timeval timeout = {0, 5000}; /* 0.005 seconds */
-
-             /* [Bug #1552726] Only limit the pause if an input hook has been
-                defined.  */
-END
-
+patch -p1 < ../../support/__EMSCRIPTEN__.embed/cpython.diff
 
 popd
 

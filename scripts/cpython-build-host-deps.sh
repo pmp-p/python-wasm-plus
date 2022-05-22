@@ -6,7 +6,7 @@
 
 # pip install .
 
-$HPY -m pip install --upgrade pip
+$PIP install pip --upgrade
 
 
 export CC=clang

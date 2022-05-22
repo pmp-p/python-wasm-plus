@@ -36,6 +36,9 @@ import copy
 #curses
 import curses
 
+#pygame_gui
+import importlib.resources
+
 if 0:
     import cffi
     from cffi import FFI

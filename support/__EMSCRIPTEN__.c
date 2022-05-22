@@ -32,7 +32,9 @@ self hosting:
 
 */
 
+
 #if __EMSCRIPTEN__
+    #define EMIFACE
     #include <emscripten/html5.h>
     #include <emscripten/key_codes.h>
     #include "emscripten.h"
@@ -43,8 +45,14 @@ self hosting:
 
     #define HOST_RETURN(value)  return value
 
+#if defined(EMIFACE)
+    PyObject *sysmod;
+    PyObject *sysdict;
+
     #include "__EMSCRIPTEN__.embed/emscriptenmodule.c"
     #include "__EMSCRIPTEN__.embed/browsermodule.c"
+    #include "__EMSCRIPTEN__.embed/sysmodule.c"
+#endif
 
 #else
     #error "wasi unsupported yet"
@@ -105,9 +113,6 @@ embed_dlcall(PyObject *self, PyObject *argv,  PyObject *kwds)
 
     Py_RETURN_NONE;
 }
-
-
-
 
 static PyObject *
 embed_test(PyObject *self, PyObject *args, PyObject *kwds)
@@ -272,10 +277,29 @@ static PyObject *embed_dict;
 
 PyMODINIT_FUNC init_embed(void) {
 
+#if defined(EMIFACE)
+    int res;
+    sysmod = PyImport_ImportModule("sys"); // must call Py_DECREF when finished
+    sysdict = PyModule_GetDict(sysmod); // borrowed ref, no need to delete
+
+    if (EmscriptenInfoType == NULL) {
+        EmscriptenInfoType = PyStructSequence_NewType(&emscripten_info_desc);
+        if (EmscriptenInfoType == NULL) {
+            goto type_init_failed;
+        }
+    }
+    SET_SYS("_emscripten_info", make_emscripten_info());
+    Py_DECREF(sysmod); // release ref to sysMod
+err_occurred:;
+type_init_failed:;
+#endif
+
     PyObject *embed_mod = PyModule_Create(&mod_embed);
     embed_dict = PyModule_GetDict(embed_mod);
     PyDict_SetItemString(embed_dict, "js2py", PyUnicode_FromString("{}"));
     return embed_mod;
+
+
 }
 
 
@@ -435,9 +459,15 @@ main(int argc, char **argv)
         .wchar_argv = NULL
     };
 
-    PyImport_AppendInittab("embed", init_embed);
+
+#if defined(EMIFACE)
     PyImport_AppendInittab("embed_emscripten", PyInit_emscripten);
     PyImport_AppendInittab("embed_browser", PyInit_browser);
+#endif
+
+    PyImport_AppendInittab("embed", init_embed);
+
+
     PyGame_static_init();
 
     //PyImport_AppendInittab("pymunk_static", PyInit__chipmunk);
@@ -559,23 +589,23 @@ EM_ASM({
     } else {
         console.log("PyMain: BrowserFS not found");
     }
-
-    SYSCALLS.getStreamFromFD(0).tty = true;
-    SYSCALLS.getStreamFromFD(1).tty = true;
-    SYSCALLS.getStreamFromFD(2).tty = true;
-
+    if (0) {
+        SYSCALLS.getStreamFromFD(0).tty = true;
+        SYSCALLS.getStreamFromFD(1).tty = true;
+        SYSCALLS.getStreamFromFD(2).tty = true;
+    }
 }, io_shm[io_stdin_filenum], FD_BUFFER_MAX);
 
 
     PyRun_SimpleString("import sys, os, json, builtins, shutil, time;");
     //# zipimport, tomlib
 
-/*
+
     if (1) {
         // display a nice six logo python-powered in xterm.js
         #define MAX 132
         char buf[MAX];
-        FILE *six = fopen("/assets/cpython.six","r");
+        FILE *six = fopen("/data/data/org.python/assets/cpython.six","r");
         while (six) {
             fgets(buf, MAX, six);
             if (!buf[0]) {
@@ -590,17 +620,10 @@ EM_ASM({
     } else {
         // same but with python
         // repl banner
-        PyRun_SimpleString(
-"print(open('/assets/cpython.six').read());"
-        );
+        PyRun_SimpleString("print(open('/data/data/org.python/assets/cpython.six').read());");
     }
 
-    PyRun_SimpleString(
-"print('CPython',sys.version, '\\n', file=sys.stderr);"
-    );
-
-*/
-
+    PyRun_SimpleString("print('CPython',sys.version, '\\n', file=sys.stderr);");
 
     embed_flush(NULL,NULL);
 

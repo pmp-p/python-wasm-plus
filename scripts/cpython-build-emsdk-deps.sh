@@ -101,13 +101,8 @@ NCOPTS="--enable-ext-colors --enable-ext-mouse --prefix=$PREFIX --disable-echo -
  --with-pkg-config-libdir=$PREFIX/lib/pkgconfig \
  --with-termlib --enable-termcap --disable-database"
 
-if [ -f ../devices/emsdk/usr/lib/libncurses.a ]
+if false
 then
-    echo "
-    * ncurses already built
-"
-else
-
     wget -q -c https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.1.tar.gz && tar xfz ncurses-6.1.tar.gz
 
     pushd ncurses-6.1
@@ -118,8 +113,12 @@ else
     mkdir ../build/ncurses
 
 
-    if false
+    if [ -f ../devices/emsdk/usr/lib/libncurses.a ]
     then
+        echo "
+        * ncurses/ncursesw already built
+    "
+    else
         pushd ../build/ncurses
         make clean
         CC=clang CFLAGS="-fpic -Wno-unused-command-line-argument" $ROOT/src/ncurses-6.1/configure \
@@ -140,36 +139,34 @@ else
         popd
     fi
 
-fi
-
-
-if [ -f ../devices/emsdk/usr/lib/libncursesw.a ]
-then
-    echo "
-    * ncursesw already built
-"
-else
-    # build wide char
-    pushd ../build/ncurses
-    make clean
-    CC=clang CFLAGS="-fpic -Wno-unused-command-line-argument" $ROOT/src/ncurses-6.1/configure \
-     $NCOPTS --enable-widec && make && make install
-
-    CFLAGS="-fpic -Wno-unused-command-line-argument" emconfigure \
-     $ROOT/src/ncurses-6.1/configure \
-     $NCOPTS --enable-widec
-
-    if patch -p1 < $ROOT/support/__EMSCRIPTEN__.deps/ncurses-6.1_emscripten_makew.patch
+    [ -f ../devices/emsdk/usr/lib/libncursesw.a ]
+    if true
     then
-        emmake make clean
-        if emmake make
-        then
-            emmake make install
-        fi
-    fi
-    popd
-fi
+        echo "
+        * ncursesw already built
+    "
+    else
+        # build wide char
+        pushd ../build/ncurses
+        make clean
+        CC=clang CFLAGS="-fpic -Wno-unused-command-line-argument" $ROOT/src/ncurses-6.1/configure \
+         $NCOPTS --enable-widec && make && make install
 
+        CFLAGS="-fpic -Wno-unused-command-line-argument" emconfigure \
+         $ROOT/src/ncurses-6.1/configure \
+         $NCOPTS --enable-widec
+
+        if patch -p1 < $ROOT/support/__EMSCRIPTEN__.deps/ncurses-6.1_emscripten_makew.patch
+        then
+            emmake make clean
+            if emmake make
+            then
+                emmake make install
+            fi
+        fi
+        popd
+    fi
+fi
 
 # TODO https://github.com/onelivesleft/PrettyErrors
 

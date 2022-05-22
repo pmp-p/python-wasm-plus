@@ -1,0 +1,51 @@
+--- Python-3.11.0b1/Modules/readline.c	2022-05-07 00:56:26.000000000 +0200
++++ Python-3.11.0b1-plus/Modules/readline.c	2022-05-21 22:57:01.680634385 +0200
+@@ -1326,7 +1326,9 @@
+         int has_input = 0, err = 0;
+ 
+         while (!has_input)
+-        {               struct timeval timeout = {0, 100000}; /* 0.1 seconds */
++        {
++
++            struct timeval timeout = {0, 5000}; /* 0.005 seconds */
+ 
+             /* [Bug #1552726] Only limit the pause if an input hook has been
+                defined.  */
+--- Python-3.11.0b1/Python/sysmodule.c	2022-05-07 00:56:26.000000000 +0200
++++ Python-3.11.0b1-plus/Python/sysmodule.c	2022-05-21 22:58:12.873024434 +0200
+@@ -48,7 +48,7 @@
+ extern const char *PyWin_DLLVersionString;
+ #endif
+ 
+-#ifdef __EMSCRIPTEN__
++#if 0
+ #include <emscripten.h>
+ #endif
+ 
+@@ -2692,7 +2692,7 @@
+     return NULL;
+ }
+ 
+-#ifdef __EMSCRIPTEN__
++#if 0
+ 
+ PyDoc_STRVAR(emscripten_info__doc__,
+ "sys._emscripten_info\n\
+@@ -2928,7 +2928,7 @@
+         }
+     }
+ 
+-#ifdef __EMSCRIPTEN__
++#if 0
+     if (EmscriptenInfoType == NULL) {
+         EmscriptenInfoType = PyStructSequence_NewType(&emscripten_info_desc);
+         if (EmscriptenInfoType == NULL) {
+@@ -3183,7 +3183,7 @@
+ #endif
+         _PyStructSequence_FiniType(&Hash_InfoType);
+         _PyStructSequence_FiniType(&AsyncGenHooksType);
+-#ifdef __EMSCRIPTEN__
++#if 0
+         Py_CLEAR(EmscriptenInfoType);
+ #endif
+     }
