@@ -2,6 +2,10 @@
 
 . ${CONFIG:-config}
 
+echo "
+    *cpython-fetch*
+"
+
 
 pushd src 2>&1 >/dev/null
 

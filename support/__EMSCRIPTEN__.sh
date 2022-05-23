@@ -1,3 +1,7 @@
+echo "
+    *__EMSCRIPTEN__*
+"
+
 
 if grep -q PYDK src/cpython/Programs/python.c
 then
@@ -98,7 +102,6 @@ main(int argc, char **argv)
 }
 #endif //#if __PYDK__
 END
-
 
     popd
 fi

@@ -379,9 +379,9 @@ _wget2_pop_callbacks(unsigned handle, PyObject **onload, PyObject **onerror, PyO
   EM_ASM({
     var http = (Browser.wgetRequests || wget.wgetRequests)[$0];
     if (http) {
-      setValue($1, http.__py_onload, '*');
-      setValue($2, http.__py_onerror, '*');
-      setValue($3, http.__py_onprogress, '*');
+      setValue($1, http.__py_onload, 'i32');
+      setValue($2, http.__py_onerror, 'i32');
+      setValue($3, http.__py_onprogress, 'i32');
       http.__py_onload = 0;
       http.__py_onerror = 0;
       http.__py_onprogress = 0;

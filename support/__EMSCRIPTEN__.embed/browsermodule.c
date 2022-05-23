@@ -998,7 +998,7 @@ static PyObject *emval_to_py(EM_VAL handle) {
       var buffer = _malloc(len);
       stringToUTF8(value, buffer, len);
       __emval_decref($0);
-      setValue($1, buffer, "*");
+      setValue($1, buffer, "i32");
       return 3;
     }
     else if (type === "function") {
