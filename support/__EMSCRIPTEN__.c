@@ -488,6 +488,8 @@ main(int argc, char **argv)
     setenv("PYTHONINSPECT","1",1);
     setenv("PYTHONDONTWRITEBYTECODE","1",1);
 
+    setenv("HOME", "/home/web_user", 1);
+    setenv("APPDATA", "/home/web_user", 1);
 
     status = pymain_init(&args);
 
