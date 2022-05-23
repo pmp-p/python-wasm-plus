@@ -302,6 +302,8 @@ def PyConfig_InitPythonConfig(PyConfig):
             global fix_preload_table, ROOTDIR
             fix_preload_table()
 
+            os.chdir(ROOTDIR)
+
             if os.path.isfile("main.py"):
                 def runmain(py):
                     __main__ = execfile(py)
@@ -313,8 +315,8 @@ def PyConfig_InitPythonConfig(PyConfig):
                 print(f"320: running {sys.argv[0]}.py as main (deferred)")
                 aio.defer(runmain, ["main.py"], {})
             else:
-                pdb(f"no main found for {sys.argv[0]}")
-            os.chdir(ROOTDIR)
+                pdb(f"no main found for {sys.argv[0]} in {ROOTDIR}")
+
             aio.defer(embed.prompt,(),{},2000)
 
         # C should unlock aio loop when preload count reach 0.

@@ -119,7 +119,7 @@ ticks = 0
 protect = []
 last_state = None
 tasks = []
-ctx = False
+is_async_ctx = False
 no_exit = True
 
 from asyncio import *
@@ -163,7 +163,7 @@ inloop = False
 # this runs both asyncio loop and the arduino style stepper
 def step(*argv):
     global inloop, last_state, paused, started, loop, oneshots, protect
-    global ticks, steps, step, flush, exit, ctx
+    global ticks, steps, step, flush, exit, is_async_ctx
 
     # those hold variable that could be processed by C
     # outside the pyloop, to keep them from GC
@@ -216,9 +216,9 @@ def step(*argv):
             # loop.call_soon(loop.stop)
             # loop.run_forever()
             if started:
-                ctx = True
+                is_async_ctx = True
                 loop._run_once()
-                ctx = False
+                is_async_ctx = False
 
     except Exception as e:
         sys.print_exception(e)
@@ -406,3 +406,65 @@ class after:
 
 
 #
+import time as Time
+class aioctx:
+    def __init__(self, delta, coro):
+        self.coro = coro
+        self.tnext = Time.time() + delta
+        self.tmout = 0
+
+
+class _(list):
+    current = None
+
+    async def __aenter__(self):
+        if self.__class__.current is None:
+            self.__class__.current = aioctx(0, None)
+        self.append(self.__class__.current)
+        self.__class__.current = None
+        if self[-1].coro is not None:
+            pdb("__aenter__ awaiting", self[-1].coro)
+            try:
+                return await self[-1].coro
+            except KeyboardInterrupt:
+                aio.paused = None
+                aio.loop.call_soon(aio.loop.stop)
+                pdb("326: aio exit on KeyboardInterrupt")
+                return await aio.sleep(0)
+        else:
+            print('__aenter__ no coro')
+            self.__class__.current = None
+            return self
+
+    async def __aexit__(self, type, value, traceback):
+        len(self) and self.pop()
+
+    def __enter__(self):
+        self.append(0)
+
+    def __exit__(self, type, value, traceback):
+        len(self) and self.pop()
+
+    def __bool__(self):
+        if self.__class__.current:
+            return True
+        if len(self) and self[-1]:
+            return True
+        return False
+
+    def __call__(self, frametime):
+        print('__call__', len(self), frametime)
+        self.__class__.current = aioctx(frametime, None)
+        return self
+
+    def call(self, coro):
+        print('.call', len(self), coro)
+        if self.__class__.current is None:
+            self.__class__.current = aioctx(0, coro)
+        else:
+            self.__class__.current.coro = coro
+        # self.__class__.current.tmout = tmout
+        return self
+
+
+aio.ctx = _()

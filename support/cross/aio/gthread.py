@@ -21,6 +21,10 @@ def _shutdown():
 # TODO: default granularity with https://docs.python.org/3/library/sys.html#sys.setswitchinterval
 
 
+
+
+
+
 class Lock:
     count = 0
 
@@ -89,7 +93,7 @@ class Thread:
         self.status = None
 
     async def wrap(self):
-        for idle in self.run():
+        for idle in self.run(*self.args, **self.kwargs):
             await aio.sleep(0)
 
     async def runner(self, coro):
@@ -154,7 +158,7 @@ class Thread:
         embed.disable_irq()
 
     def __bool__(self):
-        return self.is_alive()
+        return self.is_alive() and not aio.exit
 
     def is_alive(self):
         return self.status is True
