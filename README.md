@@ -8,11 +8,14 @@ emscripten portable sdk.
 
 How does it work ?
 
-see the excellent slides of Christian Heimes at PyCon DE (video not yet available)
+see the excellent slides of Christian Heimes at PyCon DE
+
+  https://www.youtube.com/watch?v=oa2LllRZUlU
 
   https://speakerdeck.com/tiran/python-3-dot-11-in-the-web-browser-a-journey-pycon-de-2022-keynote
 
-or those of PyCon US 2022
+
+or notes of PyCon US 2022
  https://speakerdeck.com/tiran/language-summit-2022-webassembly-python-in-the-browser-and-beyond
 
 

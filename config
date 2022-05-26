@@ -7,8 +7,8 @@ export HOST_PREFIX=${HOST_PREFIX:-$ROOT/devices/$(arch)/usr}
 export PREFIX=${PREFIX:-${ROOT}/devices/emsdk/usr}
 export PYTHONPYCACHEPREFIX=$(realpath ${ROOT}/build/pycache)
 
-export HPY=$(echo -n ${HOST_PREFIX}/bin/python3.??)
-export PIP=$(echo -n ${HOST_PREFIX}/bin/pip3.??)
+export HPY=$(echo -n ${HOST_PREFIX}/bin/python3.1?)
+export PIP=$(echo -n ${HOST_PREFIX}/bin/pip3.$(echo $HPY|cut -d. -f2))
 
 
 export CI=${CI:-false}

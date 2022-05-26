@@ -67,11 +67,11 @@ fi
 
 # ================== SDL2_image ====================
 
-if $CI
-then
-    echo "CI libtool does not handle SDL_image"
-    embuilder --pic build sdl2_image
-else
+#if $CI
+#then
+#    echo "CI libtool does not handle SDL_image"
+#    embuilder --pic build sdl2_image
+#else
 
 if [ -f ../devices/emsdk/usr/lib/libSDL2_image.a ]
 then
@@ -79,8 +79,15 @@ then
     * SDL2_image already built
 "
 else
-    [ -d SDL_image ] || git clone https://github.com/libsdl-org/SDL_image
-    pushd SDL_image
+    #[ -d SDL_image ] || git clone https://github.com/libsdl-org/SDL_image
+    if [ -d SDL2_image-2.5.1 ]
+    then
+        echo "build SDL2_image pre release"
+    else
+        wget -c -q https://github.com/libsdl-org/SDL_image/releases/download/candidate-2.5.1/SDL2_image-2.5.1.tar.gz
+    fi
+
+    pushd SDL2_image-2.5.1
     CFLAGS=$CPOPTS EMCC_CFLAGS="$ALL" $CNF \
      --disable-sdltest --disable-jpg-shared --disable-png-shared
     #--disable-tif-shared
@@ -90,7 +97,7 @@ else
     [ -f $PREFIX/include/SDL2/SDL_image.h ] || exit 1
 fi
 
-fi
+#fi
 
 
 # =============== ncurses ===========================
