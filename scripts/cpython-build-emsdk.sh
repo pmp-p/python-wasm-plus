@@ -56,7 +56,7 @@ else
 
     export EMCC_CFLAGS="$COPTS"
 
-     CFLAGS="$COPTS" \
+     CFLAGS="-O0 -g0 -fPIC" \
       emconfigure $ROOT/src/libffi/configure --host=wasm32-tot-linux\
       --prefix=$PREFIX --enable-static --disable-shared --disable-dependency-tracking\
       --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs >/dev/null

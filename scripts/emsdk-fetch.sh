@@ -22,6 +22,7 @@ then
             ./emsdk install tot
             ./emsdk activate tot
             popd
+            tar -cpR emsdk > emsdk.tar
         fi
     fi
 
