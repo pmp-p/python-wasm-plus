@@ -54,7 +54,7 @@ else
 #TODO: check if export PATH=${HOST_PREFIX}/bin:$PATH is really set to avoid system python with different bytecode
 #and no loder lib-dynload in the way.
 
-    export EMCC_CFLAGS="$COPTS"
+    export EMCC_CFLAGS="-O0 -g0 -fPIC"
 
      CFLAGS="-O0 -g0 -fPIC" \
       emconfigure $ROOT/src/libffi/configure --host=wasm32-tot-linux\

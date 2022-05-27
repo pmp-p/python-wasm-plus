@@ -1,14 +1,14 @@
 # python-wasm-plus
 
-thanks to all that participated, the cpython ticket https://bugs.python.org/issue40280 is being solved
+Thanks to all that participated, the cpython ticket https://github.com/python/cpython/issues/84461 is being solved
 
-Here's a glimpse to the future :
-a sandbox for making cpython app on webassembly with integrated pygame built with
+Here's a glimpse of the future :
+A sandbox for making cpython app on webassembly with integrated pygame built with
 emscripten portable sdk.
 
 How does it work ?
 
-see the excellent slides of Christian Heimes at PyCon DE
+See the excellent slides of Christian Heimes at PyCon DE
 
   https://www.youtube.com/watch?v=oa2LllRZUlU
 
@@ -19,13 +19,15 @@ or notes of PyCon US 2022
  https://speakerdeck.com/tiran/language-summit-2022-webassembly-python-in-the-browser-and-beyond
 
 
-for just cpython on wasm see python-wasm https://github.com/ethanhs/python-wasm/
+if you don't need pygame linked to cpython then prefer for final size reasons :
 
-or stays with the classics :
+ just cpython on wasm see python-wasm https://github.com/ethanhs/python-wasm/
+
+or the classics :
 
 for scientific python see pyodide https://pyodide.org
 
-for cpython+panda3d see both https://rdb.name/panda3d-webgl.md.html or/and PyDK
+for cpython+panda3d see https://rdb.name/panda3d-webgl.md.html or/and PyDK
 
 
 Discussions very welcomed here French/English:
@@ -115,6 +117,8 @@ use ctrl+shift+i to see the wasm/js console while running your app.
 
     touchpong.py could be shareware so if you like it, send an expensive thank you
     to @blubberquark on Pygame Community discord ;)
+
+    emscripten interface use code from Panda3D project written by https://github.com/rdb  and  regularly modified to accomodate emsdk tip-of-tree.
 
 
 ***MORE?:***
