@@ -85,6 +85,7 @@ else
         echo "build SDL2_image pre release"
     else
         wget -c -q https://github.com/libsdl-org/SDL_image/releases/download/candidate-2.5.1/SDL2_image-2.5.1.tar.gz
+        tar xfz SDL2_image-2.5.1.tar.gz
     fi
 
     pushd SDL2_image-2.5.1
