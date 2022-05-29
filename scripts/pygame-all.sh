@@ -43,7 +43,7 @@ fi
 
 # emsdk is activated via python3-wasm
 
-if $CI
+if false
 then
     SDL_IMAGE="-s USE_SDL_IMAGE=2 -sUSE_LIBPNG -sUSE_LIBJPEG"
 else

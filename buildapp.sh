@@ -188,7 +188,7 @@ pushd build/cpython-wasm 2>&1 >/dev/null
 
 # SDL2_image turned off : -ltiff
 
-if $CI
+if false
 then
     CF_SDL="-s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_SDL_TTF=2 -sUSE_LIBJPEG -sUSE_LIBPNG"
     LD_SDL=""
