@@ -9,7 +9,8 @@ then
 "
 else
     pushd src
-    git clone -b pygame-wasm-upstream https://github.com/pmp-p/pygame-wasm pygame-wasm
+    #git clone -b pygame-wasm-upstream https://github.com/pmp-p/pygame-wasm pygame-wasm
+    git clone https://github.com/pygame/pygame pygame-wasm
     popd
 fi
 
