@@ -38,9 +38,13 @@ then
 
 else
     rm cpython 2>/dev/null
-    wget -q -c https://www.python.org/ftp/python/3.11.0/Python-3.11.0b1.tar.xz
-    tar xf Python-3.11.0b1.tar.xz
-    ln -s Python-3.11.0b1 cpython
+    #wget -q -c https://www.python.org/ftp/python/3.11.0/Python-3.11.0b1.tar.xz
+    #tar xf Python-3.11.0b1.tar.xz
+    #ln -s Python-3.11.0b1 cpython
+
+    wget -q -c https://www.python.org/ftp/python/3.11.0/Python-3.11.0b3.tgz
+    tar xf Python-3.11.0b3.tgz
+    ln -s Python-3.11.0b3 cpython
 fi
 
 popd

@@ -276,6 +276,8 @@ def PyConfig_InitPythonConfig(PyConfig):
         counter = 0
         prelist = {}
 
+        sys.path.insert(0, os.getcwd())
+
         if os.path.isdir("assets"):
             explore(ROOTDIR, "assets")
             os.chdir(f"{ROOTDIR}/assets")
