@@ -3,6 +3,12 @@ print("= ${__FILE__} in websim  for  ${PLATFORM} =")
 
 # ===============================================
 import sys, os, builtins
+try:
+    import pymunk4 as pymunk
+    sys.modules['pymunk'] = pymunk
+except:
+    print("pymunk4 was not build for simulator")
+
 
 # need them earlier than aio
 
@@ -128,6 +134,10 @@ class __EMSCRIPTEN__:
     @classmethod
     def trap(cls, *argv, **kw):
         pass
+
+    @classmethod
+    def system(cls):
+        return 'Linux'
 
     js = pdb
     run_script = pdb

@@ -36,6 +36,11 @@ import copy
 #curses
 import curses
 
+#pytmx
+import gzip
+from xml.etree import ElementTree
+import distutils.spawn
+
 #pygame_gui
 import importlib.resources
 
