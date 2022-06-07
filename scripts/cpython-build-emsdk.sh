@@ -242,6 +242,7 @@ then
 else
     . ${ROOT}/config
     . ${ROOT}/emsdk/emsdk_env.sh
+    export PATH=$ROOT/emsdk/upstream/emscripten/system/bin:\$PATH
 fi
 
 export PATH=${HOST_PREFIX}/bin:\$PATH

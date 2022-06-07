@@ -8,11 +8,13 @@ echo "
 # https://stackoverflow.com/questions/6301003/stopping-setup-py-from-installing-as-egg
 # python3 setup.py install --single-version-externally-managed --root=/
 
+# just in case
+$PIP install pip --upgrade
+
 # to remove ctypes deps
 $PIP install setuptools --upgrade
 
-# just in case
-$PIP install pip --upgrade
+
 
 export CC=clang
 
