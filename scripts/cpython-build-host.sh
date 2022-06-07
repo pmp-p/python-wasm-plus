@@ -61,9 +61,9 @@ then
     if \
     CC=clang CXX=clang++ \
     eval ${ROOT}/src/cpython/configure \
-     --prefix=$HOST_PREFIX $PYOPTS $VERBOSE
+     --prefix=$HOST_PREFIX $PYOPTS $QUIET
     then
-        eval make -j$(nproc) install $VERBOSE
+        eval make -j$(nproc) install $QUIET
         rm -rf $(find $ROOT/devices/ -type d|grep __pycache__$)
 
         cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/. $HOST_PREFIX/lib/python3.??/

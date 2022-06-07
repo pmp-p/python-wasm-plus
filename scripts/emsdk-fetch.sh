@@ -105,9 +105,9 @@ fi
 
 if \$IS_SHARED
 then
-    $EMSDK_PYTHON -E \$0.py $SHARED $LDFLAGS -Wno-unused-command-line-argument "\$@"
+    \$SYS_PYTHON -E \$0.py $SHARED $LDFLAGS -Wno-unused-command-line-argument "\$@"
 else
-    $EMSDK_PYTHON -E \$0.py $CPPFLAGS -Wno-unused-command-line-argument "\$@"
+    \$SYS_PYTHON -E \$0.py $CPPFLAGS -Wno-unused-command-line-argument "\$@"
 fi
 END
         cat emsdk/upstream/emscripten/emcc > emsdk/upstream/emscripten/em++
@@ -119,14 +119,14 @@ unset _PYTHON_SYSCONFIGDATA_NAME
 unset PYTHONHOME
 unset PYTHONPATH
 
-$EMSDK_PYTHON -E \$0.py "\$@"
+\$SYS_PYTHON -E \$0.py "\$@"
 END
 
         cat emsdk/upstream/emscripten/emar > emsdk/upstream/emscripten/emcmake
 
         cat > emsdk/upstream/emscripten/emconfigure <<END
 #!/bin/bash
-$EMSDK_PYTHON -E \$0.py "\$@"
+\$SYS_PYTHON -E \$0.py "\$@"
 END
 
         chmod +x emsdk/upstream/emscripten/em*

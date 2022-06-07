@@ -1,5 +1,6 @@
 #!/bin/bash
 reset
+export ROOT=$(pwd)
 
 . ${CONFIG:-config}
 

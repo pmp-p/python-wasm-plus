@@ -1,5 +1,6 @@
 #!/bin/bash
 reset
+export ROOT=$(pwd)
 
 mkdir -p build/pycache
 export PYTHONDONTWRITEBYTECODE=1

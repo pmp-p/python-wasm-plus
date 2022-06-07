@@ -6,9 +6,12 @@ echo "
 
 
 # https://stackoverflow.com/questions/6301003/stopping-setup-py-from-installing-as-egg
-
 # python3 setup.py install --single-version-externally-managed --root=/
 
+# to remove ctypes deps
+$PIP install setuptools --upgrade
+
+# just in case
 $PIP install pip --upgrade
 
 export CC=clang
@@ -62,7 +65,7 @@ done
 
 
 rm cffi-branch-default.zip
-wget https://foss.heptapod.net/pypy/cffi/-/archive/branch/default/cffi-branch-default.zip
+wget -q https://foss.heptapod.net/pypy/cffi/-/archive/branch/default/cffi-branch-default.zip
 unzip -o -q cffi-branch-default.zip
 
 pushd cffi-branch-default
@@ -80,6 +83,7 @@ else
     $PIP install .
     popd
 fi
+
 
 if [ -d pymunk-4.0.0 ]
 then

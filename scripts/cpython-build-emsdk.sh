@@ -6,6 +6,10 @@
 # fix /pip/_internal/operations/install/wheel.py
 # for allowing to avoid pyc creation
 
+    echo "
+    * building cpython-wasm EMSDK_PYTHON=$SYS_PYTHON
+"
+
 
 export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD:-${HOST_PREFIX}/bin/python3}
 
@@ -21,7 +25,7 @@ REBUILD_WASM=${REBUILD_WASMPY:-false}
 if $REBUILD || $REBUILD_WASMPY
 then
     rm -rf build/cpython-wasm/ build/pycache/config.cache
-    rm build/cpython-wasm/libpython3.??.a
+    rm build/cpython-wasm/libpython3.??.a 2>/dev/null
     REBUILD=true
 fi
 
@@ -63,6 +67,7 @@ else
 
     emmake make install >/dev/null
 
+    unset EMCC_CFLAGS
     popd
 
     cp -fv  ${PREFIX}/lib/libffi.a $EMSDK/upstream/emscripten/cache/sysroot/lib/wasm32-emscripten/pic/
@@ -126,13 +131,13 @@ else
      --build=$($ROOT/src/cpython/config.guess) \
      --with-emscripten-target=browser \
      --prefix=$PREFIX \
-     --with-build-python=${PYTHON_FOR_BUILD} $VERBOSE
+     --with-build-python=${PYTHON_FOR_BUILD} $QUIET
 
     #echo "#define HAVE_NCURSES_H" >> pyconfig.h
 
-    if EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" eval emmake make -j$(nproc) $VERBOSE
+    if EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" eval emmake make -j$(nproc) $QUIET
     then
-        EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" eval emmake make install $VERBOSE
+        EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" eval emmake make install $QUIET
     else
         echo " **** cpython wasm build failed *** "
         exit 1
@@ -186,6 +191,15 @@ do
     fi
 done
 
+for arg do
+    shift
+    [ "\$arg" = "-I/usr/include" ] && continue
+    [ "\$arg" = "-I/usr/include/SDL2" ] && continue
+    [ "\$arg" = "-L/usr/lib64" ]	&& continue
+    [ "\$arg" = "-L/usr/lib" ]   && continue
+    set -- "\$@" "\$arg"
+done
+
 SHARED=""
 IS_SHARED=false
 
@@ -226,9 +240,8 @@ then
     # emsdk_env already parsed
     echo -n
 else
-    pushd $ROOT
-    . scripts/emsdk-fetch.sh
-    popd
+    . ${ROOT}/config
+    . ${ROOT}/emsdk/emsdk_env.sh
 fi
 
 export PATH=${HOST_PREFIX}/bin:\$PATH
@@ -248,10 +261,9 @@ export _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata__emscripten_
 
 cat >${PYTHONPYCACHEPREFIX}/.numpy-site.cfg <<NUMPY
 [DEFAULT]
-library_dirs = $PREFIX//lib
+library_dirs = $PREFIX/lib
 include_dirs = $PREFIX/include
 NUMPY
-
 
 END
 
@@ -260,7 +272,6 @@ cat > $HOST_PREFIX/bin/python3-wasm <<END
 . $ROOT/${PYDK_PYTHON_HOST_PLATFORM}-shell.sh
 
 # most important
-#export EMCC_CFLAGS="-sSIDE_MODULE -DBUILD_STATIC -fPIC"
 export CC=cc
 export _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata__emscripten_debug
 
@@ -280,50 +291,15 @@ export PYTHONPATH=$PYTHONPYCACHEPREFIX/sysconfig:$(echo -n ${HOST_PREFIX}/lib/py
 export _PYTHON_HOST_PLATFORM=${PYDK_PYTHON_HOST_PLATFORM}
 export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD}
 
-$HOST_PREFIX/bin/python3.?? -u -B \$@
+$HPY -u -B \$@
 END
 
 chmod +x $HOST_PREFIX/bin/python3-wasm
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+cp -f $HOST_PREFIX/bin/python3-wasm ${ROOT}/
 
 
 unset PYTHON_FOR_BUILD
 unset EMCC_CFLAGS
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
