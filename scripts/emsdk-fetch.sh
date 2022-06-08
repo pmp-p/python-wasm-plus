@@ -22,10 +22,9 @@ then
             ./emsdk install tot
             ./emsdk activate tot
             popd
-            tar -cpR emsdk > emsdk.tar
+            [ -f dev ] && tar -cpR emsdk > emsdk.tar
         fi
     fi
-
 
     if [ -f emsdk/emsdk_env.sh ]
     then

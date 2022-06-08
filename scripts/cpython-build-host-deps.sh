@@ -14,6 +14,12 @@ $PIP install pip --upgrade
 # to remove ctypes deps
 $PIP install setuptools --upgrade
 
+HPFX=./devices/x86_64/usr/lib/python3.11
+rm $HPFX/ensurepip/_bundled/setuptools-*-py3-none-any.whl
+mv $HPFX/site-packages/setuptool* $HPFX/
+mv $HPFX/site-packages/_distutils* $HPFX/
+mv $HPFX/site-packages/pkg_resources $HPFX/
+
 
 
 export CC=clang

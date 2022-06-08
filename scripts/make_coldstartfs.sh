@@ -3,9 +3,6 @@
 . ${CONFIG:-config}
 
 echo PYTHON=$HPY
-echo LD_LIBRARY_PATH=./devices/x86_64/usr/lib =$LD_LIBRARY_PATH
-
-ROOT=$(pwd)
 
 FS=$PYTHONPYCACHEPREFIX/fs
 
@@ -14,6 +11,7 @@ import sys, os, json, builtins, shutil, zipimport, tomllib, time
 import trace, traceback, asyncio, inspect, _thread, importlib
 import ctypes
 sys.stdout.reconfigure(encoding='utf-16')
+sys.stdout.reconfigure(encoding='utf-8')
 
 #pymunk tests
 import unittest, locale
@@ -38,6 +36,7 @@ import curses
 
 #pytmx
 import gzip
+import zlib
 from xml.etree import ElementTree
 import distutils.spawn
 
@@ -83,6 +82,4 @@ tar xvf $PYTHONPYCACHEPREFIX/stdl.tar | wc -l
 rm $PYTHONPYCACHEPREFIX/stdl.tar
 du -hs $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.??
 popd
-
-
 

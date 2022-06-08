@@ -4,6 +4,14 @@
 
 . ./scripts/emsdk-fetch.sh
 
+
+HPFX=./devices/x86_64/usr/lib/python3.11
+rm ./devices/emsdk/usr/lib/python3.11/ensurepip/_bundled/setuptools-*-py3-none-any.whl
+cp -Rf $HPFX/setuptool* ./devices/emsdk/usr/lib/python3.11/
+cp -Rf $HPFX/_distutils* ./devices/emsdk/usr/lib/python3.11/
+cp -Rf $HPFX/pkg_resources ./devices/emsdk/usr/lib/python3.11/
+
+
 # ../../devices/x86_64/usr/bin/python3-wasm -mpip install .
 # not working because python startup is skipped
 
