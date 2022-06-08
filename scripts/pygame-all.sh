@@ -50,13 +50,15 @@ else
     SDL_IMAGE="-sUSE_LIBPNG -sUSE_LIBJPEG"
 fi
 
+rm -rf build/temp.wasm32-* 2>/dev/null
+
 if python3-wasm setup.py -config -auto -sdl2
 then
     if CC=emcc CFLAGS="-DBUILD_STATIC -DSDL_NO_COMPAT -ferror-limit=1 -Wno-unused-command-line-argument -Wno-unreachable-code-fallthrough -fPIC"\
  EMCC_CFLAGS="-I$PREFIX/include/SDL2 -s USE_SDL=2 -sUSE_SDL_TTF=2 $SDL_IMAGE"\
  python3-wasm setup.py build
     then
-        OBJS=$(find build/temp.wasm32-tot-emscripten-3.??/|grep o$)
+        OBJS=$(find build/temp.wasm32-*/|grep o$)
         $ROOT/emsdk/upstream/emscripten/emar rcs ${ROOT}/prebuilt/libpygame.a $OBJS
         for obj in $OBJS
         do

@@ -63,7 +63,7 @@ then
     echo -n
 else
     mkdir -p src
-    export PKG_CONFIG_PATH="${PREFIX}/lib/pkgconfig"
+    export PKG_CONFIG_PATH="${HOST_PREFIX}/lib/pkgconfig"
     export PATH="${HOST_PREFIX}/bin:$PATH"
     export PYDK=minimal
 fi
