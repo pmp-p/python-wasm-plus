@@ -40,15 +40,17 @@ then
         exit 1
     fi
 
-    # 3.6 could have problems
-    for py in 10 9 8 7
-    do
-        if command -v python3.${py} >/dev/null
-        then
-            export EMSDK_PYTHON=$(command -v python3.${py})
-            break
-        fi
-    done
+# EMSDK_PYTHON is cleared
+# https://github.com/emscripten-core/emscripten/pull/16736
+#    # 3.6 could have problems
+#    for py in 10 9 8 7
+#    do
+#        if command -v python3.${py} >/dev/null
+#        then
+#            export EMSDK_PYTHON=$(command -v python3.${py})
+#            break
+#        fi
+#    done
 
 
 
@@ -92,23 +94,34 @@ unset PYTHONPATH
 SHARED=""
 IS_SHARED=false
 
-if echo "\$@"|grep -q shared
-then
-    IS_SHARED=true
-    SHARED="-sSIDE_MODULE"
-else
-    if echo "\$@"|grep -q wasm32-emscripten.so
+for arg do
+    shift
+
+    # that is for some very bad setup.py behaviour regarding cross compiling. should not be needed ..
+    [ "\$arg" = "-I/usr/include" ] && continue
+    [ "\$arg" = "-I/usr/include/SDL2" ] && continue
+    [ "\$arg" = "-L/usr/lib64" ]	&& continue
+    [ "\$arg" = "-L/usr/lib" ]   && continue
+
+    if [ "\$arg" = "-shared" ]
     then
         IS_SHARED=true
-        SHARED="-shared -sSIDE_MODULE"
+        SHARED="$SHARED -sSIDE_MODULE"
     fi
-fi
+
+    if echo "\$arg"|grep -q wasm32-emscripten.so\$
+    then
+        IS_SHARED=true
+        SHARED="$SHARED -shared -sSIDE_MODULE"
+    fi
+    set -- "\$@" "\$arg"
+done
 
 if \$IS_SHARED
 then
-    \$SYS_PYTHON -E \$0.py $SHARED $LDFLAGS -Wno-unused-command-line-argument "\$@"
+    \$SYS_PYTHON -E \$0.py $SHARED $LDFLAGS "\$@"
 else
-    \$SYS_PYTHON -E \$0.py $CPPFLAGS -Wno-unused-command-line-argument "\$@"
+    \$SYS_PYTHON -E \$0.py $CPPFLAGS "\$@"
 fi
 END
         cat emsdk/upstream/emscripten/emcc > emsdk/upstream/emscripten/em++

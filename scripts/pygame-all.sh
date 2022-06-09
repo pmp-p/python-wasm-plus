@@ -25,7 +25,7 @@ echo "
 
 
 # remove old lib
-[ -f ${ROOT}/prebuilt/libpygame.a ] && rm ${ROOT}/prebuilt/libpygame.a
+[ -f ${ROOT}/prebuilt/emsdk/libpygame.a ] && rm ${ROOT}/prebuilt/emsdk/libpygame.a
 
 
 pushd src/pygame-wasm 2>&1 >/dev/null
@@ -59,7 +59,7 @@ then
  python3-wasm setup.py build
     then
         OBJS=$(find build/temp.wasm32-*/|grep o$)
-        $ROOT/emsdk/upstream/emscripten/emar rcs ${ROOT}/prebuilt/libpygame.a $OBJS
+        $ROOT/emsdk/upstream/emscripten/emar rcs ${ROOT}/prebuilt/emsdk/libpygame.a $OBJS
         for obj in $OBJS
         do
             echo $obj

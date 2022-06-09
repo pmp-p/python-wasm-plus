@@ -1,12 +1,13 @@
 . ${CONFIG:-config}
 
 echo "
-    *cpython-build-host-deps*
+    *cpython-build-host-deps pip==$PIP *
 " 1>&2
 
 
 # https://stackoverflow.com/questions/6301003/stopping-setup-py-from-installing-as-egg
 # python3 setup.py install --single-version-externally-managed --root=/
+SPY="$HPY setup.py install --single-version-externally-managed --root=/"
 
 # just in case
 $PIP install pip --upgrade
@@ -81,16 +82,16 @@ pushd cffi-branch-default
 popd
 
 
-# cython 3 ( not out yet )
-if $HPY -m cython -V 2>&1|grep -q 'version 3.0.'
-then
-    echo  found cython 3+
-else
-    git_update https://github.com/cython/cython
-    pushd cython
-    $PIP install .
-    popd
-fi
+## cython 3 ( not out yet )
+#if $HPY -m cython -V 2>&1|grep -q 'version 3.0.'
+#then
+#    echo  found cython 3+
+#else
+#    git_update https://github.com/cython/cython
+#    pushd cython
+#    $PIP install .
+#    popd
+#fi
 
 
 if [ -d pymunk-4.0.0 ]
@@ -100,8 +101,8 @@ then
     [ -d $HOST_PREFIX/lib/python3.11/site-packages/pymunk4 ] && rm -rf $HOST_PREFIX/lib/python3.11/site-packages/pymunk4
     rm -f  build/lib/pymunk/* chipmunk_src/*.so chipmunk_src/*/*.o
     $HPY setup.py build_chipmunk
-    $HPY setup.py install
-    mv pymunk/libchipmunk.so $HOST_PREFIX/lib/python3.11/site-packages/pymunk/libchipmunk64.so
+    $SPY
+    mv $HOST_PREFIX/lib/python3.11/site-packages/pymunk/libchipmunk.so $HOST_PREFIX/lib/python3.11/site-packages/pymunk/libchipmunk64.so
     mv $HOST_PREFIX/lib/python3.11/site-packages/pymunk $HOST_PREFIX/lib/python3.11/site-packages/pymunk4
     popd
 fi

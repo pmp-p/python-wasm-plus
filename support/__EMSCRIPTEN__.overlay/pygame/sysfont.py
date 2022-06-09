@@ -197,8 +197,8 @@ def initsysfonts_darwin():
 def initsysfonts_unix(path="fc-list"):
     """use the fc-list from fontconfig to get a list of fonts"""
     fonts = {}
-    
-    if sys.platform == 'emscripten':
+
+    if sys.platform == "emscripten":
         return fonts
 
     try:

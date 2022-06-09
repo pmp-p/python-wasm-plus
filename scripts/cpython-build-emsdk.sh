@@ -121,7 +121,7 @@ else
 
 # CFLAGS="-DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1"
 
-    CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten\
+    CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten \
     OPT="$CPOPTS -DNDEBUG -fwrapv" \
     eval emconfigure $ROOT/src/cpython/configure -C --without-pymalloc --disable-ipv6 \
      --cache-file=${PYTHONPYCACHEPREFIX}/config.cache \
@@ -147,8 +147,10 @@ else
 
     popd
 
+    mkdir -p ${ROOT}/prebuilt/emsdk
+
     # move them to MEMFS
-    mv $PREFIX/lib/python3.??/lib-dynload/* $ROOT/support/__EMSCRIPTEN__/
+    mv $PREFIX/lib/python3.??/lib-dynload/* $ROOT/prebuilt/emsdk/site-packages
 
     # specific platform support
     cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/. $HOST_PREFIX/lib/python3.??/
@@ -156,8 +158,8 @@ else
     # TODO: use PYTHONPATH for python3-wasm to pick them in devices/emsdk/usr/lib/python3.11/
     #ln $PREFIX/lib/python3.??/_sysconfigdata__emscripten_wasm32-emscripten.py devices/x86_64/usr/lib/python3.??/
 
-    mkdir -p prebuilt
-    cp -vf build/cpython-wasm/libpython3.*.a prebuilt/
+
+    cp -vf build/cpython-wasm/libpython3.*.a prebuilt/emsdk/
     rmdir  $PREFIX/lib/python3.??/lib-dynload
 fi
 
@@ -182,48 +184,44 @@ cat > $HOST_PREFIX/bin/cc <<END
 unset _PYTHON_SYSCONFIGDATA_NAME
 unset PYTHONHOME
 unset PYTHONPATH
-for py in 10 9 8 7
-do
-    if command -v python3.${py}
-    then
-        export EMSDK_PYTHON=$(command -v python3.${py})
-        break
-    fi
-done
+
+SHARED="-Wno-unused-command-line-argument"
+IS_SHARED=false
 
 for arg do
     shift
+
+    # that is for some very bad setup.py behaviour regarding cross compiling. should not be needed ..
     [ "\$arg" = "-I/usr/include" ] && continue
     [ "\$arg" = "-I/usr/include/SDL2" ] && continue
     [ "\$arg" = "-L/usr/lib64" ]	&& continue
     [ "\$arg" = "-L/usr/lib" ]   && continue
+
+    if [ "\$arg" = "-shared" ]
+    then
+        IS_SHARED=true
+        SHARED="$SHARED -sSIDE_MODULE"
+    fi
+
+    if echo "\$arg"|grep -q wasm32-emscripten.so\$
+    then
+        IS_SHARED=true
+        SHARED="$SHARED -shared -sSIDE_MODULE"
+    fi
     set -- "\$@" "\$arg"
 done
 
-SHARED=""
-IS_SHARED=false
-
-if echo \$@|grep -q shared
-then
-    IS_SHARED=true
-    SHARED="-sSIDE_MODULE"
-else
-    if echo \$@|grep -q wasm32-emscripten.so
-    then
-        IS_SHARED=true
-        SHARED="-shared -sSIDE_MODULE"
-    fi
-fi
 
 if \$IS_SHARED
 then
-    # $COPTS
-    emcc \$SHARED $COPTS $LDFLAGS -sSIDE_MODULE -gsource-map --source-map-base / \$@
+    $SYS_PYTHON -E $EMSDK/upstream/emscripten/emcc.py \
+        \$SHARED $COPTS $LDFLAGS -sSIDE_MODULE -gsource-map --source-map-base / \$@
 else
-    # $COPTS
-    emcc $COPTS $CPPFLAGS -DBUILD_STATIC \$@
+    $SYS_PYTHON -E $EMSDK/upstream/emscripten/emcc.py \
+        $COPTS $CPPFLAGS -DBUILD_STATIC \$@
 fi
 END
+
 
 chmod +x $HOST_PREFIX/bin/cc
 

@@ -28,7 +28,7 @@ then
     ./scripts/pygame-all.sh > /dev/null
 
     # pygame won't build if python or sdl failed
-    [ -f prebuilt/libpygame.a ] || exit 1
+    [ -f prebuilt/emsdk/libpygame.a ] || exit 1
 
 else
     echo " cpython-build-emsdk failed"

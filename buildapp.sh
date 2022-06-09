@@ -41,9 +41,17 @@ shift
 TMPL=$(realpath $TMPL)
 APK=$(realpath $APK)
 
+mkdir -p prebuilt/emsdk/site-packages
 
-# plat stdlib
+# pre populated site-packages
+REQUIREMENTS=$(realpath prebuilt/emsdk/site-packages)
+
+# runtime patches on known modules for specific platform
+# applies to prebuilt/emsdk/site-packages at preload stage.
 PLATFORM=$(realpath support/__EMSCRIPTEN__)
+
+[ -d ${REQUIREMENTS}/pygame ] || cp -R ${ROOT}/src/pygame-wasm/src_py ${REQUIREMENTS}/pygame
+cp -Rf ${PLATFORM}.overlay/* ${REQUIREMENTS}/
 
 # crosstools, aio and simulator
 CROSS=$(realpath support/cross)
@@ -55,7 +63,6 @@ touch $(echo -n $PREFIX/lib/python3.??/site-packages)/README.txt
 
 
 . scripts/emsdk-fetch.sh
-
 
 
 ALWAYS_ASSETS=$(realpath tests/assets)
@@ -174,17 +181,18 @@ else
 
 fi
 
+# apply stdlib patches
 /bin/cp -Rfv $PLATFORM.patches/. $ROOT/devices/$(arch)/usr/lib/python3.??/
 /bin/cp -Rf $PLATFORM.patches/. $ROOT/devices/emsdk/usr/lib/python3.??/
 
+# and pack the minimal stdlib for current implicit requirements
+# see inside ./scripts/make_coldstartfs.sh to view them
 ./scripts/make_coldstartfs.sh
-
 
 pushd build/cpython-wasm 2>&1 >/dev/null
 
 [ -f ${MODE}.js ] && rm ${MODE}.*
 [ -f Programs/${MODE}.o ] && rm Programs/${MODE}.o
-
 
 
 # SDL2_image turned off : -ltiff
@@ -199,6 +207,7 @@ else
 fi
 
 
+#  -sALLOW_MEMORY_GROWTH=1
 
 # gnu99 not c99 for EM_ASM() js calls functions.
 
@@ -206,9 +215,6 @@ emcc -fPIC -D__PYDK__=1 -DNDEBUG $CF_SDL \
  -c -fwrapv -Wall $CPOPTS -std=gnu99 -Werror=implicit-function-declaration -fvisibility=hidden\
  -I$ROOT/src/cpython/Include/internal -IObjects -IInclude -IPython -I. -I$ROOT/src/cpython/Include -DPy_BUILD_CORE\
  -o Programs/${MODE}.o $ROOT/src/cpython/Programs/python.c
-
-#  --preload-file ${APK}/@/assets
-#  -sALLOW_MEMORY_GROWTH=1
 
 #if $CI
 #then
@@ -219,23 +225,20 @@ emcc -fPIC -D__PYDK__=1 -DNDEBUG $CF_SDL \
 
 STDLIBFS="--preload-file $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.11@/usr/lib/python3.11"
 
-
 #  --preload-file /usr/share/terminfo/x/xterm@/usr/share/terminfo/x/xterm \
-
 
 time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  -s TOTAL_MEMORY=512MB -s ALLOW_TABLE_GROWTH \
  -s USE_BZIP2=1 -s USE_ZLIB=1 $CF_SDL \
  --use-preload-plugins \
  $STDLIBFS \
- --preload-file $ROOT/support/xterm@/etc/termcap \
- --preload-file ${CROSS}@/data/data/org.python/assets/site-packages \
- --preload-file ${PLATFORM}@/data/data/org.python/assets/site-packages \
  $ALWAYS_FS \
- -o ${MODE}.js Programs/${MODE}.o ${ROOT}/prebuilt/libpython3.*.a Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a \
- ${ROOT}/prebuilt/libpygame.a $CFLDPFX -lffi -lSDL2_gfx -lSDL2_mixer  \
+ --preload-file ${CROSS}@/data/data/org.python/assets/site-packages \
+ --preload-file ${REQUIREMENTS}@/data/data/org.python/assets/site-packages \
+ --preload-file $ROOT/support/xterm@/etc/termcap \
+ -o ${MODE}.js Programs/${MODE}.o ${ROOT}/prebuilt/emsdk/libpython3.*.a Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a \
+ ${ROOT}/prebuilt/emsdk/libpygame.a $CFLDPFX -lffi -lSDL2_gfx -lSDL2_mixer  \
  $LD_SDL -ldl -lm
-
 
 popd
 

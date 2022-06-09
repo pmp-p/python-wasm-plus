@@ -98,8 +98,6 @@ from pygame.pixelarray import PixelArray
 
 from pygame.overlay import Overlay
 
-import pygame.transform
-
 """
 
 
@@ -159,11 +157,19 @@ import pygame_mixer_music
 music = clean_mod("pygame.mixer_music")
 
 mixer.music = music
-################################
+#=============================================
+# fix pygame._sdl2
 
-import pygame._sdl2
+import pygame__sdl2_sdl2
+sys.modules["pygame._sdl2.sdl2"] = pygame__sdl2_sdl2
 
-sys.modules["pygame._sdl2.video"] = pygame._sdl2.video
+import pygame_sdl2_video
+sys.modules["pygame._sdl2.video"] = pygame_sdl2_video
+
+sys.modules["pygame._sdl2.audio"] = type(builtins)("pygame._sdl2.audio")
+
+import pygame._sdl2 as _sdl2
+#=============================================
 
 import pygame_context
 
