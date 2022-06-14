@@ -64,7 +64,7 @@ then
         ALL="libembind libgl libal libhtml5 libstubs libnoexit libsockets"
         ALL="$ALL libc libdlmalloc libcompiler_rt libc++-noexcept libc++abi-noexcept"
         ALL="$ALL struct_info libfetch zlib bzip2"
-        ALL="$ALL libpng libjpeg freetype harfbuzz "
+        ALL="$ALL libpng libjpeg freetype harfbuzz"
         ALL="$ALL sdl2 sdl2_mixer sdl2_gfx sdl2_ttf"
 
         echo "
@@ -80,9 +80,24 @@ then
             #embuilder build $one
         done
 
+        if $CI
+        then
+            echo "
 
-# -Wno-limited-postlink-optimizations
+        ==========================================================
+                            stripping emsdk
+        ==========================================================
+"
+            rm -rf ${SDKDIR}/emsdk/upstream/emscripten/cache/ports*
+            # something triggers sdl2 *full* rebuild in pygame.
+            # but only that one.
+            embuilder --pic build sdl2
+            embuilder build sdl2
+            rm -rf ${SDKDIR}/emsdk/upstream/emscripten/cache/ports/sdl2/SDL-*
+            rm -rf ${SDKDIR}/emsdk/upstream/emscripten/tests
+        fi
 
+#
 
         cat > emsdk/upstream/emscripten/emcc <<END
 #!/bin/bash
@@ -91,6 +106,7 @@ unset _PYTHON_SYSCONFIGDATA_NAME
 unset PYTHONHOME
 unset PYTHONPATH
 
+COMMON="-Wno-limited-postlink-optimizations"
 SHARED=""
 IS_SHARED=false
 
@@ -106,22 +122,22 @@ for arg do
     if [ "\$arg" = "-shared" ]
     then
         IS_SHARED=true
-        SHARED="$SHARED -sSIDE_MODULE"
+        SHARED="\$SHARED -sSIDE_MODULE"
     fi
 
     if echo "\$arg"|grep -q wasm32-emscripten.so\$
     then
         IS_SHARED=true
-        SHARED="$SHARED -shared -sSIDE_MODULE"
+        SHARED="\$SHARED -shared -sSIDE_MODULE"
     fi
     set -- "\$@" "\$arg"
 done
 
 if \$IS_SHARED
 then
-    \$SYS_PYTHON -E \$0.py $SHARED $LDFLAGS "\$@"
+    \$SYS_PYTHON -E \$0.py $SHARED $LDFLAGS "\$@" $COMMON
 else
-    \$SYS_PYTHON -E \$0.py $CPPFLAGS "\$@"
+    \$SYS_PYTHON -E \$0.py $CPPFLAGS "\$@" $COMMON
 fi
 END
         cat emsdk/upstream/emscripten/emcc > emsdk/upstream/emscripten/em++

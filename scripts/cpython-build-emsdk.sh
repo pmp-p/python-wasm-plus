@@ -185,7 +185,8 @@ unset _PYTHON_SYSCONFIGDATA_NAME
 unset PYTHONHOME
 unset PYTHONPATH
 
-SHARED="-Wno-unused-command-line-argument"
+COMMON="-Wno-unused-command-line-argument -Wno-unreachable-code-fallthrough"
+SHARED=""
 IS_SHARED=false
 
 for arg do
@@ -211,17 +212,15 @@ for arg do
     set -- "\$@" "\$arg"
 done
 
-
 if \$IS_SHARED
 then
     $SYS_PYTHON -E $EMSDK/upstream/emscripten/emcc.py \
-        \$SHARED $COPTS $LDFLAGS -sSIDE_MODULE -gsource-map --source-map-base / \$@
+     \$SHARED $COPTS $LDFLAGS -sSIDE_MODULE -gsource-map --source-map-base / "\$@" \$COMMON
 else
     $SYS_PYTHON -E $EMSDK/upstream/emscripten/emcc.py \
-        $COPTS $CPPFLAGS -DBUILD_STATIC \$@
+     $COPTS $CPPFLAGS -DBUILD_STATIC "\$@" \$COMMON
 fi
 END
-
 
 chmod +x $HOST_PREFIX/bin/cc
 

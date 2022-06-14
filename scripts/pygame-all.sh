@@ -56,7 +56,7 @@ if python3-wasm setup.py -config -auto -sdl2
 then
     if CC=emcc CFLAGS="-DBUILD_STATIC -DSDL_NO_COMPAT -ferror-limit=1 -Wno-unused-command-line-argument -Wno-unreachable-code-fallthrough -fPIC"\
  EMCC_CFLAGS="-I$PREFIX/include/SDL2 -s USE_SDL=2 -sUSE_SDL_TTF=2 $SDL_IMAGE"\
- python3-wasm setup.py build
+ python3-wasm setup.py build -j3
     then
         OBJS=$(find build/temp.wasm32-*/|grep o$)
         $ROOT/emsdk/upstream/emscripten/emar rcs ${ROOT}/prebuilt/emsdk/libpygame.a $OBJS
