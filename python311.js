@@ -145,11 +145,11 @@ function _until(fn_solver){
           if ( fn_solver.apply(null, argv ) ) {
             console.log("_until has reached", argv)
             resolve();
-          } else if (Date.now() > start_time + 30000) {
+          } else if (Date.now() > start_time + 120000) {
             console.error('ERROR time out waiting for condition _until',argv);
             resolve();
           } else {
-            window.setTimeout(solve, 50);
+            window.setTimeout(solve, 100);
           }
         }
         solve();
@@ -227,7 +227,7 @@ window.readline = readline
 // Xterm Sixel ======================================================
 
 export class WasmTerminal {
-    constructor(hostid, cols, rows) {
+    constructor(hostid, cols, rows, addon_url) {
         this.input = ''
         this.resolveInput = null
         this.activeInput = true
@@ -243,7 +243,7 @@ export class WasmTerminal {
             }
         );
 
-        const imageAddon = new ImageAddon.ImageAddon("./xtermjsixel/xterm-addon-image-worker.js", {sixelSupport: true});
+        const imageAddon = new ImageAddon.ImageAddon(addon_url || "./xtermjsixel/xterm-addon-image-worker.js", {sixelSupport: true});
 
         this.xterm.loadAddon(imageAddon);
         console.warn(hostid,cols,rows)
