@@ -482,7 +482,6 @@ main(int argc, char **argv)
 
     setenv("LANG","en_US.UTF-8", 0);
 
-
     setenv("PYTHONHOME","/usr", 1);
     setenv("PYTHONUNBUFFERED", "1", 1);
     setenv("PYTHONINSPECT","1",1);

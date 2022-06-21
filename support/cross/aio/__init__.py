@@ -347,7 +347,7 @@ else:
     __exit__ = sys.exit
 
 
-def aio_exit(maybecoro):
+def aio_exit(maybecoro=0):
     import inspect
 
     if inspect.iscoroutine(maybecoro):
@@ -361,9 +361,7 @@ def aio_exit(maybecoro):
         #    pdb("309: NOT A CORO", maybecoro)
         exit_now(maybecoro)
 
-
 sys.exit = aio_exit
-
 
 # check if we have a Time handler.
 try:

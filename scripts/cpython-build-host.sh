@@ -61,14 +61,14 @@ END
     # Prevent freezing bytecode with a different magic
     rm -f $HOST_PREFIX/bin/python3*
 
-    if command -v python3.11
+    if command -v python3.${PYMINOR}
     then
         echo "
 
     ===================================================================================
 
-            it's not safe to have a python3.11 in the path :
-                $(command -v python3.11)
+            it's not safe to have a python3.${PYMINOR} in the path :
+                $(command -v python3.${PYMINOR})
             while in pre-release cycle : _sre.MAGIC / bytecode weird errors etc ...
 
     ===================================================================================
@@ -87,10 +87,10 @@ END
         eval make -j$(nproc) install $QUIET
         rm -rf $(find $ROOT/devices/ -type d|grep __pycache__$)
 
-        patchelf --remove-needed libintl.so.8  $HOST_PREFIX/bin/python3.11
-        sed -i 's|-lintl ||g' /opt/python-wasm-sdk/devices/x86_64/usr/bin/python3.11-config
+        patchelf --remove-needed libintl.so.8  $HOST_PREFIX/bin/python3.${PYMINOR}
+        sed -i 's|-lintl ||g' /opt/python-wasm-sdk/devices/x86_64/usr/bin/python3.${PYMINOR}-config
 
-        cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/. $HOST_PREFIX/lib/python3.??/
+        cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/. $HOST_PREFIX/lib/python3.${PYMINOR}/
     else
         echo "
 ==========================================================================

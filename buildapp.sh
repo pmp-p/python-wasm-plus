@@ -11,13 +11,13 @@ if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus/
 then
     # in this special case build testsuite frontend
     TMPL_DEFAULT="templates/no-worker"
-    APK_DEFAULT="demos/org.python3.11.0"
+    APK_DEFAULT="demos/org.python3.${PYMINOR}.0"
     mkdir -p $APK_DEFAULT
     pushd $APK_DEFAULT
-    cp -Ru $ROOT/devices/x86_64/usr/lib/python3.?? ./
-    rm -rf ./python3.??/lib-dynload/* ./python3.??/site-packages/* ./python3.??/config-*
-    cp -vf $ROOT/devices/emsdk/usr/lib/python3.??/_sysconfigdata* ./python3.??/
-    cp -vRf $ROOT/devices/emsdk/usr/lib/python3.??/config-* ./python3.??/
+    cp -Ru $ROOT/devices/x86_64/usr/lib/python3.${PYMINOR} ./
+    rm -rf ./python3.${PYMINOR}/lib-dynload/* ./python3.${PYMINOR}/site-packages/* ./python3.${PYMINOR}/config-*
+    cp -vf $ROOT/devices/emsdk/usr/lib/python3.${PYMINOR}/_sysconfigdata* ./python3.${PYMINOR}/
+    cp -vRf $ROOT/devices/emsdk/usr/lib/python3.${PYMINOR}/config-* ./python3.${PYMINOR}/
     popd
 else
     APK_DEFAULT="demos/1-touchpong"
@@ -58,8 +58,8 @@ CROSS=$(realpath support/cross)
 
 
 # clean up untested modules
-rm -fr $PREFIX/lib/python3.??/site-packages/*
-touch $(echo -n $PREFIX/lib/python3.??/site-packages)/README.txt
+rm -fr $PREFIX/lib/python3.${PYMINOR}/site-packages/*
+touch $(echo -n $PREFIX/lib/python3.${PYMINOR}/site-packages)/README.txt
 
 
 . scripts/emsdk-fetch.sh
@@ -182,8 +182,8 @@ else
 fi
 
 # apply stdlib patches
-/bin/cp -Rfv $PLATFORM.patches/. $ROOT/devices/$(arch)/usr/lib/python3.??/
-/bin/cp -Rf $PLATFORM.patches/. $ROOT/devices/emsdk/usr/lib/python3.??/
+/bin/cp -Rfv $PLATFORM.patches/3.${PYMINOR}/. $ROOT/devices/$(arch)/usr/lib/python3.${PYMINOR}/
+/bin/cp -Rf $PLATFORM.patches/3.${PYMINOR}/. $ROOT/devices/emsdk/usr/lib/python3.${PYMINOR}/
 
 # and pack the minimal stdlib for current implicit requirements
 # see inside ./scripts/make_coldstartfs.sh to view them
@@ -220,10 +220,10 @@ emcc -fPIC -D__PYDK__=1 -DNDEBUG $CF_SDL \
 #then
 #    STDLIBFS="--preload-file  $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.12@/usr/lib/python3.12"
 #else
-#    # --preload-file $ROOT/devices/emsdk/usr/lib/python3.11@/usr/lib/python3.11
+#    # --preload-file $ROOT/devices/emsdk/usr/lib/python3.${PYMINOR}@/usr/lib/python3.${PYMINOR}
 #fi
 
-STDLIBFS="--preload-file $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.11@/usr/lib/python3.11"
+STDLIBFS="--preload-file $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.${PYMINOR}@/usr/lib/python3.${PYMINOR}"
 
 #  --preload-file /usr/share/terminfo/x/xterm@/usr/share/terminfo/x/xterm \
 

@@ -15,7 +15,7 @@ $PIP install pip --upgrade
 # to remove ctypes deps
 $PIP install setuptools --upgrade
 
-HPFX=./devices/x86_64/usr/lib/python3.11
+HPFX=./devices/x86_64/usr/lib/python3.${PYMINOR}
 rm $HPFX/ensurepip/_bundled/setuptools-*-py3-none-any.whl
 mv $HPFX/site-packages/setuptool* $HPFX/
 mv $HPFX/site-packages/_distutils* $HPFX/
@@ -98,12 +98,12 @@ if [ -d pymunk-4.0.0 ]
 then
     pushd pymunk-4.0.0
 
-    [ -d $HOST_PREFIX/lib/python3.11/site-packages/pymunk4 ] && rm -rf $HOST_PREFIX/lib/python3.11/site-packages/pymunk4
+    [ -d $HOST_PREFIX/lib/python3.${PYMINOR}/site-packages/pymunk4 ] && rm -rf $HOST_PREFIX/lib/python3.${PYMINOR}/site-packages/pymunk4
     rm -f  build/lib/pymunk/* chipmunk_src/*.so chipmunk_src/*/*.o
     $HPY setup.py build_chipmunk
     $SPY
-    mv $HOST_PREFIX/lib/python3.11/site-packages/pymunk/libchipmunk.so $HOST_PREFIX/lib/python3.11/site-packages/pymunk/libchipmunk64.so
-    mv $HOST_PREFIX/lib/python3.11/site-packages/pymunk $HOST_PREFIX/lib/python3.11/site-packages/pymunk4
+    mv $HOST_PREFIX/lib/python3.${PYMINOR}/site-packages/pymunk/libchipmunk.so $HOST_PREFIX/lib/python3.${PYMINOR}/site-packages/pymunk/libchipmunk64.so
+    mv $HOST_PREFIX/lib/python3.${PYMINOR}/site-packages/pymunk $HOST_PREFIX/lib/python3.${PYMINOR}/site-packages/pymunk4
     popd
 fi
 

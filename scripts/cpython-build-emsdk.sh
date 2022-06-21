@@ -25,7 +25,7 @@ REBUILD_WASM=${REBUILD_WASMPY:-false}
 if $REBUILD || $REBUILD_WASMPY
 then
     rm -rf build/cpython-wasm/ build/pycache/config.cache
-    rm build/cpython-wasm/libpython3.??.a 2>/dev/null
+    rm build/cpython-wasm/libpython3.${PYMINOR}.a 2>/dev/null
     REBUILD=true
 fi
 
@@ -96,7 +96,7 @@ TESTSUITE=$TESTSUITE
 
 
 
-if [ -f build/cpython-wasm/libpython3.??.a ]
+if [ -f build/cpython-wasm/libpython3.${PYMINOR}.a ]
 then
     echo "
     * not rebuilding cpython-wasm for [$PYDK_PYTHON_HOST_PLATFORM]
@@ -133,47 +133,53 @@ else
      --prefix=$PREFIX \
      --with-build-python=${PYTHON_FOR_BUILD} $QUIET
 
-    #echo "#define HAVE_NCURSES_H" >> pyconfig.h
+    mkdir -p ${PYTHONPYCACHEPREFIX}/empty
+    touch ${PYTHONPYCACHEPREFIX}/empty/$($HPY -V|cut -f2 -d' ')
 
-    if EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" eval emmake make -j$(nproc) $QUIET
+    #echo "#define HAVE_NCURSES_H" >> pyconfig.h
+    cat > Modules/Setup.local <<END
+*disabled*
+_decimal
+END
+
+    if EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" \
+        emmake make -j$(nproc) WASM_ASSETS_DIR=$(realpath ${PYTHONPYCACHEPREFIX}/empty)@/
     then
-        EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" eval emmake make install $QUIET
+        EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" \
+        emmake make WASM_ASSETS_DIR=$(realpath ${PYTHONPYCACHEPREFIX}/empty)@/ install
     else
-        echo " **** cpython wasm build failed *** "
+        echo " **** cpython wasm build failed ***
+
+EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" emmake make WASM_ASSETS_DIR=$(realpath ${PYTHONPYCACHEPREFIX}/empty)@/ install
+
+        " 1>&2
+
         exit 1
     fi
 
-    rm -rf $(find $ROOT/devices/ -type d|grep __pycache__$)
+    rm -rf $(find $ROOT/devices/ -type d|grep /__pycache__$)
 
     popd
 
     mkdir -p ${ROOT}/prebuilt/emsdk
 
     # move them to MEMFS
-    mv $PREFIX/lib/python3.??/lib-dynload/* $ROOT/prebuilt/emsdk/site-packages
+    mv $PREFIX/lib/python3.${PYMINOR}/lib-dynload/* $ROOT/prebuilt/emsdk/site-packages
 
     # specific platform support
-    cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/. $HOST_PREFIX/lib/python3.??/
-
-    # TODO: use PYTHONPATH for python3-wasm to pick them in devices/emsdk/usr/lib/python3.11/
-    #ln $PREFIX/lib/python3.??/_sysconfigdata__emscripten_wasm32-emscripten.py devices/x86_64/usr/lib/python3.??/
-
+    cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/3.${PYMINOR}/. $HOST_PREFIX/lib/python3.${PYMINOR}/
 
     cp -vf build/cpython-wasm/libpython3.*.a prebuilt/emsdk/
-    rmdir  $PREFIX/lib/python3.??/lib-dynload
+    rmdir  $PREFIX/lib/python3.${PYMINOR}/lib-dynload
 fi
 
 mkdir -p $PYTHONPYCACHEPREFIX/sysconfig
 
 
 # FIXME: seems CI cannot locate that one with python3-wasm
-cp $PREFIX/lib/python3.??/_sysconfigdata__emscripten_wasm32-emscripten.py $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
+cp $PREFIX/lib/python3.${PYMINOR}/_sysconfigdata__emscripten_wasm32-emscripten.py $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
 sed -i 's|-Os|-O0|g' $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
 sed -i 's|-g0|-g3|g' $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
-
-#workaround
-#cp $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py  devices/x86_64/usr/lib/python3.11/_sysconfigdata__emscripten_debug.py
-
 
 
 # python setup.py install --single-version-externally-managed --root=/
@@ -281,8 +287,8 @@ export PYTHONHOME=$PREFIX
 
 # find sysconfig ( tweaked )
 # but still can load dynload and setuptools
-PYTHONPATH=$(echo -n ${HOST_PREFIX}/lib/python3.??/site-packages):\$PYTHONPATH
-export PYTHONPATH=$PYTHONPYCACHEPREFIX/sysconfig:$(echo -n ${HOST_PREFIX}/lib/python3.??/lib-dynload):\$PYTHONPATH
+PYTHONPATH=$(echo -n ${HOST_PREFIX}/lib/python3.${PYMINOR}/site-packages):\$PYTHONPATH
+export PYTHONPATH=$PYTHONPYCACHEPREFIX/sysconfig:$(echo -n ${HOST_PREFIX}/lib/python3.${PYMINOR}/lib-dynload):\$PYTHONPATH
 
 
 #probably useless

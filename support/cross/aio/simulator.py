@@ -117,7 +117,17 @@ sys.path.append("${PLATFORM}")
 sys.platform = "emscripten"
 
 
-class __EMSCRIPTEN__:
+class __EMSCRIPTEN__(object):
+    def __init__(self):
+        import platform
+        self.platform = platform
+
+    def __getattribute__(self, name):
+        try:
+            return object.__getattribute__(self, name)
+        except:
+            return object.__getattribute__(self.platform, name)
+
     @classmethod
     def PyConfig_InitPythonConfig(*argv):
         pass
@@ -142,6 +152,7 @@ class __EMSCRIPTEN__:
     js = pdb
     run_script = pdb
 
+__EMSCRIPTEN__ = __EMSCRIPTEN__()
 
 sys.modules["__EMSCRIPTEN__"] = __EMSCRIPTEN__
 sys.modules["embed"] = __EMSCRIPTEN__

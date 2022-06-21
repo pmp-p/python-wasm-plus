@@ -28,7 +28,6 @@ from pygame_rwobject import encode_string, encode_file_path
 
 rwobject = clean_mod("pygame.rwobject")
 
-
 import pygame_surflock
 
 surflock = clean_mod("pygame.surflock")
@@ -106,6 +105,10 @@ import pygame_surface
 Surface = pygame_surface.Surface
 surface = clean_mod("pygame.surface")
 
+import pygame_pixelcopy
+pixelcopy = clean_mod("pygame.pixelcopy")
+
+
 
 import pygame_transform
 
@@ -157,6 +160,14 @@ import pygame_mixer_music
 music = clean_mod("pygame.mixer_music")
 
 mixer.music = music
+
+try:
+    import pygame.surfarray
+    import pygame.sndarray
+except ModuleNotFoundError:
+    print("numpy not found, pygame.surfarray not loaded", file=sys.stderr)
+    print("numpy not found, pygame.sndarray not loaded", file=sys.stderr)
+
 #=============================================
 # fix pygame._sdl2
 
@@ -189,6 +200,7 @@ import pygame.pkgdata as pkgdata
 
 del clean_mod
 
+import pygame.wasm_patches
 
 # Thanks for supporting pygame. Without support now, there won't be pygame later.
 if "PYGAME_HIDE_SUPPORT_PROMPT" not in os.environ:

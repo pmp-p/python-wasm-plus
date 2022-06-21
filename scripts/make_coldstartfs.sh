@@ -2,16 +2,32 @@
 
 . ${CONFIG:-config}
 
-echo PYTHON=$HPY
-
 FS=$PYTHONPYCACHEPREFIX/fs
 
+echo "
+    * packing minimal stdlib for
+        PYTHON=$HPY
+        FS=$FS
+"
+
+
+
 $HPY -v <<END 2>&1 |grep py$ > $FS
-import sys, os, json, builtins, shutil, zipimport, tomllib, time
-import trace, traceback, asyncio, inspect, _thread, importlib
-import ctypes
-sys.stdout.reconfigure(encoding='utf-16')
-sys.stdout.reconfigure(encoding='utf-8')
+from __future__ import annotations
+import sys
+
+M1='os, json, builtins, shutil, zipimport, time, trace, traceback, '
+M2='asyncio, inspect, _thread, importlib, ctypes, tomllib'
+for mod in (M1+M2).split(', '):
+    try:
+        __import__(mod)
+    except:
+        pass
+try:
+    sys.stdout.reconfigure(encoding='utf-16')
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 #pymunk tests
 import unittest, locale
@@ -77,9 +93,10 @@ END
 
 echo "=============================="
 mkdir -p $PYTHONPYCACHEPREFIX/stdlib-coldstart
+
 pushd $PYTHONPYCACHEPREFIX/stdlib-coldstart
 tar xvf $PYTHONPYCACHEPREFIX/stdl.tar | wc -l
 rm $PYTHONPYCACHEPREFIX/stdl.tar
-du -hs $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.??
+du -hs $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.${PYMINOR}
 popd
 

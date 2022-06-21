@@ -9,6 +9,9 @@ echo "
 
 pushd src 2>&1 >/dev/null
 
+
+NOPATCH=false
+
 if false
 then
 
@@ -37,26 +40,33 @@ then
     fi
 
 else
-    rm cpython 2>/dev/null
-    #wget -q -c https://www.python.org/ftp/python/3.11.0/Python-3.11.0b1.tar.xz
-    #tar xf Python-3.11.0b1.tar.xz
-    #ln -s Python-3.11.0b1 cpython
-
-    wget -q -c https://www.python.org/ftp/python/3.11.0/Python-3.11.0b3.tgz
-    tar xf Python-3.11.0b3.tgz
-    ln -s Python-3.11.0b3 cpython
+    if [ -L cpython ]
+    then
+        echo "
+    * cpython source tree already linked $(file cpython)"
+        NOPATCH=true
+    else
+        wget -q -c https://www.python.org/ftp/python/3.11.0/Python-3.11.0b3.tgz
+        tar xf Python-3.11.0b3.tgz
+        ln -s Python-3.11.0b3 cpython
+    fi
 fi
 
 popd
 
+if $NOPATCH
+then
+    echo "
+    * assuming cpython tree already patched, press <enter>
+"
 
-# do some patching
 
-pushd src/cpython 2>&1 >/dev/null
-
-patch -p1 < ../../support/__EMSCRIPTEN__.embed/cpython.diff
-
-popd
+else
+    # do some patching
+    pushd src/cpython 2>&1 >/dev/null
+    patch -p1 < ../../support/__EMSCRIPTEN__.embed/cpython.diff
+    popd
+fi
 
 echo "
     * fetched cpython source, status is :
