@@ -47,7 +47,7 @@ if false
 then
     SDL_IMAGE="-s USE_SDL_IMAGE=2 -sUSE_LIBPNG -sUSE_LIBJPEG"
 else
-    SDL_IMAGE="-sUSE_LIBPNG -sUSE_LIBJPEG"
+    SDL_IMAGE="-sUSE_LIBPNG -sUSE_LIBJPEG -lwebp"
 fi
 
 rm -rf build/temp.wasm32-* 2>/dev/null
