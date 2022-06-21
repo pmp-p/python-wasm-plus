@@ -237,7 +237,7 @@ time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  --preload-file ${REQUIREMENTS}@/data/data/org.python/assets/site-packages \
  --preload-file $ROOT/support/xterm@/etc/termcap \
  -o ${MODE}.js Programs/${MODE}.o ${ROOT}/prebuilt/emsdk/libpython3.*.a Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a \
- ${ROOT}/prebuilt/emsdk/libpygame.a $CFLDPFX -lffi -lSDL2_gfx -lSDL2_mixer  \
+ ${ROOT}/prebuilt/emsdk/libpygame.a $CFLDPFX -lffi -lSDL2_gfx -lSDL2_mixer -lwebp \
  $LD_SDL -ldl -lm
 
 popd
