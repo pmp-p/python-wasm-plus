@@ -7,13 +7,26 @@ export PYTHONDONTWRITEBYTECODE=1
 export REBUILD=${REBUILD:-false}
 export CI=${CI:-false}
 
-export PYBUILD=${PYBUILD:-3.11}
+export PYMAJOR=3
+export PYBUILD=${PYBUILD:-${PYMAJOR}.11}
 
 export HOST_PREFIX=${HOST_PREFIX:-${SDKROOT}/devices/$(arch)/usr}
 export PREFIX=${PREFIX:-${SDKROOT}/devices/emsdk/usr}
 export PYTHONPYCACHEPREFIX=$(realpath ${SDKROOT}/build/pycache)
 
-export PYMAJOR=3
+
+# this is python used for emsdk : ${SYS_PYTHON} -> ${EMSDK_PYTHON}
+for py in 10 9 8 7
+do
+    if command -v python${PYMAJOR}.${py} >/dev/null
+    then
+        export SYS_PYTHON=$(command -v python${PYMAJOR}.${py})
+        break
+    else
+        # sane default
+        export SYS_PYTHON=$(command -v python${PYMAJOR})
+    fi
+done
 
 export HPY=${HOST_PREFIX}/bin/python${PYBUILD}
 
@@ -29,17 +42,6 @@ then
     export PYMINOR=$(echo $HPY|cut -d. -f2)
     export PIP=${HOST_PREFIX}/bin/pip3.${PYMINOR}
 fi
-
-# this is python used for emsdk : ${SYS_PYTHON} -> ${EMSDK_PYTHON}
-for py in 10 9 8 7
-do
-    if command -v python3.${py} >/dev/null
-    then
-        export SYS_PYTHON=$(command -v python3.${py})
-        break
-    fi
-done
-
 
 # cpython build opts
 export CPOPTS="-Os -g0 -fPIC"

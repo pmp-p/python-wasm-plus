@@ -32,6 +32,7 @@ then
         * activating emsdk via emsdk_env.sh
 "
         . emsdk/emsdk_env.sh 2>&1 > /dev/null
+        # EMSDK_PYTHON may be cleared, restore it
         export EMSDK_PYTHON=$SYS_PYTHON
     else
         echo "
@@ -39,20 +40,6 @@ then
 "
         exit 1
     fi
-
-# EMSDK_PYTHON is cleared
-# https://github.com/emscripten-core/emscripten/pull/16736
-#    # 3.6 could have problems
-#    for py in 10 9 8 7
-#    do
-#        if command -v python3.${py} >/dev/null
-#        then
-#            export EMSDK_PYTHON=$(command -v python3.${py})
-#            break
-#        fi
-#    done
-
-
 
     if [ -f embuild.done ]
     then
@@ -135,9 +122,9 @@ done
 
 if \$IS_SHARED
 then
-    \$EMSDK_PYTHON -E \$0.py $SHARED $LDFLAGS "\$@" $COMMON
+    $EMSDK_PYTHON -E \$0.py $SHARED $LDFLAGS "\$@" $COMMON
 else
-    \$EMSDK_PYTHON -E \$0.py $CPPFLAGS "\$@" $COMMON
+    $EMSDK_PYTHON -E \$0.py $CPPFLAGS "\$@" $COMMON
 fi
 END
         cat emsdk/upstream/emscripten/emcc > emsdk/upstream/emscripten/em++
@@ -149,14 +136,14 @@ unset _PYTHON_SYSCONFIGDATA_NAME
 unset PYTHONHOME
 unset PYTHONPATH
 
-\$EMSDK_PYTHON -E \$0.py "\$@"
+$EMSDK_PYTHON -E \$0.py "\$@"
 END
 
         cat emsdk/upstream/emscripten/emar > emsdk/upstream/emscripten/emcmake
 
         cat > emsdk/upstream/emscripten/emconfigure <<END
 #!/bin/bash
-\$EMSDK_PYTHON -E \$0.py "\$@"
+$EMSDK_PYTHON -E \$0.py "\$@"
 END
 
         chmod +x emsdk/upstream/emscripten/em*
