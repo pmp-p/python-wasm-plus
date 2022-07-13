@@ -79,9 +79,11 @@ except:
                     tmpl.append([len(__prepro), l.find("g")])
                     __prepro.append("#globals")
                     continue
+
                 elif testline.startswith("import "):
                     testline = testline.replace("import ", "").strip()
                     imports.extend(map(str.strip, testline.split(",")))
+
                 elif testline.startswith("from "):
                     testline = testline.replace("from ", "").strip()
                     imports.append(testline.split(" import ")[0].strip())
@@ -213,7 +215,7 @@ if defined("embed") and hasattr(embed, "readline"):
             if not len(argv):
                 argv = ["."]
             for arg in argv:
-                for out in os.listdir(arg):
+                for out in sorted(os.listdir(arg)):
                     print(out)
 
         @classmethod
@@ -280,6 +282,12 @@ if defined("embed") and hasattr(embed, "readline"):
                     execfile(cmd)
                 return True
             return False
+
+        @classmethod
+        def dll(cls, *argv):
+            cdll = __import__("ctypes").CDLL(None)
+            print( getattr(cdll, argv[0])(*argv[1:]) )
+            return True
 
         @classmethod
         def strace(cls, *argv, **env):
@@ -379,7 +387,27 @@ except Exception as e:
 import random
 random.seed(1)
 
+if not aio.cross.simulator:
+    import webbrowser
+
+    def browser_open(url, new=0, autoraise=True):
+        __import__('__EMSCRIPTEN__').window.open(url, "_blank")
+
+    def browser_open_new(url):
+        return browser_open(url, 1)
+
+    def browser_open_new_tab(url):
+        return browser_open(url, 2)
+
+    webbrowser.open = browser_open
+    webbrowser.open_new = browser_open_new
+    webbrowser.open_new_tab = browser_open_new_tab
+
 # ======================================================
+
+def ESC(*argv):
+    for arg in argv:
+        sys.__stdout__.write(chr(27),arg, sep="", endl="")
 
 # import pygame
 pgzrun = None
@@ -400,9 +428,14 @@ else:
     pdb("TODO: js sim")
 
 
+if os.path.isfile('/data/data/custom.py'):
+    execfile('/data/data/custom.py')
+
 import aio.recycle
 # ============================================================
 # DO NOT ADD ANYTHING FROM HERE OR APP RECYCLING WILL TRASH IT
+
+
 
 
 
