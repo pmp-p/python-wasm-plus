@@ -24,9 +24,14 @@ export __FILE__="$1"
 cat $ROOT/support/cross/aio/simulator.py | envsubst > $ROOT/build/pycache/.pythonrc.py
 
 unset PYTHONHOME
+unset _PYTHON_SYSCONFIGDATA_NAME
+
+export PYTHONPATH=$(pwd):$ROOT/support/cross:$ROOT/support/sim.links:$PYTHONPATH
+
+export _PYTHON_SYSCONFIGDATA_NAME=$($ROOT/devices/$(arch)/usr/bin/python3 -c 'import sys;print(f"""_sysconfigdata_{sys.abiflags}_{sys.platform}_{getattr(sys.implementation, "_multiarch", "")}""")')
+echo "_PYTHON_SYSCONFIGDATA_NAME=$_PYTHON_SYSCONFIGDATA_NAME"
 
 export PYTHONSTARTUP=$ROOT/build/pycache/.pythonrc.py
-export PYTHONPATH=$(pwd):$ROOT/support/cross:$ROOT/support/sim.links:$PYTHONPATH
 
 
 if false

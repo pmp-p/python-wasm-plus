@@ -29,6 +29,13 @@ try:
 except:
     pass
 
+# for dom event subscriptions
+import webbrowser
+
+# pygame_gui
+import html.parser
+import importlib.readers
+
 #pymunk tests
 import unittest, locale
 

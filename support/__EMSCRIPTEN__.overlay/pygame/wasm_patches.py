@@ -23,8 +23,10 @@ def patch_set_timer(cust_event_no, millis, loops=0):
     dlay = float(millis) / 1000
     cevent = pygame.event.Event(cust_event_no)
     async def fire_event():
-        while not aio.exit:
+        while true:
             await asyncio.sleep( dlay )
+            if aio.exit:
+                break
             pygame.event.post(cevent)
     Thread(target=fire_event).start()
 

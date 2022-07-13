@@ -3,24 +3,20 @@
 . ${CONFIG:-config}
 
 echo "
-    *cpython-fetch*
+    *cpython-fetch $PYBUILD*
 "
 
 
 pushd src 2>&1 >/dev/null
 
-
 NOPATCH=false
+[ -L cpython ] && rm cpython
 
-if false
+if echo $PYBUILD |grep -q 12$
 then
-
-    # same goal as  "python-wasm/fetch-python.sh"
-    # get python from git ( actually the only one supporting emsdk without patches)
-
-    if [ -d cpython ]
+    if [ -d cpython-git ]
     then
-        pushd cpython 2>&1 >/dev/null
+        pushd cpython-git 2>&1 >/dev/null
         # put the tree back to original state so we can pull
         # Programs/python.c Modules/readline.c
         git restore .
@@ -35,32 +31,43 @@ then
         #cat $ROOT/support/compilenone.py > ./Lib/compileall.py
         popd
     else
-        git clone https://github.com/python/cpython.git
+        git clone --depth 1 https://github.com/python/cpython.git cpython-git
         export REBUILD=true
     fi
 
-else
-    if [ -L cpython ]
-    then
-        echo "
-    * cpython source tree already linked $(file cpython)"
-        NOPATCH=true
-    else
-        wget -q -c https://www.python.org/ftp/python/3.11.0/Python-3.11.0b3.tgz
-        tar xf Python-3.11.0b3.tgz
-        ln -s Python-3.11.0b3 cpython
-    fi
+    ln -s cpython-git cpython
+
 fi
 
+if echo $PYBUILD | grep -q 11$
+then
+    #wget -q -c https://www.python.org/ftp/python/3.11.0/Python-3.11.0b3.tgz
+    wget -q https://www.python.org/ftp/python/3.11.0/Python-3.11.0b4.tar.xz
+
+    #tar xf Python-3.11.0b3.tgz
+    tar xf Python-3.11.0b4.tar.xz
+    #ln -s Python-3.11.0b3 cpython
+    ln -s Python-3.11.0b4 cpython
+    export REBUILD=true
+fi
+
+if echo $PYBUILD | grep -q 10$
+then
+    tar xfj /data/git/python-wasm-sdk/src/Python-3.10.5-pydk.tar.bz2
+    ln -s Python-3.10.5-pydk cpython
+    NOPATCH=true
+    export REBUILD=true
+fi
+
+
 popd
+
 
 if $NOPATCH
 then
     echo "
     * assuming cpython tree already patched, press <enter>
 "
-
-
 else
     # do some patching
     pushd src/cpython 2>&1 >/dev/null
@@ -68,8 +75,11 @@ else
     popd
 fi
 
+
 echo "
     * fetched cpython source, status is :
         REBUILD=${REBUILD}
 "
 
+[ -d build/cpython-host ] && rm -rf build/cpython-host
+[ -d build/cpython-wasm ] && rm -rf build/cpython-wasm

@@ -15,7 +15,7 @@ def lines(frame, event, arg):
     func_name = co.co_name
     line_no = frame.f_lineno
     filename = co.co_filename
-    print '  %s line %s' % (func_name, line_no)
+    print(f"  {func_name} line {line_no}")
 
 
 def calls(frame, event, arg):
@@ -55,7 +55,7 @@ def calls(frame, event, arg):
         else:
             print(f"{func_name} {func_filename}:{caller_line_no}->{func_line_no}")
 
-    if STEP_INFO:
+    if STEP_INTO:
         return lines
     return
 

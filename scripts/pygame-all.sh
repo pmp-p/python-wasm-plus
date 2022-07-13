@@ -9,8 +9,14 @@ then
 "
 else
     pushd src
-    #git clone -b pygame-wasm-upstream https://github.com/pmp-p/pygame-wasm pygame-wasm
-    git clone https://github.com/pygame/pygame pygame-wasm
+    if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus/
+    then
+        # pygame-wasm testing
+        git clone -b pygame-wasm https://github.com/pmp-p/pygame-wasm pygame-wasm
+    else
+        # git pygame
+        git clone https://github.com/pygame/pygame pygame-wasm
+    fi
     popd
 fi
 
@@ -34,7 +40,7 @@ pushd src/pygame-wasm 2>&1 >/dev/null
 if [ -f dev ]
 then
     #TODO: $HPY setup.py cython config
-    python3 setup.py config cython
+    python3 setup.py cython_only
 fi
 
 

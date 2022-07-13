@@ -42,9 +42,13 @@ TMPL=$(realpath $TMPL)
 APK=$(realpath $APK)
 
 mkdir -p prebuilt/emsdk/site-packages
+mkdir -p prebuilt/emsdk/lib-dynload
 
 # pre populated site-packages
 REQUIREMENTS=$(realpath prebuilt/emsdk/site-packages)
+DYNLOAD=$(realpath prebuilt/emsdk/lib-dynload)
+
+mv $ROOT/devices/emsdk/usr/lib/python3.${PYMINOR}/lib-dynload/*.so $DYNLOAD/ 2>/dev/null
 
 # runtime patches on known modules for specific platform
 # applies to prebuilt/emsdk/site-packages at preload stage.
@@ -57,8 +61,9 @@ cp -Rf ${PLATFORM}.overlay/* ${REQUIREMENTS}/
 CROSS=$(realpath support/cross)
 
 
+
 # clean up untested modules
-rm -fr $PREFIX/lib/python3.${PYMINOR}/site-packages/*
+#rm -fr $PREFIX/lib/python3.${PYMINOR}/site-packages/*
 touch $(echo -n $PREFIX/lib/python3.${PYMINOR}/site-packages)/README.txt
 
 
@@ -227,16 +232,28 @@ STDLIBFS="--preload-file $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.${PYMINOR
 
 #  --preload-file /usr/share/terminfo/x/xterm@/usr/share/terminfo/x/xterm \
 
+
+
+CPY_EXTRALIB=""
+for cpylib in Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a
+do
+    [ -f $cpylib ] && CPY_EXTRALIB="$CPY_EXTRALIB $cpylib"
+done
+
+
+
 time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  -s TOTAL_MEMORY=512MB -s ALLOW_TABLE_GROWTH \
  -s USE_BZIP2=1 -s USE_ZLIB=1 $CF_SDL \
  --use-preload-plugins \
  $STDLIBFS \
  $ALWAYS_FS \
+ --preload-file ${DYNLOAD}@/usr/lib/python3.${PYMINOR}/lib-dynload \
  --preload-file ${CROSS}@/data/data/org.python/assets/site-packages \
  --preload-file ${REQUIREMENTS}@/data/data/org.python/assets/site-packages \
  --preload-file $ROOT/support/xterm@/etc/termcap \
- -o ${MODE}.js Programs/${MODE}.o ${ROOT}/prebuilt/emsdk/libpython3.*.a Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a \
+ -o ${MODE}.js Programs/${MODE}.o ${ROOT}/prebuilt/emsdk/libpython3.${PYMINOR}.a \
+ $CPY_EXTRALIB \
  ${ROOT}/prebuilt/emsdk/libpygame.a $CFLDPFX -lffi -lSDL2_gfx -lSDL2_mixer -lwebp \
  $LD_SDL -ldl -lm
 

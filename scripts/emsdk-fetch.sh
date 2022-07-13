@@ -32,7 +32,7 @@ then
         * activating emsdk via emsdk_env.sh
 "
         . emsdk/emsdk_env.sh 2>&1 > /dev/null
-
+        export EMSDK_PYTHON=$SYS_PYTHON
     else
         echo "
         ERROR cannot find emsdk/emsdk_env.sh in $(pwd)
@@ -135,9 +135,9 @@ done
 
 if \$IS_SHARED
 then
-    \$SYS_PYTHON -E \$0.py $SHARED $LDFLAGS "\$@" $COMMON
+    \$EMSDK_PYTHON -E \$0.py $SHARED $LDFLAGS "\$@" $COMMON
 else
-    \$SYS_PYTHON -E \$0.py $CPPFLAGS "\$@" $COMMON
+    \$EMSDK_PYTHON -E \$0.py $CPPFLAGS "\$@" $COMMON
 fi
 END
         cat emsdk/upstream/emscripten/emcc > emsdk/upstream/emscripten/em++
@@ -149,14 +149,14 @@ unset _PYTHON_SYSCONFIGDATA_NAME
 unset PYTHONHOME
 unset PYTHONPATH
 
-\$SYS_PYTHON -E \$0.py "\$@"
+\$EMSDK_PYTHON -E \$0.py "\$@"
 END
 
         cat emsdk/upstream/emscripten/emar > emsdk/upstream/emscripten/emcmake
 
         cat > emsdk/upstream/emscripten/emconfigure <<END
 #!/bin/bash
-\$SYS_PYTHON -E \$0.py "\$@"
+\$EMSDK_PYTHON -E \$0.py "\$@"
 END
 
         chmod +x emsdk/upstream/emscripten/em*
