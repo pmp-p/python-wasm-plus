@@ -1,6 +1,26 @@
 #!/bin/bash
-reset
+
 export ROOT=$(pwd)
+
+while true
+do
+    echo Waiting for pygame build to complete ...
+
+    [ -f ${ROOT}/prebuilt/emsdk/libpygame.a ] && break
+    sleep 1
+
+    [ -f ${ROOT}/prebuilt/emsdk/libpygame.a ] && break
+    sleep 1
+
+    [ -f ${ROOT}/prebuilt/emsdk/libpygame.a ] && break
+    sleep 1
+
+    [ -f ${ROOT}/prebuilt/emsdk/libpygame.a ] && break
+    sleep 1
+
+done
+reset
+
 
 . ${CONFIG:-config}
 

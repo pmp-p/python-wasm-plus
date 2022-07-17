@@ -1,7 +1,7 @@
 . ${CONFIG:-config}
 
 echo "
-    *cpython-build-host-deps pip==$PIP *
+    *   cpython-build-host-deps pip==$PIP   *
 " 1>&2
 
 

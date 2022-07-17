@@ -60,8 +60,8 @@ self hosting:
 
 #include <unistd.h>
 
-
-extern void PyGame_static_init();
+extern void Inittab_pygame();
+//extern PyMODINIT_FUNC PyInit_pygame_static(void);
 
 static long long embed = 0;
 
@@ -466,13 +466,8 @@ main(int argc, char **argv)
 #endif
 
     PyImport_AppendInittab("embed", init_embed);
-
-
-    PyGame_static_init();
-
-    //PyImport_AppendInittab("pymunk_static", PyInit__chipmunk);
-
-    //puts("pymain_init");
+    //PyImport_AppendInittab("pygame_static", PyInit_pygame_static);
+    Inittab_pygame();
 
     setenv("TERM","xterm", 1);
     setenv("TERMINFO", "/usr/share/terminfo", 1);

@@ -81,6 +81,8 @@ then
             embuilder --pic build sdl2
             embuilder build sdl2
             rm -rf ${SDKDIR}/emsdk/upstream/emscripten/cache/ports/sdl2/SDL-*
+            rm -rf ${SDKDIR}/emsdk/upstream/emscripten/cache/ports
+            rm -rf ${SDKDIR}/emsdk/upstream/emscripten/cache/ports-builds
             rm -rf ${SDKDIR}/emsdk/upstream/emscripten/tests
         fi
 

@@ -3,7 +3,7 @@
 . ${CONFIG:-config}
 
 echo "
-    *cpython-fetch $PYBUILD*
+    *   cpython-fetch $PYBUILD  *
 "
 
 
@@ -31,7 +31,7 @@ then
         #cat $ROOT/support/compilenone.py > ./Lib/compileall.py
         popd
     else
-        git clone --depth 1 https://github.com/python/cpython.git cpython-git
+        git clone --no-tags --depth 1 --single-branch --branch main https://github.com/python/cpython.git cpython-git
         export REBUILD=true
     fi
 

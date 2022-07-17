@@ -9,7 +9,7 @@ mkdir -p build/cpython-host
 if $REBUILD
 then
     echo "
-    * building cpython $PYBUILD $CIVER
+    * building CPython $PYBUILD for $CIVER
 "
 else
     if [ -f ${PYTHON_FOR_BUILD} ]
