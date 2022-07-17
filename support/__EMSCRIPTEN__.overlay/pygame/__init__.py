@@ -83,11 +83,9 @@ class MissingModule:
 
 # this is a special loader for WebAssembly platform
 # where pygame is actually statically linked
-
+# mixing single phase (C) and multiphase modules (cython)
 if sys.platform in ("wasi", "emscripten"):
     import pygame_static
-
-    pygame_static.load_into(sys.modules)
 
     pygame = sys.modules[__name__]
 
@@ -107,13 +105,9 @@ if sys.platform in ("wasi", "emscripten"):
     import importlib.machinery
 
     loader = importlib.machinery.FrozenImporter
-    for alias in ("sdl2", "audio", "video", "controller", "mixer"):
+    spec = importlib.machinery.ModuleSpec("", loader)
+    pygame_static.import_cython(spec)
 
-        spec = importlib.machinery.ModuleSpec(alias, loader)
-        try:
-            pygame_static.load_sdl2(sys.modules, spec, alias)
-        except:
-            vars(pygame._sdl2)[alias] = MissingModule(alias, urgent=1)
 
 # we need to import like this, each at a time. the cleanest way to import
 # our modules is with the import command (not the __import__ function)
