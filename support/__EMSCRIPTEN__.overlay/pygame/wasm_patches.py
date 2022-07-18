@@ -44,6 +44,18 @@ def patch_set_timer(cust_event_no, millis, loops=0):
 
 pygame.time.set_timer = patch_set_timer
 
+# ====================================================================
+# pygame.quit is too hard on gc, and re-importing pygame is problematic
+# if interpreter is not fully renewed.
+# so just clear screen cut music and hope for the best.
+
+def pygame_quit():
+    pygame.mixer.music.stop()
+    pygame.display.update()
+
+pygame.quit = pygame_quit
+
+
 
 # ====================================================================
 print("\n\n")

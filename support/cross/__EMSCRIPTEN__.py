@@ -217,10 +217,10 @@ def fix_preload_table():
     global prelist, preloadedWasm, preloadedImages, preloadedAudios
 
     if embed.counter() < 0:
-        pdb("asset manager not ready 0>", embed.counter())
-        aio.defer(fix_preload_table, deadline=60)
+        pdb("220: asset manager not ready 0>", embed.counter())
+        aio.defer(fix_preload_table, (), {}, delay=60)
     else:
-        pdb("all assets were ready at", embed.counter())
+        pdb("223: all assets were ready at", embed.counter())
 
     for (
         src,
@@ -314,12 +314,12 @@ def PyConfig_InitPythonConfig(PyConfig):
                         # __main__.setup()
                         # aio.steps.append(__main__.loop)
 
-                print(f"320: running {sys.argv[0]}.py as main (deferred)")
+                print(f"317: running main.py for {sys.argv[0]} (deferred)")
                 aio.defer(runmain, ["main.py"], {})
             else:
                 pdb(f"no main found for {sys.argv[0]} in {ROOTDIR}")
 
-            aio.defer(embed.prompt,(),{},2000)
+            aio.defer(embed.prompt, (), {}, delay=2000)
 
         # C should unlock aio loop when preload count reach 0.
 
@@ -333,7 +333,7 @@ def PyConfig_InitPythonConfig(PyConfig):
         # unlock embed looper because no preloading
         embed.run()
 
-    aio.defer(fix_preload_table_apk, deadline=1000)
+    aio.defer(fix_preload_table_apk, (), {}, delay=1000)
 
     # go pods !
     aio.started = True

@@ -145,12 +145,12 @@ asyncio.events._set_running_loop(loop)
 sys.modules["asyncio"] = __import__(__name__)
 
 
-def defer(fn, argv=(), kw={}, deadline=0, framerate=60):
+def defer(fn, argv=(), kw={}, delay=0, framerate=60):
     global ticks, oneshots
     # FIXME: set ticks + deadline for alarm
     oneshots.append(
         [
-            ticks + int(deadline / framerate),
+            ticks + int(delay / framerate),
             fn,
             argv,
             kw,
@@ -283,8 +283,11 @@ def run(coro, *, debug=False):
     if coro is not None:
         task = loop.create_task(coro)
         _set_task_name(task, coro.__name__)
-        if debug:
-            pdb("251: task [", coro.__name__, "] added")
+        if __EMSCRIPTEN__ and ("pygame" in sys.modules):
+            if not aio.cross.simulator:
+                pdb("280: window_resize")
+                aio.defer(__EMSCRIPTEN__.window.window_resize, (), {}, delay=100)
+            pdb("290: task [", coro.__name__, "] added")
     elif debug:
         pdb("253:None coro called, just starting loop")
 
@@ -339,7 +342,7 @@ if __WASM__:
             loop.close()
         try:
             aio.recycle.cleanup()
-            aio.defer(embed.prompt, (), {}, 300)
+            aio.defer(embed.prompt, (), {}, delay=300)
         except:
             pass
 
@@ -378,7 +381,7 @@ def prompt_request():
     try:
         embed.prompt_request()
     except:
-        aio.defer(embed.prompt, (), {}, 100)
+        aio.defer(embed.prompt, (), {}, delay=100)
 
 
 class after:

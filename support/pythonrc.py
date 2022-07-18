@@ -276,7 +276,7 @@ if defined("embed") and hasattr(embed, "readline"):
                     print("a program is already running, using 'stop' cmd before retrying")
                     cls.stop()
                     pgzrun = None
-                    aio.defer(cls.exec,(cmd,*argv),env, 500)
+                    aio.defer(cls.exec,(cmd,*argv),env, delay=500)
 
                 else:
                     execfile(cmd)
@@ -303,8 +303,8 @@ if defined("embed") and hasattr(embed, "readline"):
             # pgzrun will reset to None next exec
             if not pgzrun:
                 # pgzrun does its own cleanup call
-                aio.defer(aio.recycle.cleanup, (), {}, 500)
-                aio.defer(embed.prompt, (), {}, 800)
+                aio.defer(aio.recycle.cleanup, (), {}, delay=500)
+                aio.defer(embed.prompt, (), {}, delay=800)
 
     def _process_args(argv, env):
         catch = True
@@ -403,13 +403,18 @@ if not aio.cross.simulator:
     webbrowser.open_new = browser_open_new
     webbrowser.open_new_tab = browser_open_new_tab
 
+    # merge emscripten browser module here ?
+    # https://rdb.name/panda3d-webgl.md.html#supplementalmodules/asynchronousloading
+    #
+
+
 # ======================================================
 
 def ESC(*argv):
     for arg in argv:
         sys.__stdout__.write(chr(27),arg, sep="", endl="")
 
-# import pygame
+import pygame
 pgzrun = None
 
 if __WASM__ and __EMSCRIPTEN__ and __EMSCRIPTEN__.is_browser:
@@ -426,7 +431,6 @@ if __WASM__ and __EMSCRIPTEN__ and __EMSCRIPTEN__.is_browser:
         return value
 else:
     pdb("TODO: js sim")
-
 
 if os.path.isfile('/data/data/custom.py'):
     execfile('/data/data/custom.py')

@@ -8,7 +8,10 @@ then
     echo __EMSCRIPTEN__ support already added
 else
     pushd src/cpython
-
+    if echo $PYBUILD |grep -q 3.12$
+    then
+        echo 3.12 does not need patching for interactive FD
+    else
     patch -p1 <<END
 diff --git a/Parser/pegen_errors.c b/Parser/pegen_errors.c
 index 489699679633e..78266f712c05c 100644
@@ -24,7 +27,7 @@ index 489699679633e..78266f712c05c 100644
      char *cur_line = p->tok->fp_interactive ? p->tok->interactive_src_start : p->tok->str;
      if (cur_line == NULL) {
 END
-
+    fi
 
     # fix the main startup to it gets a minimal kernel for wasm
     cat > Programs/python.c <<END
