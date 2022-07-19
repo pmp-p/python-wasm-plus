@@ -6,6 +6,7 @@ echo "
     *   cpython-fetch $PYBUILD  *
 "
 
+mkdir -p src
 
 pushd src 2>&1 >/dev/null
 

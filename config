@@ -7,8 +7,8 @@ export PYTHONDONTWRITEBYTECODE=1
 export REBUILD=${REBUILD:-false}
 export CI=${CI:-false}
 
-export PYMAJOR=3
-export PYBUILD=${PYBUILD:-${PYMAJOR}.11}
+export PYBUILD=${PYBUILD:-3.11}
+export PYMAJOR=$(echo -n $PYBUILD|cut -d. -f1)
 export PYMINOR=$(echo -n $PYBUILD|cut -d. -f2)
 
 
