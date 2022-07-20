@@ -67,7 +67,7 @@ pygame.quit = pygame_quit
 __pygame_display_set_mode__ = pygame.display.set_mode
 
 
-def path_pygame_display_set_mode(size, flags, depth=0):
+def path_pygame_display_set_mode(size, flags=0, depth=0):
     import platform
 
     # apparently no need to remove scaled.
