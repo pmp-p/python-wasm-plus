@@ -13,7 +13,6 @@ SPY="$HPY setup.py install --single-version-externally-managed --root=/"
 # just in case
 $PIP install pip --upgrade
 
-
 if [ -d $HPFX/site-packages/setuptools ]
 then
     echo "
@@ -30,6 +29,8 @@ else
     mv $HPFX/site-packages/pkg_resources* $HPFX/
 fi
 
+# https://github.com/aroberge/ideas, for code transformation
+$PIP install token-utils
 
 export CC=clang
 

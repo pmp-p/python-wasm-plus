@@ -125,6 +125,8 @@ is_async_ctx = False
 no_exit = True
 
 enter = time_time()
+spent = 0.000000001
+leave = enter + spent
 
 
 from asyncio import *
@@ -179,7 +181,7 @@ inloop = False
 def step(*argv):
     global inloop, last_state, paused, started, loop, oneshots, protect
     global ticks, steps, step, flush, exit, is_async_ctx
-    global enter
+    global enter, leave, spent
 
     enter = time_time()
 
@@ -262,6 +264,7 @@ def step(*argv):
         inloop = False
     finally:
         leave = time_time()
+        spent = leave - enter
 
 async def sleep_ms(ms=0):
     await sleep(float(ms) / 1000)
@@ -313,11 +316,7 @@ def run(coro, *, debug=False):
     if coro is not None:
         task = loop.create_task(coro)
         _set_task_name(task, coro.__name__)
-        if __EMSCRIPTEN__ and ("pygame" in sys.modules):
-            if not aio.cross.simulator:
-                pdb("280: window_resize")
-                aio.defer(__EMSCRIPTEN__.window.window_resize, (), {}, delay=100)
-            pdb("290: task [", coro.__name__, "] added")
+
     elif debug:
         pdb("253:None coro called, just starting loop")
 

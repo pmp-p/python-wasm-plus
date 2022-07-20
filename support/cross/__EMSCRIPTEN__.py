@@ -26,7 +26,7 @@ except Exception as e:
         ticks = 0
         protect = []
         enter = 0
-
+        spent = 0
 
         @classmethod
         def breakpointhook(cls, *argv, **kw):
@@ -64,6 +64,7 @@ except Exception as e:
                     pdb("- aio paused -")
             finally:
                 cls.leave = time_time()
+                cls.spent = cls.leave - cls.enter
         @classmethod
         def defer(cls, fn, argv, kw, deadline=0):
             # FIXME: set ticks + deadline for alarm
@@ -83,7 +84,9 @@ def breakpointhook(*argv, **kw):
 
 def shed_yield():
     #TODO: coroutine id as pid
-    print("86", aio.leave - aio.enter )
+    print("86", time_time() - aio.enter, aio.spent )
+    return True
+
 
 
 sys.breakpointhook = breakpointhook
