@@ -1,5 +1,6 @@
 import aio
 import inspect
+import threading as __threading__
 
 # mark not started but no error
 aio.error = None
@@ -20,10 +21,22 @@ def _shutdown():
 
 # TODO: default granularity with https://docs.python.org/3/library/sys.html#sys.setswitchinterval
 
+def excepthook(*argv, **kw):
+    print("24 threading.excepthook",__file__,argv,kw)
 
+class _dangling:
+    @classmethod
+    def copy(cls):
+        # __threading__._MainThread()
+        return set([])
 
+    @classmethod
+    def clear(cls):
+        pass
 
-
+    @classmethod
+    def update(cls, saved):
+        pass
 
 class Lock:
     count = 0

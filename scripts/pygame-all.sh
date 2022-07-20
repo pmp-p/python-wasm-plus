@@ -12,10 +12,10 @@ else
     if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus/
     then
         # pygame-wasm testing
-        git clone -b pygame-wasm https://github.com/pmp-p/pygame-wasm pygame-wasm
+        git clone --no-tags --depth 1 --single-branch -b pygame-wasm https://github.com/pmp-p/pygame-wasm pygame-wasm
     else
         # git pygame
-        git clone https://github.com/pygame/pygame pygame-wasm
+        git clone --no-tags --depth 1 --single-branch -b main https://github.com/pygame/pygame pygame-wasm
     fi
     popd
 fi
@@ -33,8 +33,11 @@ echo "
 # remove old lib
 [ -f ${ROOT}/prebuilt/emsdk/libpygame.a ] && rm ${ROOT}/prebuilt/emsdk/libpygame.a
 
+# remove anything that could be native
+rm -rf src/pygame-wasm/Setup src/pygame-wasm/build
 
-pushd src/pygame-wasm 2>&1 >/dev/null
+
+pushd src/pygame-wasm
 
 # regen cython files
 if [ -f dev ]

@@ -37,8 +37,8 @@ English only:
 WebAssembly/python on https://discord.gg/MCTM4xFDMK
 
 
-NOTE: as time of cpython pre-3.11a7, released cython does not handle it - only git version - so pygame-wasm is not upstreamed yet
-this is only temporary.
+NOTE: ~~as time of cpython pre-3.11a7, released cython does not handle it - only git version - so pygame-wasm is not upstreamed yet
+this is only temporary.~~ pygame-wasm has been upstreamed
 
 WIP:
 https://github.com/pmp-p/pygame-wasm/tree/pygame-wasm-static
