@@ -414,8 +414,6 @@ def ESC(*argv):
     for arg in argv:
         sys.__stdout__.write(chr(27),arg, sep="", endl="")
 
-import pygame
-pgzrun = None
 
 if __WASM__ and __EMSCRIPTEN__ and __EMSCRIPTEN__.is_browser:
     from __EMSCRIPTEN__ import window,document
@@ -431,6 +429,13 @@ if __WASM__ and __EMSCRIPTEN__ and __EMSCRIPTEN__.is_browser:
         return value
 else:
     pdb("TODO: js sim")
+
+pgzrun = None
+try:
+    import pygame
+except Exception as e:
+    sys.print_exception(e)
+    print("pygame not loaded")
 
 if os.path.isfile('/data/data/custom.py'):
     execfile('/data/data/custom.py')
