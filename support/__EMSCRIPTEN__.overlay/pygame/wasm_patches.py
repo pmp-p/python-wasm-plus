@@ -49,13 +49,35 @@ pygame.time.set_timer = patch_set_timer
 # if interpreter is not fully renewed.
 # so just clear screen cut music and hope for the best.
 
+
 def pygame_quit():
     pygame.mixer.music.stop()
+    pygame.mixer.music.unload()
     pygame.display.update()
+
 
 pygame.quit = pygame_quit
 
 
+# =====================================================================
+# we want fullscreen-windowed template for games as a default
+# so call javascript to resize canvas viewport to fill the current
+# window each time mode is changed, also remove the "scaled" option
+
+__pygame_display_set_mode__ = pygame.display.set_mode
+
+
+def path_pygame_display_set_mode(size, flags, depth=0):
+    import platform
+
+    # apparently no need to remove scaled.
+    if (sys.platform == "emscripten") and platform.is_browser:
+        platform.window.window_resize()
+
+    return __pygame_display_set_mode__(size, flags, depth)
+
+
+pygame.display.set_mode = path_pygame_display_set_mode
 
 # ====================================================================
 print("\n\n")

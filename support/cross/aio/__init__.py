@@ -1,5 +1,8 @@
 import sys
 import builtins
+import inspect
+from time import time as time_time
+
 
 DEBUG = True
 
@@ -46,7 +49,6 @@ else:
 
 
 define("sys_trace", sys_trace)
-
 
 try:
     import embed
@@ -122,6 +124,9 @@ tasks = []
 is_async_ctx = False
 no_exit = True
 
+enter = time_time()
+
+
 from asyncio import *
 
 import asyncio.events as events
@@ -148,12 +153,22 @@ sys.modules["asyncio"] = __import__(__name__)
 def defer(fn, argv=(), kw={}, delay=0, framerate=60):
     global ticks, oneshots
     # FIXME: set ticks + deadline for alarm
+    if __UPY__:
+        tb = "n/i"
+    else:
+        try:
+            frm = inspect.currentframe().f_back
+            tb = f"{inspect.getframeinfo(frm).filename}:{frm.f_lineno}"
+        except:
+            tb = "no frame"
+
     oneshots.append(
         [
             ticks + int(delay / framerate),
             fn,
             argv,
             kw,
+            tb,
         ]
     )
 
@@ -164,6 +179,9 @@ inloop = False
 def step(*argv):
     global inloop, last_state, paused, started, loop, oneshots, protect
     global ticks, steps, step, flush, exit, is_async_ctx
+    global enter
+
+    enter = time_time()
 
     # those hold variable that could be processed by C
     # outside the pyloop, to keep them from GC
@@ -174,64 +192,76 @@ def step(*argv):
     if not started:
         return
 
-    # TODO: OPTIM: remove later
-    if inloop:
-        pdb("97: FATAL: aio loop not re-entrant !")
-        paused = True
-        return
-    inloop = True
-
-    if paused is not last_state:
-        if not exit:
-            # print(f' - aio is {(paused and "paused") or "resuming"}')
-            print(f" - aio is {'paused' if paused else 'resuming'} -")
-        else:
-            print(f" - aio is exiting -")
-        last_state = paused
-
-    ticks += 1
-
     try:
-        # defer and oneshot can run even if main loop is paused
-        # eg for timekeep, or vital remote I/O sakes
 
-        # NEED a scheduler + timesort
-        early = []
-        while len(oneshots):
-            deferred = oneshots.pop()
-            if deferred[0] > ticks:
-                deferred[0] -= 1
-                early.append(deferred)
+        # TODO: OPTIM: remove later
+        if inloop:
+            pdb("97: FATAL: aio loop not re-entrant !")
+            paused = True
+            return
+        inloop = True
+
+        if paused is not last_state:
+            if not exit:
+                # print(f' - aio is {(paused and "paused") or "resuming"}')
+                print(f" - aio is {'paused' if paused else 'resuming'} -")
             else:
-                _, fn, argv, kw = deferred
-                fn(*argv, **kw)
-        while len(early):
-            oneshots.append(early.pop())
+                print(f" - aio is exiting -")
+            last_state = paused
 
-        # TODO: fix global clock accordingly
-        if not paused:
-            for onestep in steps:
-                onestep()
+        ticks += 1
 
-            # loop.call_soon(loop.stop)
-            # loop.run_forever()
-            if started:
-                is_async_ctx = True
-                loop._run_once()
-                is_async_ctx = False
+        try:
+            # defer and oneshot can run even if main loop is paused
+            # eg for timekeep, or vital remote I/O sakes
 
-    except Exception as e:
-        sys.print_exception(e)
-        paused = True
-        pdb("- aio paused -")
+            # NEED a scheduler + timesort
+            early = []
+            while len(oneshots):
+                deferred = oneshots.pop()
+                if deferred[0] > ticks:
+                    deferred[0] -= 1
+                    early.append(deferred)
+                else:
+                    _, fn, argv, kw, tb = deferred
+                    try:
+                        fn(*argv, **kw)
+                    except Exception as e:
+                        sys.print_exception(e)
+                        print("--- stack -----", file=sys.__stderr__)
+                        print(_, fn, argv, kw, file=sys.__stderr__)
+                        print("--- stack -----", file=sys.__stderr__)
+                        print("deferred from", tb, file=sys.__stderr__)
 
-    # if using external loop handler (eg  PyOS_InputHook ) then call us again
-    if started and cross.scheduler and not exit:
-        cross.scheduler(step, 1)
 
-    flush()
-    inloop = False
+            while len(early):
+                oneshots.append(early.pop())
 
+            # TODO: fix global clock accordingly
+            if not paused:
+                for onestep in steps:
+                    onestep()
+
+                # loop.call_soon(loop.stop)
+                # loop.run_forever()
+                if started:
+                    is_async_ctx = True
+                    loop._run_once()
+                    is_async_ctx = False
+
+        except Exception as e:
+            sys.print_exception(e)
+            paused = True
+            pdb("- aio paused -")
+
+        # if using external loop handler (eg  PyOS_InputHook ) then call us again
+        if started and cross.scheduler and not exit:
+            cross.scheduler(step, 1)
+
+        flush()
+        inloop = False
+    finally:
+        leave = time_time()
 
 async def sleep_ms(ms=0):
     await sleep(float(ms) / 1000)
@@ -351,8 +381,6 @@ else:
 
 
 def aio_exit(maybecoro=0):
-    import inspect
-
     if inspect.iscoroutine(maybecoro):
 
         async def atexit(coro):

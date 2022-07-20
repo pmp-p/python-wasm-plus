@@ -25,6 +25,8 @@ except Exception as e:
         oneshots = []
         ticks = 0
         protect = []
+        enter = 0
+
 
         @classmethod
         def breakpointhook(cls, *argv, **kw):
@@ -32,33 +34,36 @@ except Exception as e:
 
         @classmethod
         def step(cls):
-            if cls.paused:
-                return
-
-            if aio.protect:
-                aio.protect.clear()
-
+            cls.enter = time.time()
             try:
-                # NEED a scheduler + timesort
-                early = []
-                while len(cls.oneshots):
-                    deferred = cls.oneshots.pop()
-                    if deferred[0] > cls.ticks:
-                        deferred[0] -= 1
-                        early.append(deferred)
-                    else:
-                        _, fn, argv, kw = deferred
-                        fn(*argv, **kw)
-                while len(early):
-                    cls.oneshots.append(early.pop())
+                if cls.paused:
+                    return
 
-                for step in cls.steps:
-                    step()
-            except Exception as e:
-                sys.print_exception(e)
-                cls.paused = True
-                pdb("- aio paused -")
+                if aio.protect:
+                    aio.protect.clear()
 
+                try:
+                    # NEED a scheduler + timesort
+                    early = []
+                    while len(cls.oneshots):
+                        deferred = cls.oneshots.pop()
+                        if deferred[0] > cls.ticks:
+                            deferred[0] -= 1
+                            early.append(deferred)
+                        else:
+                            _, fn, argv, kw = deferred
+                            fn(*argv, **kw)
+                    while len(early):
+                        cls.oneshots.append(early.pop())
+
+                    for step in cls.steps:
+                        step()
+                except Exception as e:
+                    sys.print_exception(e)
+                    cls.paused = True
+                    pdb("- aio paused -")
+            finally:
+                cls.leave = time_time()
         @classmethod
         def defer(cls, fn, argv, kw, deadline=0):
             # FIXME: set ticks + deadline for alarm
@@ -74,6 +79,11 @@ except Exception as e:
 
 def breakpointhook(*argv, **kw):
     aio.paused = True
+
+
+def shed_yield():
+    #TODO: coroutine id as pid
+    print("86", aio.leave - aio.enter )
 
 
 sys.breakpointhook = breakpointhook
