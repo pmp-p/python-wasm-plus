@@ -11,11 +11,10 @@
 "
 
 
-export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD:-${HOST_PREFIX}/bin/python3}
+export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD:-${HPY}}
 
 # remove old compiler wrapper to avoid conflicts
-rm $HOST_PREFIX/bin/cc
-
+[ -f $HOST_PREFIX/bin/cc ] && rm $HOST_PREFIX/bin/cc
 
 . ./scripts/emsdk-fetch.sh
 
@@ -25,7 +24,7 @@ REBUILD_WASM=${REBUILD_WASMPY:-false}
 if $REBUILD || $REBUILD_WASMPY
 then
     rm -rf build/cpython-wasm/ build/pycache/config.cache
-    rm build/cpython-wasm/libpython3.${PYMINOR}.a 2>/dev/null
+    rm build/cpython-wasm/libpython${PYBUILD}.a 2>/dev/null
     REBUILD=true
 fi
 
@@ -96,7 +95,7 @@ TESTSUITE=$TESTSUITE
 
 
 
-if [ -f build/cpython-wasm/libpython3.${PYMINOR}.a ]
+if [ -f build/cpython-wasm/libpython${PYBUILD}.a ]
 then
     echo "
     * not rebuilding cpython-wasm for [$PYDK_PYTHON_HOST_PLATFORM]
@@ -142,8 +141,16 @@ else
 _decimal
 END
 
+    if $CI
+    then
+        NPROC=$(nproc)
+    else
+        # yes, i only have a amd200GE with 32G
+        NPROC=1
+    fi
+
     if EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" \
-        emmake make -j$(nproc) WASM_ASSETS_DIR=$(realpath ${PYTHONPYCACHEPREFIX}/empty)@/
+        emmake make -j$NPROC WASM_ASSETS_DIR=$(realpath ${PYTHONPYCACHEPREFIX}/empty)@/
     then
         EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" \
         emmake make WASM_ASSETS_DIR=$(realpath ${PYTHONPYCACHEPREFIX}/empty)@/ install
@@ -164,16 +171,16 @@ EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" emmake make WASM_ASSETS_DIR=$(realpath ${PY
     mkdir -p ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/site-packages
     mkdir -p ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/lib-dynload
 
-    if [ -d $PREFIX/lib/python3.${PYMINOR}/lib-dynload ]
+    if [ -d $PREFIX/lib/python${PYBUILD}/lib-dynload ]
     then
         # move them to MEMFS
-        mv $PREFIX/lib/python3.${PYMINOR}/lib-dynload/* ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/lib-dynload/
+        mv $PREFIX/lib/python${PYBUILD}/lib-dynload/* ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/lib-dynload/
 
         # specific platform support
-        cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/3.${PYMINOR}/. $HOST_PREFIX/lib/python3.${PYMINOR}/
+        cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/${PYBUILD}/. $HOST_PREFIX/lib/python${PYBUILD}/
 
         cp -vf build/cpython-wasm/libpython3.*.a prebuilt/emsdk/
-        rmdir  $PREFIX/lib/python3.${PYMINOR}/lib-dynload
+        rmdir  $PREFIX/lib/python${PYBUILD}/lib-dynload
     fi
 fi
 
@@ -181,7 +188,7 @@ mkdir -p $PYTHONPYCACHEPREFIX/sysconfig
 
 
 # FIXME: seems CI cannot locate that one with python3-wasm
-cp $PREFIX/lib/python3.${PYMINOR}/_sysconfigdata__emscripten_wasm32-emscripten.py $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
+cp $PREFIX/lib/python${PYBUILD}/_sysconfigdata__emscripten_wasm32-emscripten.py $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
 sed -i 's|-Os|-O0|g' $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
 sed -i 's|-g0|-g3|g' $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
 

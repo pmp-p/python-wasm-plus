@@ -14,7 +14,7 @@ then
         # emsdk could have been deleted for full rebuild
         rm embuild.done
 
-        if git clone https://github.com/emscripten-core/emsdk.git
+        if git clone --no-tags --depth 1 --single-branch --branch main https://github.com/emscripten-core/emsdk.git
         then
             pushd emsdk
             ./emsdk install ${EMFLAVOUR}

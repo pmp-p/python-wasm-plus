@@ -7,11 +7,11 @@
 # echo " ${PIMINOR}"|grep -q 11$
 if true
 then
-    HPFX=./devices/x86_64/usr/lib/python3.${PYMINOR}
-    rm ./devices/emsdk/usr/lib/python3.${PYMINOR}/ensurepip/_bundled/setuptools-*-py3-none-any.whl
-    cp -Rf $HPFX/setuptool* ./devices/emsdk/usr/lib/python3.${PYMINOR}/
-    cp -Rf $HPFX/_distutils* ./devices/emsdk/usr/lib/python3.${PYMINOR}/
-    cp -Rf $HPFX/pkg_resources ./devices/emsdk/usr/lib/python3.${PYMINOR}/
+    HPFX=./devices/x86_64/usr/lib/python${PYBUILD}
+    rm ./devices/emsdk/usr/lib/python${PYBUILD}/ensurepip/_bundled/setuptools-*-py3-none-any.whl
+    cp -Rf $HPFX/setuptool* ./devices/emsdk/usr/lib/python${PYBUILD}/
+    cp -Rf $HPFX/_distutils* ./devices/emsdk/usr/lib/python${PYBUILD}/
+    cp -Rf $HPFX/pkg_resources ./devices/emsdk/usr/lib/python${PYBUILD}/
 fi
 
 # ../../devices/x86_64/usr/bin/python3-wasm -mpip install .

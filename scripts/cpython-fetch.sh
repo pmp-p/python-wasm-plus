@@ -13,6 +13,9 @@ pushd src 2>&1 >/dev/null
 NOPATCH=false
 [ -L cpython ] && rm cpython
 
+[ -f $HPY ] || REBUILD=true
+
+
 if echo $PYBUILD |grep -q 12$
 then
     if [ -d cpython-git ]

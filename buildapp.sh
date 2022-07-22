@@ -25,13 +25,13 @@ if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus/
 then
     # in this special case build testsuite frontend
     TMPL_DEFAULT="templates/no-worker"
-    APK_DEFAULT="demos/org.python3.${PYMINOR}.0"
+    APK_DEFAULT="demos/org.python${PYBUILD}.0"
     mkdir -p $APK_DEFAULT
     pushd $APK_DEFAULT
-    cp -Ru $ROOT/devices/x86_64/usr/lib/python3.${PYMINOR} ./
-    rm -rf ./python3.${PYMINOR}/lib-dynload/* ./python3.${PYMINOR}/site-packages/* ./python3.${PYMINOR}/config-*
-    cp -vf $ROOT/devices/emsdk/usr/lib/python3.${PYMINOR}/_sysconfigdata* ./python3.${PYMINOR}/
-    cp -vRf $ROOT/devices/emsdk/usr/lib/python3.${PYMINOR}/config-* ./python3.${PYMINOR}/
+    cp -Ru $ROOT/devices/x86_64/usr/lib/python${PYBUILD} ./
+    rm -rf ./python${PYBUILD}/lib-dynload/* ./python${PYBUILD}/site-packages/* ./python${PYBUILD}/config-*
+    cp -vf $ROOT/devices/emsdk/usr/lib/python${PYBUILD}/_sysconfigdata* ./python${PYBUILD}/
+    cp -vRf $ROOT/devices/emsdk/usr/lib/python${PYBUILD}/config-* ./python${PYBUILD}/
     popd
 else
     APK_DEFAULT="demos/1-touchpong"
@@ -63,12 +63,12 @@ REQUIREMENTS=$(realpath ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/site-packages)
 DYNLOAD=$(realpath ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/lib-dynload)
 
 # should already be done, but usefull when testing new modules
-if [ -d $ROOT/devices/emsdk/usr/lib/python3.${PYMINOR}/lib-dynload ]
+if [ -d $ROOT/devices/emsdk/usr/lib/python${PYBUILD}/lib-dynload ]
 then
     echo "
-    * Adding new modules from $ROOT/devices/emsdk/usr/lib/python3.${PYMINOR}/lib-dynload
+    * Adding new modules from $ROOT/devices/emsdk/usr/lib/python${PYBUILD}/lib-dynload
 "
-    mv $ROOT/devices/emsdk/usr/lib/python3.${PYMINOR}/lib-dynload/*.so $DYNLOAD/ 2>/dev/null
+    mv $ROOT/devices/emsdk/usr/lib/python${PYBUILD}/lib-dynload/*.so $DYNLOAD/ 2>/dev/null
 fi
 
 
@@ -85,8 +85,8 @@ CROSS=$(realpath support/cross)
 
 
 # clean up untested modules
-#rm -fr $PREFIX/lib/python3.${PYMINOR}/site-packages/*
-touch $(echo -n $PREFIX/lib/python3.${PYMINOR}/site-packages)/README.txt
+#rm -fr $PREFIX/lib/python${PYBUILD}/site-packages/*
+touch $(echo -n $PREFIX/lib/python${PYBUILD}/site-packages)/README.txt
 
 
 . scripts/emsdk-fetch.sh
@@ -209,8 +209,8 @@ else
 fi
 
 # apply stdlib patches
-/bin/cp -Rfv $PLATFORM.patches/3.${PYMINOR}/. $ROOT/devices/$(arch)/usr/lib/python3.${PYMINOR}/
-/bin/cp -Rf $PLATFORM.patches/3.${PYMINOR}/. $ROOT/devices/emsdk/usr/lib/python3.${PYMINOR}/
+/bin/cp -Rfv $PLATFORM.patches/${PYBUILD}/. $ROOT/devices/$(arch)/usr/lib/python${PYBUILD}/
+/bin/cp -Rf $PLATFORM.patches/${PYBUILD}/. $ROOT/devices/emsdk/usr/lib/python${PYBUILD}/
 
 # and pack the minimal stdlib for current implicit requirements
 # see inside ./scripts/make_coldstartfs.sh to view them
@@ -247,10 +247,10 @@ emcc -fPIC -D__PYDK__=1 -DNDEBUG $CF_SDL \
 #then
 #    STDLIBFS="--preload-file  $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.12@/usr/lib/python3.12"
 #else
-#    # --preload-file $ROOT/devices/emsdk/usr/lib/python3.${PYMINOR}@/usr/lib/python3.${PYMINOR}
+#    # --preload-file $ROOT/devices/emsdk/usr/lib/python${PYBUILD}@/usr/lib/python${PYBUILD}
 #fi
 
-STDLIBFS="--preload-file $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.${PYMINOR}@/usr/lib/python3.${PYMINOR}"
+STDLIBFS="--preload-file $PYTHONPYCACHEPREFIX/stdlib-coldstart/python${PYBUILD}@/usr/lib/python${PYBUILD}"
 
 #  --preload-file /usr/share/terminfo/x/xterm@/usr/share/terminfo/x/xterm \
 
@@ -270,7 +270,7 @@ time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  --use-preload-plugins \
  $STDLIBFS \
  $ALWAYS_FS \
- --preload-file ${DYNLOAD}@/usr/lib/python3.${PYMINOR}/lib-dynload \
+ --preload-file ${DYNLOAD}@/usr/lib/python${PYBUILD}/lib-dynload \
  --preload-file ${CROSS}@/data/data/org.python/assets/site-packages \
  --preload-file ${REQUIREMENTS}@/data/data/org.python/assets/site-packages \
  --preload-file $ROOT/support/xterm@/etc/termcap \

@@ -23,11 +23,13 @@ else
     # to remove ctypes deps
     $PIP install setuptools --upgrade
     HPFX=./devices/x86_64/usr/lib/python3.${PYMINOR}
+    rm -rf $HPFX/setuptools* $HPFX/_distutils* $HPFX/pkg_resources*
     rm $HPFX/ensurepip/_bundled/setuptools-*-py3-none-any.whl
     mv $HPFX/site-packages/setuptools* $HPFX/
     mv $HPFX/site-packages/_distutils* $HPFX/
     mv $HPFX/site-packages/pkg_resources* $HPFX/
 fi
+
 
 # https://github.com/aroberge/ideas, for code transformation
 $PIP install token-utils

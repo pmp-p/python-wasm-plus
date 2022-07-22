@@ -31,18 +31,7 @@ do
 done
 
 export HPY=${HOST_PREFIX}/bin/python${PYBUILD}
-
-if [ -f $HPY ]
-then
-    echo -n # host python has been built successfully
-else
-    export HPY=$(ls ${HOST_PREFIX}/bin/python3.?? 2>/dev/null | sort | tail -n 1)
-fi
-
-if [ -f $HPY ]
-then
-    export PIP=${HOST_PREFIX}/bin/pip3.${PYMINOR}
-fi
+export PIP=${HOST_PREFIX}/bin/pip${PYBUILD}
 
 # cpython build opts
 export CPOPTS="-Os -g0 -fPIC"
