@@ -55,7 +55,7 @@ then
         ALL="$ALL struct_info libfetch zlib bzip2"
         ALL="$ALL libpng libjpeg freetype harfbuzz"
         ALL="$ALL sdl2 sdl2_mixer sdl2_gfx sdl2_ttf"
-        ALL="$ALL libsqlite3"
+        ALL="$ALL sqlite3"
 
         echo "
         * building third parties libraries for emsdk ( can take time ... )

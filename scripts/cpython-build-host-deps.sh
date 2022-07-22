@@ -22,18 +22,18 @@ HPFX=./devices/x86_64/usr/lib/python${PYBUILD}
 rm -rf $HPFX/ensurepip/_bundled/*-py3-none-any.whl
 
 
-for moveit in setuptools _distutils pkg_resources
+for moveit in setuptools _distutils _distutils_hack pkg_resources
 do
     if [ -d $HPFX/site-packages/${moveit} ]
     then
         echo "
         * migrating ${moveit}
 "
-        rm -rf $HPFX/${moveit}*
-        mv $HPFX/site-packages/${moveit}* $HPFX/
+        rm -rf $HPFX/${moveit} rm -rf $HPFX/${moveit}-*
+        mv $HPFX/site-packages/${moveit}  $HPFX/
+        mv $HPFX/site-packages/${moveit}-* $HPFX/
     fi
 done
-
 
 
 # https://github.com/aroberge/ideas, for code transformation

@@ -94,7 +94,6 @@ TESTSUITE=$TESTSUITE
 "
 
 
-
 if [ -f build/cpython-wasm/libpython${PYBUILD}.a ]
 then
     echo "
@@ -106,6 +105,15 @@ else
         PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD}
 "
 
+
+    if [ -f /lowend ]
+    then
+        # yes, i only have a amd200GE with 32G
+        NPROC=1
+        export EMSDK_NUM_CORES=1
+    else
+        NPROC=$(nproc)
+    fi
 
 
     mkdir -p build/cpython-wasm $PREFIX
@@ -141,14 +149,6 @@ else
 _decimal
 END
 
-    if $CI
-    then
-        NPROC=$(nproc)
-    else
-        # yes, i only have a amd200GE with 32G
-        NPROC=1
-        EMSDK_NUM_CORES=1
-    fi
 
     if EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" \
         emmake make -j$NPROC WASM_ASSETS_DIR=$(realpath ${PYTHONPYCACHEPREFIX}/empty)@/
