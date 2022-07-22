@@ -38,6 +38,12 @@ class _dangling:
     def update(cls, saved):
         pass
 
+class Local:
+    pass
+
+def local():
+    return Local
+
 class Lock:
     count = 0
 

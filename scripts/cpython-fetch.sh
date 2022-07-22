@@ -42,20 +42,22 @@ fi
 
 if echo $PYBUILD | grep -q 11$
 then
-    #wget -q -c https://www.python.org/ftp/python/3.11.0/Python-3.11.0b3.tgz
-    wget -q https://www.python.org/ftp/python/3.11.0/Python-3.11.0b4.tar.xz
-
-    #tar xf Python-3.11.0b3.tgz
+    wget -q -c https://www.python.org/ftp/python/3.11.0/Python-3.11.0b4.tar.xz
     tar xf Python-3.11.0b4.tar.xz
-    #ln -s Python-3.11.0b3 cpython
     ln -s Python-3.11.0b4 cpython
+
     export REBUILD=true
 fi
 
 if echo $PYBUILD | grep -q 10$
 then
-    tar xfj /data/git/python-wasm-sdk/src/Python-3.10.5-pydk.tar.bz2
-    ln -s Python-3.10.5-pydk cpython
+    wget -q -c https://www.python.org/ftp/python/3.10.5/Python-3.10.5.tar.xz
+    tar xf Python-3.10.5.tar.xz
+    ln -s Python-3.10.5 cpython
+
+    #tar xfj /data/git/python-wasm-sdk/src/Python-3.10.5-pydk.tar.bz2
+    #ln -s Python-3.10.5-pydk cpython
+
     NOPATCH=true
     export REBUILD=true
 fi
@@ -63,6 +65,16 @@ fi
 
 popd
 
+# 3.10 is not wasm stable
+if [ -f support/__EMSCRIPTEN__.patches/${PYBUILD}.diff ]
+then
+    pushd src/cpython 2>&1 >/dev/null
+    patch -p1 < ../../support/__EMSCRIPTEN__.patches/${PYBUILD}.diff
+    popd 2>&1 >/dev/null
+fi
+
+# the sys._emscripten_info is actually not compatible with shared build
+# just move its stuff to main
 
 if $NOPATCH
 then
@@ -73,7 +85,7 @@ else
     # do some patching
     pushd src/cpython 2>&1 >/dev/null
     patch -p1 < ../../support/__EMSCRIPTEN__.embed/cpython.diff
-    popd
+    popd 2>&1 >/dev/null
 fi
 
 

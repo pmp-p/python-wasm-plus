@@ -68,7 +68,7 @@ else
     wget -q -c https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-$WEBP_VER.tar.gz \
         && tar xfz libwebp-$WEBP_VER.tar.gz
     pushd libwebp-$WEBP_VER
-    EMCC_CFLAGS="$ALL" $CNF \
+    EMCC_CFLAGS="$ALL" CC=emcc $CNF \
      --disable-threading --disable-neon --disable-sse2 --enable-libwebpdecoder 2>&1>/dev/null
     EMCC_CFLAGS="$ALL" emmake make 2>&1>/dev/null
     emmake make install 2>&1>/dev/null
@@ -99,7 +99,7 @@ else
     fi
 
     pushd SDL2_image-2.5.1
-    CFLAGS=$CPOPTS EMCC_CFLAGS="$ALL" $CNF \
+    CFLAGS=$CPOPTS EMCC_CFLAGS="$ALL" CC=emcc  $CNF \
      --disable-sdltest --disable-jpg-shared --disable-png-shared
     #--disable-tif-shared
     EMCC_CFLAGS="$ALL" emmake make
@@ -119,7 +119,7 @@ NCOPTS="--enable-ext-colors --enable-ext-mouse --prefix=$PREFIX --disable-echo -
  --with-pkg-config-libdir=$PREFIX/lib/pkgconfig \
  --with-termlib --enable-termcap --disable-database"
 
-if false
+if true
 then
     wget -q -c https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.1.tar.gz && tar xfz ncurses-6.1.tar.gz
 

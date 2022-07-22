@@ -60,12 +60,12 @@ else
 
     export EMCC_CFLAGS="-O0 -g0 -fPIC"
 
-     CFLAGS="-O0 -g0 -fPIC" \
-      emconfigure $ROOT/src/libffi/configure --host=wasm32-tot-linux\
+    CFLAGS="-O0 -g0 -fPIC" \
+     emconfigure $ROOT/src/libffi/configure --host=wasm32-tot-linux\
       --prefix=$PREFIX --enable-static --disable-shared --disable-dependency-tracking\
-      --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs >/dev/null
+      --disable-builddir --disable-multi-os-directory --disable-raw-api --disable-docs
 
-    emmake make install >/dev/null
+    emmake make install
 
     unset EMCC_CFLAGS
     popd
@@ -161,16 +161,20 @@ EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" emmake make WASM_ASSETS_DIR=$(realpath ${PY
 
     popd
 
-    mkdir -p ${ROOT}/prebuilt/emsdk
+    mkdir -p ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/site-packages
+    mkdir -p ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/lib-dynload
 
-    # move them to MEMFS
-    mv $PREFIX/lib/python3.${PYMINOR}/lib-dynload/* $ROOT/prebuilt/emsdk/site-packages
+    if [ -d $PREFIX/lib/python3.${PYMINOR}/lib-dynload ]
+    then
+        # move them to MEMFS
+        mv $PREFIX/lib/python3.${PYMINOR}/lib-dynload/* ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/lib-dynload/
 
-    # specific platform support
-    cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/3.${PYMINOR}/. $HOST_PREFIX/lib/python3.${PYMINOR}/
+        # specific platform support
+        cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/3.${PYMINOR}/. $HOST_PREFIX/lib/python3.${PYMINOR}/
 
-    cp -vf build/cpython-wasm/libpython3.*.a prebuilt/emsdk/
-    rmdir  $PREFIX/lib/python3.${PYMINOR}/lib-dynload
+        cp -vf build/cpython-wasm/libpython3.*.a prebuilt/emsdk/
+        rmdir  $PREFIX/lib/python3.${PYMINOR}/lib-dynload
+    fi
 fi
 
 mkdir -p $PYTHONPYCACHEPREFIX/sysconfig
@@ -273,6 +277,10 @@ END
 
 cat > $HOST_PREFIX/bin/python3-wasm <<END
 #!/bin/bash
+export PYBUILD=\${PYBUILD:-$PYBUILD}
+export PYMAJOR=$(echo -n \$PYBUILD|cut -d. -f1)
+export PYMINOR=$(echo -n \$PYBUILD|cut -d. -f2)
+
 . $ROOT/${PYDK_PYTHON_HOST_PLATFORM}-shell.sh
 
 # most important
@@ -287,15 +295,15 @@ export PYTHONHOME=$PREFIX
 
 # find sysconfig ( tweaked )
 # but still can load dynload and setuptools
-PYTHONPATH=$(echo -n ${HOST_PREFIX}/lib/python3.${PYMINOR}/site-packages):\$PYTHONPATH
-export PYTHONPATH=$PYTHONPYCACHEPREFIX/sysconfig:$(echo -n ${HOST_PREFIX}/lib/python3.${PYMINOR}/lib-dynload):\$PYTHONPATH
+PYTHONPATH=$(echo -n ${HOST_PREFIX}/lib/python/\${PYBUILD}/site-packages):\$PYTHONPATH
+export PYTHONPATH=$PYTHONPYCACHEPREFIX/sysconfig:$(echo -n ${HOST_PREFIX}/lib/python\${PYBUILD}/lib-dynload):\$PYTHONPATH
 
 
 #probably useless
 export _PYTHON_HOST_PLATFORM=${PYDK_PYTHON_HOST_PLATFORM}
 export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD}
 
-$HPY -u -B \$@
+${HOST_PREFIX}/bin/python\${PYBUILD} -u -B \$@
 END
 
 chmod +x $HOST_PREFIX/bin/python3-wasm

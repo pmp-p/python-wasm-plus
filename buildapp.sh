@@ -2,27 +2,21 @@
 
 export ROOT=$(pwd)
 
+. ${CONFIG:-config}
+
 while true
 do
     echo Waiting for pygame build to complete ...
-
-    [ -f ${ROOT}/prebuilt/emsdk/libpygame.a ] && break
-    sleep 1
-
-    [ -f ${ROOT}/prebuilt/emsdk/libpygame.a ] && break
-    sleep 1
-
-    [ -f ${ROOT}/prebuilt/emsdk/libpygame.a ] && break
-    sleep 1
-
-    [ -f ${ROOT}/prebuilt/emsdk/libpygame.a ] && break
-    sleep 1
+    for i in 1 2 3 4
+    do
+        [ -f ${ROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a ] && break
+        sleep 1
+    done
+    [ -f ${ROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a ] && break
 
 done
 reset
 
-
-. ${CONFIG:-config}
 
 EXE=python311
 
@@ -61,14 +55,22 @@ shift
 TMPL=$(realpath $TMPL)
 APK=$(realpath $APK)
 
-mkdir -p prebuilt/emsdk/site-packages
-mkdir -p prebuilt/emsdk/lib-dynload
+mkdir -p prebuilt/emsdk/${PYBUILD}/site-packages
+mkdir -p prebuilt/emsdk/${PYBUILD}/lib-dynload
 
 # pre populated site-packages
-REQUIREMENTS=$(realpath prebuilt/emsdk/site-packages)
-DYNLOAD=$(realpath prebuilt/emsdk/lib-dynload)
+REQUIREMENTS=$(realpath ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/site-packages)
+DYNLOAD=$(realpath ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/lib-dynload)
 
-mv $ROOT/devices/emsdk/usr/lib/python3.${PYMINOR}/lib-dynload/*.so $DYNLOAD/ 2>/dev/null
+# should already be done, but usefull when testing new modules
+if [ -d $ROOT/devices/emsdk/usr/lib/python3.${PYMINOR}/lib-dynload ]
+then
+    echo "
+    * Adding new modules from $ROOT/devices/emsdk/usr/lib/python3.${PYMINOR}/lib-dynload
+"
+    mv $ROOT/devices/emsdk/usr/lib/python3.${PYMINOR}/lib-dynload/*.so $DYNLOAD/ 2>/dev/null
+fi
+
 
 # runtime patches on known modules for specific platform
 # applies to prebuilt/emsdk/site-packages at preload stage.
@@ -225,10 +227,10 @@ pushd build/cpython-wasm 2>&1 >/dev/null
 if false
 then
     CF_SDL="-s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_SDL_TTF=2 -sUSE_LIBJPEG -sUSE_LIBPNG"
-    LD_SDL=""
+    LD_SDL="-lSDL2_gfx -lSDL2_mixer"
 else
     CF_SDL="-s USE_SDL=2"
-    LD_SDL="-lSDL2_image -ljpeg -lpng -lSDL2_ttf -lharfbuzz -lfreetype"
+    LD_SDL="-lSDL2_gfx -lSDL2_mixer -lSDL2_image -ljpeg -lpng -lSDL2_ttf -lharfbuzz -lfreetype -lwebp"
 fi
 
 
@@ -253,7 +255,6 @@ STDLIBFS="--preload-file $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.${PYMINOR
 #  --preload-file /usr/share/terminfo/x/xterm@/usr/share/terminfo/x/xterm \
 
 
-
 CPY_EXTRALIB=""
 for cpylib in Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a
 do
@@ -261,6 +262,7 @@ do
 done
 
 
+# -lffi
 
 time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  -s TOTAL_MEMORY=512MB -s ALLOW_TABLE_GROWTH \
@@ -272,10 +274,9 @@ time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  --preload-file ${CROSS}@/data/data/org.python/assets/site-packages \
  --preload-file ${REQUIREMENTS}@/data/data/org.python/assets/site-packages \
  --preload-file $ROOT/support/xterm@/etc/termcap \
- -o ${MODE}.js Programs/${MODE}.o ${ROOT}/prebuilt/emsdk/libpython3.${PYMINOR}.a \
+ -o ${MODE}.js Programs/${MODE}.o ${ROOT}/prebuilt/emsdk/libpython${PYBUILD}.a \
  $CPY_EXTRALIB \
- ${ROOT}/prebuilt/emsdk/libpygame.a $CFLDPFX -lffi -lSDL2_gfx -lSDL2_mixer -lwebp \
- $LD_SDL -ldl -lm
+ ${ROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a $CFLDPFX $LD_SDL -lffi -ldl -lm
 
 popd
 

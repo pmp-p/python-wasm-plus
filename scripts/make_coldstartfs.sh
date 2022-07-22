@@ -32,6 +32,16 @@ except:
 # for dom event subscriptions
 import webbrowser
 
+# nodezator
+from logging.handlers import RotatingFileHandler
+from colorsys  import rgb_to_hls, hls_to_rgb
+import xml.dom.minidom
+from xml.dom import expatbuilder
+import pydoc
+
+# rich
+import zlib
+
 # pygame_gui
 import html.parser
 import importlib.readers
@@ -77,6 +87,7 @@ $HPY -u -B <<END
 import sys, os
 stdlp=""
 with open("$PYTHONPYCACHEPREFIX/stdl.list","w") as tarlist:
+    sysconf = "_sysconfigdata__linux_x86_64-linux-gnu.py"
     with open("$FS") as fs:
         for l in fs.readlines():
             #print( l.strip() )
@@ -84,9 +95,15 @@ with open("$PYTHONPYCACHEPREFIX/stdl.list","w") as tarlist:
                 continue
             _,trail = l.strip().split('/',1)
             stdlp, name = trail.rsplit('usr/lib/',1)
+
             #print (stdlp, name)
             #if name.find('asyncio/unix_events.py')>0:
             #    continue
+
+
+            if name.endswith(sysconf):
+                name = name.replace(sysconf,"_sysconfigdata__emscripten_wasm32-emscripten.py")
+
             name = name.replace('asyncio/selector_','asyncio/wasm_')
             print(name, file=tarlist )
         else:
@@ -100,7 +117,7 @@ END
 
 echo "=============================="
 mkdir -p $PYTHONPYCACHEPREFIX/stdlib-coldstart
-
+#cp -vf devices/emsdk/usr/lib/python3.*/_sysconfigdata* $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.*/
 pushd $PYTHONPYCACHEPREFIX/stdlib-coldstart
 tar xvf $PYTHONPYCACHEPREFIX/stdl.tar | wc -l
 rm $PYTHONPYCACHEPREFIX/stdl.tar

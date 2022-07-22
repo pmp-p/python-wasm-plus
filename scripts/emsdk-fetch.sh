@@ -17,10 +17,8 @@ then
         if git clone https://github.com/emscripten-core/emsdk.git
         then
             pushd emsdk
-            #./emsdk install latest
-            #./emsdk activate latest
-            ./emsdk install tot
-            ./emsdk activate tot
+            ./emsdk install ${EMFLAVOUR}
+            ./emsdk activate ${EMFLAVOUR}
             popd
             [ -f dev ] && tar -cpR emsdk > emsdk.tar
         fi
@@ -115,19 +113,25 @@ for arg do
         SHARED="\$SHARED -sSIDE_MODULE"
     fi
 
-    if echo "\$arg"|grep -q wasm32-emscripten.so\$
+    if \$IS_SHARED
     then
-        IS_SHARED=true
-        SHARED="\$SHARED -shared -sSIDE_MODULE"
+        true
+    else
+        if echo "\$arg"|grep -q wasm32-emscripten.so\$
+        then
+            IS_SHARED=true
+            SHARED="\$SHARED -shared -sSIDE_MODULE"
+        fi
     fi
+
     set -- "\$@" "\$arg"
 done
 
 if \$IS_SHARED
 then
-    $EMSDK_PYTHON -E \$0.py $SHARED $LDFLAGS "\$@" $COMMON
+    $EMSDK_PYTHON -E \$0.py \$SHARED $LDFLAGS "\$@" \$COMMON
 else
-    $EMSDK_PYTHON -E \$0.py $CPPFLAGS "\$@" $COMMON
+    $EMSDK_PYTHON -E \$0.py \$CPPFLAGS "\$@" \$COMMON
 fi
 END
         cat emsdk/upstream/emscripten/emcc > emsdk/upstream/emscripten/em++

@@ -18,10 +18,10 @@ then
     echo "
     * setuptools/_distutils/pkg_resources already migrated
 "
+    rm -rf $HPFX/site-packages/setuptools* $HPFX/site-packages/_distutils* $HPFX/site-packages/pkg_resources*
 else
     # to remove ctypes deps
     $PIP install setuptools --upgrade
-
     HPFX=./devices/x86_64/usr/lib/python3.${PYMINOR}
     rm $HPFX/ensurepip/_bundled/setuptools-*-py3-none-any.whl
     mv $HPFX/site-packages/setuptools* $HPFX/

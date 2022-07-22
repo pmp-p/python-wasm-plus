@@ -41,14 +41,13 @@ fi
 
 if [ -f $HPY ]
 then
-    export PYMINOR=$(echo $HPY|cut -d. -f2)
     export PIP=${HOST_PREFIX}/bin/pip3.${PYMINOR}
 fi
 
 # cpython build opts
 export CPOPTS="-Os -g0 -fPIC"
 export CPPFLAGS="-I$PREFIX/include"
-export LDFLAGS="-L$PREFIX/lib"
+export LDFLAGS="-msoft-float -L$PREFIX/lib"
 
 # module build opts
 export CFLDPFX="$CPPFLAGS $LDFLAGS -Wno-unused-command-line-argument"
@@ -59,13 +58,19 @@ then
     export QUIET=""
 else
     export COPTS="-Os -g0 -fPIC"
-    export QUIET="2>&1 > $PYTHONPYCACHEPREFIX/.log"
+    if ${VERBOSE:-false}
+    then
+        export QUIET=""
+    else
+        export QUIET="2>&1 > $PYTHONPYCACHEPREFIX/.log"
+    fi
 fi
 
 #stable
 # EMFLAVOUR=latest
 #git
-EMFLAVOUR=tot
+EMFLAVOUR=${EMFLAVOUR:-latest}
+
 
 export PYDK_PYTHON_HOST_PLATFORM=wasm32-$EMFLAVOUR-emscripten
 

@@ -85,28 +85,33 @@ class MissingModule:
 # where pygame is actually statically linked
 # mixing single phase (C) and multiphase modules (cython)
 if sys.platform in ("wasi", "emscripten"):
-    import pygame_static
+    try:
+        import pygame_static
+    except ModuleNotFoundError:
+        pygame_static = None
 
-    pygame = sys.modules[__name__]
+    if pygame_static:
 
-    pygame.Color = pygame.color.Color
+        pygame = sys.modules[__name__]
 
-    Vector2 = pygame.math.Vector2
-    Vector3 = pygame.math.Vector3
+        pygame.Color = pygame.color.Color
 
-    Rect = pygame.rect.Rect
+        Vector2 = pygame.math.Vector2
+        Vector3 = pygame.math.Vector3
 
-    BufferProxy = pygame.bufferproxy.BufferProxy
+        Rect = pygame.rect.Rect
 
-    # cython modules use multiphase initialisation when not in builtin Inittab.
+        BufferProxy = pygame.bufferproxy.BufferProxy
 
-    import pygame._sdl2 as _sdl2
+        # cython modules use multiphase initialisation when not in builtin Inittab.
 
-    import importlib.machinery
+        import pygame._sdl2 as _sdl2
 
-    loader = importlib.machinery.FrozenImporter
-    spec = importlib.machinery.ModuleSpec("", loader)
-    pygame_static.import_cython(spec)
+        import importlib.machinery
+
+        loader = importlib.machinery.FrozenImporter
+        spec = importlib.machinery.ModuleSpec("", loader)
+        pygame_static.import_cython(spec)
 
 
 # we need to import like this, each at a time. the cleanest way to import
@@ -416,9 +421,10 @@ def __color_reduce(c):
 copyreg.pickle(Color, __color_reduce, __color_constructor)
 
 if sys.platform in ("wasi", "emscripten"):
-    import pygame.wasm_patches
+    if pygame_static:
+        import pygame.wasm_patches
+        print(sys._emscripten_info)
 
-    print(sys._emscripten_info)
 
 # Thanks for supporting pygame. Without support now, there won't be pygame later.
 if "PYGAME_HIDE_SUPPORT_PROMPT" not in os.environ:
