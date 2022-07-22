@@ -13,22 +13,27 @@ SPY="$HPY setup.py install --single-version-externally-managed --root=/"
 # just in case
 $PIP install pip --upgrade
 
-if [ -d $HPFX/site-packages/setuptools ]
-then
-    echo "
-    * setuptools/_distutils/pkg_resources already migrated
+
+# to remove ctypes deps
+$PIP install setuptools --upgrade
+
+
+HPFX=./devices/x86_64/usr/lib/python${PYBUILD}
+rm -rf $HPFX/ensurepip/_bundled/*-py3-none-any.whl
+
+
+for moveit in setuptools _distutils pkg_resources
+do
+    if [ -d $HPFX/site-packages/${moveit} ]
+    then
+        echo "
+        * migrating ${moveit}
 "
-    rm -rf $HPFX/site-packages/setuptools* $HPFX/site-packages/_distutils* $HPFX/site-packages/pkg_resources*
-else
-    # to remove ctypes deps
-    $PIP install setuptools --upgrade
-    HPFX=./devices/x86_64/usr/lib/python3.${PYMINOR}
-    rm -rf $HPFX/setuptools* $HPFX/_distutils* $HPFX/pkg_resources*
-    rm $HPFX/ensurepip/_bundled/setuptools-*-py3-none-any.whl
-    mv $HPFX/site-packages/setuptools* $HPFX/
-    mv $HPFX/site-packages/_distutils* $HPFX/
-    mv $HPFX/site-packages/pkg_resources* $HPFX/
-fi
+        rm -rf $HPFX/${moveit}*
+        mv $HPFX/site-packages/${moveit}* $HPFX/
+    fi
+done
+
 
 
 # https://github.com/aroberge/ideas, for code transformation

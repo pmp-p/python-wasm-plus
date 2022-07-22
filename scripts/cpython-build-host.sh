@@ -81,16 +81,16 @@ END
 # CFLAGS="-DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1"
     if \
     CC=clang CXX=clang++ \
-    eval ${ROOT}/src/cpython/configure \
-     --prefix=$HOST_PREFIX $PYOPTS $QUIET
+    ${ROOT}/src/cpython/configure \
+     --prefix=$HOST_PREFIX $PYOPTS
     then
-        eval make -j$(nproc) install $QUIET
+        make -j$(nproc) install
         rm -rf $(find $ROOT/devices/ -type d|grep __pycache__$)
 
         patchelf --remove-needed libintl.so.8  $HOST_PREFIX/bin/python3.${PYMINOR}
         sed -i 's|-lintl ||g' /opt/python-wasm-sdk/devices/x86_64/usr/bin/python3.${PYMINOR}-config
 
-        cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/. $HOST_PREFIX/lib/python3.${PYMINOR}/
+        cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/${PYBUILD}/. $HOST_PREFIX/lib/python${PYBUILD}/
     else
         echo "
 ==========================================================================
@@ -101,8 +101,6 @@ END
     " 1>&2
         exit 1
     fi
-
-
 
     popd
 else

@@ -17,27 +17,31 @@ then
         if git clone --no-tags --depth 1 --single-branch --branch main https://github.com/emscripten-core/emsdk.git
         then
             pushd emsdk
-            ./emsdk install ${EMFLAVOUR}
-            ./emsdk activate ${EMFLAVOUR}
+            ./emsdk install ${EMFLAVOUR:-latest}
+            ./emsdk activate ${EMFLAVOUR:-latest}
             popd
-            [ -f dev ] && tar -cpR emsdk > emsdk.tar
         fi
     fi
 
-    if [ -f emsdk/emsdk_env.sh ]
+    export EMSDK_PYTHON=$SYS_PYTHON
+
+    if [ -f ${SDKROOT}/emsdk/emsdk_env.sh ]
     then
         echo "
-        * activating emsdk via emsdk_env.sh
+        * activating emsdk via emsdk_env.sh with EMSDK_PYTHON=$EMSDK_PYTHON
 "
-        . emsdk/emsdk_env.sh 2>&1 > /dev/null
+        . ${SDKROOT}/emsdk/emsdk_env.sh
         # EMSDK_PYTHON may be cleared, restore it
-        export EMSDK_PYTHON=$SYS_PYTHON
+
     else
         echo "
         ERROR cannot find emsdk/emsdk_env.sh in $(pwd)
 "
         exit 1
     fi
+
+    export EMSDK_PYTHON=$SYS_PYTHON
+
 
     if [ -f embuild.done ]
     then
@@ -74,15 +78,15 @@ then
                             stripping emsdk
         ==========================================================
 "
-            rm -rf ${SDKDIR}/emsdk/upstream/emscripten/cache/ports*
+            rm -rf ${SDKROOT}/emsdk/upstream/emscripten/cache/ports*
             # something triggers sdl2 *full* rebuild in pygame.
             # but only that one.
             embuilder --pic build sdl2
             embuilder build sdl2
-            rm -rf ${SDKDIR}/emsdk/upstream/emscripten/cache/ports/sdl2/SDL-*
-            rm -rf ${SDKDIR}/emsdk/upstream/emscripten/cache/ports
-            rm -rf ${SDKDIR}/emsdk/upstream/emscripten/cache/ports-builds
-            rm -rf ${SDKDIR}/emsdk/upstream/emscripten/tests
+            rm -rf ${SDKROOT}/emsdk/upstream/emscripten/cache/ports/sdl2/SDL-*
+            rm -rf ${SDKROOT}/emsdk/upstream/emscripten/cache/ports
+            rm -rf ${SDKROOT}/emsdk/upstream/emscripten/cache/ports-builds
+            rm -rf ${SDKROOT}/emsdk/upstream/emscripten/tests
         fi
 
 #

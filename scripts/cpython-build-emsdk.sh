@@ -147,6 +147,7 @@ END
     else
         # yes, i only have a amd200GE with 32G
         NPROC=1
+        EMSDK_NUM_CORES=1
     fi
 
     if EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" \
