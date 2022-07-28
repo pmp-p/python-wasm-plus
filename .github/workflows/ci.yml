@@ -18,7 +18,7 @@ jobs:
             echo
             env|grep GITHUB
             echo
-            grep "^Pkg.Revision =" ${ANDROID_HOME}/ndk-bundle/source.properties
+            env|grep ANDROID
             sudo apt-get update
             sudo apt-get install -y bash wget
             cd $GITHUB_WORKSPACE
