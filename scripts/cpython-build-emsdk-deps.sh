@@ -157,8 +157,8 @@ then
         popd
     fi
 
-    [ -f ../devices/emsdk/usr/lib/libncursesw.a ]
-    if true
+
+    if [ -f ../devices/emsdk/usr/lib/libncursesw.a ]
     then
         echo "
         * ncursesw already built

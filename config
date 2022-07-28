@@ -57,8 +57,12 @@ fi
 
 #stable
 # EMFLAVOUR=latest
-#git
-EMFLAVOUR=${EMFLAVOUR:-latest}
+# EMFLAVOUR=${EMFLAVOUR:-latest}
+
+export EMFLAVOUR=${EMFLAVOUR:-tot}
+
+#temp fix for oom on CI (Error: Process completed with exit code 143.)
+export EMSDK_NUM_CORES=1
 
 
 export PYDK_PYTHON_HOST_PLATFORM=wasm32-$EMFLAVOUR-emscripten

@@ -67,29 +67,8 @@ then
             + $done
     "
             embuilder --pic build $one
-            #embuilder build $one
+            embuilder build $one
         done
-
-        if $CI
-        then
-            echo "
-
-        ==========================================================
-                            stripping emsdk
-        ==========================================================
-"
-            rm -rf ${SDKROOT}/emsdk/upstream/emscripten/cache/ports*
-            # something triggers sdl2 *full* rebuild in pygame.
-            # but only that one.
-            embuilder --pic build sdl2
-            embuilder build sdl2
-            rm -rf ${SDKROOT}/emsdk/upstream/emscripten/cache/ports/sdl2/SDL-*
-            rm -rf ${SDKROOT}/emsdk/upstream/emscripten/cache/ports
-            rm -rf ${SDKROOT}/emsdk/upstream/emscripten/cache/ports-builds
-            rm -rf ${SDKROOT}/emsdk/upstream/emscripten/tests
-        fi
-
-#
 
         cat > emsdk/upstream/emscripten/emcc <<END
 #!/bin/bash

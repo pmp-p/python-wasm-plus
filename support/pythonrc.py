@@ -6,6 +6,7 @@ import os, sys, json, builtins
 import aio
 import aio.cross
 
+import time
 
 # the sim does not preload assets and cannot access currentline
 # unless using https://github.com/pmp-p/aioprompt/blob/master/aioprompt/__init__.py
@@ -295,6 +296,25 @@ if defined("embed") and hasattr(embed, "readline"):
 
             sys.settrace(aio.trace.calls)
             return _process_args(argv, env)
+
+        @classmethod
+        def time(cls, *argv, **env):
+            cmd = " ".join(argv)
+
+            __main__ = __import__("__main__")
+            __main__dict = vars(__main__)
+
+            try:
+                code = compile(cmd, "<stdin>", "exec")
+                exec(code, __main__dict, __main__dict)
+                return True
+            except SyntaxError as e:
+                # try run a file or cmd
+                return cls._process_args(argv, env)
+            finally:
+                print(time.time() - time_start)
+            return False
+
 
         @classmethod
         def stop(cls, *argv, **env):

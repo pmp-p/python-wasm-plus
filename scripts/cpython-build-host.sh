@@ -56,14 +56,14 @@ END
 
 END
 
-
-
-    # Prevent freezing bytecode with a different magic
-    rm -f $HOST_PREFIX/bin/python3*
-
-    if command -v python3.${PYMINOR}
+    if echo $PYBUILD|grep -q 3.12$
     then
-        echo "
+        # Prevent freezing bytecode with a different magic
+        rm -f $HOST_PREFIX/bin/python3 $HOST_PREFIX/bin/python${PYBUILD}
+
+        if command -v python3.${PYMINOR}
+        then
+            echo "
 
     ===================================================================================
 
@@ -73,9 +73,11 @@ END
 
     ===================================================================================
 
-" 1>&2
-        sleep 6
+            " 1>&2
+            sleep 6
+        fi
     fi
+
 
 # OPT="$OPT"
 # CFLAGS="-DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1"

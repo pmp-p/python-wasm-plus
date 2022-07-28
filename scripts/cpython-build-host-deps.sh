@@ -35,6 +35,12 @@ do
     fi
 done
 
+if [ -f $HPFX/site-packages/distutils-precedence.pth ]
+then
+    mv $HPFX/site-packages/distutils-precedence.pth $HPFX/
+fi
+
+
 
 # https://github.com/aroberge/ideas, for code transformation
 $PIP install token-utils

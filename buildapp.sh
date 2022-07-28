@@ -6,7 +6,7 @@ export ROOT=$(pwd)
 
 while true
 do
-    echo Waiting for pygame build to complete ...
+    echo "Waiting for pygame (prebuilt/emsdk/libpygame${PYBUILD}.a) build to complete ..."
     for i in 1 2 3 4
     do
         [ -f ${ROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a ] && break

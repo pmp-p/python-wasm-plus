@@ -184,45 +184,27 @@ def init_platform(embed):
 ROOTDIR = f"/data/data/{sys.argv[0]}/assets"
 
 
-def explore(pushpopd, newpath):
+def explore(root):
     global prelist, preloadedWasm, preloadedImages, preloadedAudios, counter
 
+    counter = 0
+
     import shutil
+    preloads = f"{preloadedImages} {preloadedAudios} {preloadedWasm}".split(" ")
+    print(f"194: preloads {preloads}")
 
-    if newpath.endswith(".git"):
-        return
-
-    for dirname, dirnames, filenames in os.walk(newpath):
-        try:
-            os.chdir(dirname)
-            # print(f"\nNow in {os.getcwd()[LSRC:] or '.'}")
-
-        except:
-            print("Invalid Folder :", pushpopd, newpath)
-
-        for f in filenames:
-            if not os.path.isfile(f):
-                continue
-
-            ext = f.rsplit(".", 1)[-1].lower()
-
-            if (
-                ext.lower()
-                not in f"{preloadedImages} {preloadedAudios} {preloadedWasm}"
-            ):
-                continue
-
-            src = os.path.join(os.getcwd(), f)
-            dst = "/tmp/pre" + str(counter).zfill(4) + "." + ext
-            shutil.copyfile(src, dst)
-            prelist[src] = dst
-            embed.preload(dst)
-            counter += 1
-
-        for subdir in dirnames:
-            explore(os.getcwd(), subdir)
-
-    os.chdir(pushpopd)
+    for current, dirnames, filenames in os.walk(root):
+        for filename in filenames:
+            if filename.find('.')>1:
+                ext = filename.rsplit(".", 1)[-1].lower()
+                if ext in preloads:
+                    counter += 1
+                    src = f"{current}/{filename}"
+                    dst = "/tmp/pre" + str(counter).zfill(4) + "." + ext
+                    print(src,"->",dst)
+                    shutil.copyfile(src, dst)
+                    prelist[src] = dst
+                    embed.preload(dst)
 
 
 
@@ -230,10 +212,10 @@ def fix_preload_table():
     global prelist, preloadedWasm, preloadedImages, preloadedAudios
 
     if embed.counter() < 0:
-        pdb("220: asset manager not ready 0>", embed.counter())
+        pdb("233: asset manager not ready 0>", embed.counter())
         aio.defer(fix_preload_table, (), {}, delay=60)
     else:
-        pdb("223: all assets were ready at", embed.counter())
+        pdb("236: all assets were ready at", embed.counter())
 
     for (
         src,
@@ -286,20 +268,20 @@ def PyConfig_InitPythonConfig(PyConfig):
 
         ROOTDIR = os.getcwd()
         LSRC = len(ROOTDIR) + 1
-        counter = 0
+        counter = -1
         prelist = {}
 
-        sys.path.insert(0, os.getcwd())
+        sys.path.insert(0, ROOTDIR)
 
-        if os.path.isdir("assets"):
-            explore(ROOTDIR, "assets")
-            os.chdir(f"{ROOTDIR}/assets")
+        explore(ROOTDIR)
+
+        if counter<0:
+            pdb(f"{ROOTDIR=}")
+            pdb(f"{os.getcwd()=}")
 
         print(f"assets found :", counter)
         if not counter:
             embed.run()
-
-        sys.path.insert(0, os.getcwd())
 
         return True
 

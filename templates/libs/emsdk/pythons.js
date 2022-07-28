@@ -244,7 +244,7 @@ window.readline = readline
 // Xterm Sixel ======================================================
 
 export class WasmTerminal {
-    constructor(hostid, cols, rows, addon_url) {
+    constructor(hostid, cols, rows, addons_list) {
         this.input = ''
         this.resolveInput = null
         this.activeInput = true
@@ -260,14 +260,23 @@ export class WasmTerminal {
             }
         );
 
-        const imageAddon = new ImageAddon.ImageAddon(addon_url || "./xtermjsixel/xterm-addon-image-worker.js", {sixelSupport: true});
+        if (typeof(Worker) !== "undefined") {
 
-        this.xterm.loadAddon(imageAddon);
-        console.warn(hostid,cols,rows)
+            for (const addon of (addons_list||[]) ) {
+                console.warn(hostid,cols,rows, addon)
+                const imageAddon = new ImageAddon.ImageAddon(addon.url , addon);
+                this.xterm.loadAddon(imageAddon);
+            }
+
+        } else {
+            console.warn("No worker support, not loading xterm addons")
+        }
+
+
         this.xterm.open(document.getElementById( 'terminal'))
 
         // hack to hide scrollbar inside box
-        document.getElementsByClassName('xterm-viewport')[0].style.left="-15px"
+        //document.getElementsByClassName('xterm-viewport')[0].style.left="-15px"
 
         this.xterm.onKey((keyEvent) => {
             // Fix for iOS Keyboard Jumping on space
@@ -598,7 +607,22 @@ async function fshandler(VM) {
 // Python WASM ===================================================
 
 
-const modularized = (typeof python311 != 'undefined')
+var modularized = false
+
+if (typeof python310 != 'undefined') {
+    modularized = true
+    const pythonm = python310
+}
+
+if (typeof python311 != 'undefined') {
+    modularized = true
+    const pythonm = python311
+}
+
+if (typeof python312 != 'undefined') {
+    modularized = true
+    const pythonm = python312
+}
 
 
 function pythonvm(vterm, config) {
@@ -608,7 +632,19 @@ function pythonvm(vterm, config) {
     if (config){
         canvasid = config._sdl2
         autorun = config.archive
+    } else {
+        config = {xtermjs:false}
     }
+
+    if (!vterm) {
+        config.xtermjs = false
+        // xtermjs placeholder
+        vterm = { print : console.log, sixel : function(){}}
+    }
+
+    config.cdn =  config.cdn || ""
+
+    config.pydigits = (config.PYBUILD || "3.11").replace(".","")
 
     console.log(__FILE__, "canvas found at "+ canvasid)
 
@@ -781,7 +817,7 @@ function pythonvm(vterm, config) {
 
         locateFile : function(path, prefix) {
             if (path == "main.data") {
-                const url = (config.cdn || "" )+`python311/${path}`
+                const url = (config.cdn || "" )+`python${config.pydigits}/${path}`
                 console.log(__FILE__,"locateData: "+path+' '+prefix, "->", url);
                 return url;
             } else {
@@ -844,7 +880,7 @@ function pythonvm(vterm, config) {
 
 
     if (modularized) {
-        python311(Module).then( async (vm) => {
+        pythonm(Module).then( async (vm) => {
                 VM = vm
                 await _until(defined, "APK", VM)
                 await fshandler(VM)
@@ -857,7 +893,7 @@ function pythonvm(vterm, config) {
         window.Module = Module
         const jswasmloader=document.createElement('script')
         jswasmloader.setAttribute("type","text/javascript")
-        jswasmloader.setAttribute("src", (config.cdn || "")+ "python311/main.js")
+        jswasmloader.setAttribute("src", `${config.cdn}python${config.pydigits}/main.js`)
         jswasmloader.setAttribute('async', true);
         document.getElementsByTagName("head")[0].appendChild(jswasmloader)
 

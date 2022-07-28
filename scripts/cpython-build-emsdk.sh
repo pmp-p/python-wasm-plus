@@ -121,7 +121,7 @@ else
 
 #     --with-tzpath="/usr/share/zoneinfo" \
 
-    export EMCC_CFLAGS="$CPOPTS"
+    export EMCC_CFLAGS="$CPOPTS -I$PREFIX/include/ncursesw -sUSE_ZLIB -sUSE_BZIP2"
 
     CPPFLAGS="$CPPFLAGS -I$PREFIX/include/ncursesw"
     CFLAGS="$CPPFLAGS -I$PREFIX/include/ncursesw"
@@ -150,15 +150,13 @@ _decimal
 END
 
 
-    if EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" \
-        emmake make -j$NPROC WASM_ASSETS_DIR=$(realpath ${PYTHONPYCACHEPREFIX}/empty)@/
+    if emmake make -j$NPROC WASM_ASSETS_DIR=$(realpath ${PYTHONPYCACHEPREFIX}/empty)@/
     then
-        EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" \
         emmake make WASM_ASSETS_DIR=$(realpath ${PYTHONPYCACHEPREFIX}/empty)@/ install
     else
         echo " **** cpython wasm build failed ***
 
-EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" emmake make WASM_ASSETS_DIR=$(realpath ${PYTHONPYCACHEPREFIX}/empty)@/ install
+        emmake make WASM_ASSETS_DIR=$(realpath ${PYTHONPYCACHEPREFIX}/empty)@/ install
 
         " 1>&2
 
@@ -180,7 +178,11 @@ EMCC_CFLAGS="-sUSE_ZLIB -sUSE_BZIP2" emmake make WASM_ASSETS_DIR=$(realpath ${PY
         # specific platform support
         cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/${PYBUILD}/. $HOST_PREFIX/lib/python${PYBUILD}/
 
-        cp -vf build/cpython-wasm/libpython3.*.a prebuilt/emsdk/
+        cp -vf build/cpython-wasm/libpython${PYBUILD}.a prebuilt/emsdk/
+        if [ -f build/cpython-wasm/Modules/expat/libexpat.a ]
+        then
+            cp build/cpython-wasm/Modules/expat/libexpat.a prebuilt/emsdk/libexpat${PYBUILD}.a
+        fi
         rmdir  $PREFIX/lib/python${PYBUILD}/lib-dynload
     fi
 fi
@@ -301,15 +303,19 @@ export PYTHONSTARTUP=$ROOT/support/__EMSCRIPTEN__.py
 # so include dirs are good
 export PYTHONHOME=$PREFIX
 
+# so pip does not think everything in ~/.local is useable
+export HOME=${PYTHONPYCACHEPREFIX}
+
+
 # find sysconfig ( tweaked )
 # but still can load dynload and setuptools
 PYTHONPATH=$(echo -n ${HOST_PREFIX}/lib/python/\${PYBUILD}/site-packages):\$PYTHONPATH
 export PYTHONPATH=$PYTHONPYCACHEPREFIX/sysconfig:$(echo -n ${HOST_PREFIX}/lib/python\${PYBUILD}/lib-dynload):\$PYTHONPATH
 
 
-#probably useless
+# just in case
 export _PYTHON_HOST_PLATFORM=${PYDK_PYTHON_HOST_PLATFORM}
-export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD}
+export PYTHON_FOR_BUILD=${HOST_PREFIX}/bin/python\${PYBUILD}
 
 ${HOST_PREFIX}/bin/python\${PYBUILD} -u -B \$@
 END
