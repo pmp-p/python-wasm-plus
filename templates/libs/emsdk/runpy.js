@@ -16,6 +16,22 @@ window.__defineGetter__('__FILE__', function() {
 })
 
 
+//urlretrieve
+function DEPRECATED_wget_sync(url, store){
+    const request = new XMLHttpRequest();
+    try {
+        request.open('GET', url, false);
+        request.send(null);
+        if (request.status === 200) {
+            console.log(`DEPRECATED_wget_sync(${url})`);
+            FS.writeFile( store, request.responseText);
+        }
+        return request.status
+    } catch (ex) {
+        return 500;
+    }
+}
+
 
 function prerun(VM) {
 
@@ -154,6 +170,8 @@ const vm = {
 
         script : {},
 
+        DEPRECATED_wget_sync : DEPRECATED_wget_sync,
+
         vt : {
                 xterm : { write : console.log},
                 sixel : function(){},
@@ -246,6 +264,7 @@ for (const script of document.getElementsByTagName('script')) {
                 config = {
                     cdn     : "http://localhost:8000/",
                     xtermjs : 0,
+                    interactive : 0,
                     archive : 0,
                     autorun : 0,
                     features : script.id.split(","),
@@ -279,7 +298,7 @@ for (const script of document.getElementsByTagName('script')) {
     "import_time" : 0,
     "inspect" : 1,
     "install_signal_handlers" :0 ,
-    "interactive" : 0,
+    "interactive" : ${config.interactive},
     "isolated" : 1,
     "legacy_windows_stdio":0,
     "malloc_stats" : 0 ,
@@ -404,9 +423,13 @@ __import__('platform').EventTarget.build('focus', json.dumps(${dump}))
 
     if (vm.config.features.includes("gui")) {
 
-        const canvas = document.createElement('canvas')
-        canvas.setAttribute("id","canvas")
-        document.body.appendChild(canvas)
+        var canvas = document.getElementById('canvas')
+
+        if (!canvas) {
+            canvas = document.createElement('canvas')
+            canvas.setAttribute("id","canvas")
+            document.body.appendChild(canvas)
+        }
 
         vm.canvas = canvas
 

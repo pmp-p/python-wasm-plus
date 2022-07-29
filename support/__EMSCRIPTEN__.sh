@@ -12,7 +12,7 @@ else
     then
         echo 3.12 does not need patching for interactive FD
     else
-    patch -p1 <<END
+        [ -f "Parser/pegen_errors.c" ] && patch -p1 <<END
 diff --git a/Parser/pegen_errors.c b/Parser/pegen_errors.c
 index 489699679633e..78266f712c05c 100644
 --- a/Parser/pegen_errors.c

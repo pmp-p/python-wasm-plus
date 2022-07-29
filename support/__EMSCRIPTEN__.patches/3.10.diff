@@ -1,4 +1,4 @@
---- Python-3.10.5/configure.ac	2022-07-22 04:00:52.446672802 +0200
+--- Python-3.10.5/configure.ac	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/configure.ac	2022-06-15 17:57:14.787541515 +0200
 @@ -16,7 +16,38 @@
      [AX_C_FLOAT_WORDS_BIGENDIAN],
@@ -4456,7 +4456,7 @@
 +please run ./configure --enable-optimizations
 +])
  fi
---- Python-3.10.5/configure	2022-07-22 04:00:52.442672931 +0200
+--- Python-3.10.5/configure	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/configure	2022-06-15 17:56:58.876053590 +0200
 @@ -623,9 +623,164 @@
  #endif"
@@ -17761,7 +17761,7 @@
 +please run ./configure --enable-optimizations
 +" >&6;}
  fi
---- Python-3.10.5/Include/internal/pycore_object.h	2022-07-22 04:00:50.822725556 +0200
+--- Python-3.10.5/Include/internal/pycore_object.h	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Include/internal/pycore_object.h	2022-06-20 18:28:56.475177795 +0200
 @@ -180,6 +180,34 @@
  // See also the Py_TPFLAGS_READY flag.
@@ -17798,7 +17798,7 @@
  #ifdef __cplusplus
  }
  #endif
---- Python-3.10.5/Include/pyport.h	2022-07-22 04:00:50.854724517 +0200
+--- Python-3.10.5/Include/pyport.h	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Include/pyport.h	2022-06-15 16:46:36.252078870 +0200
 @@ -743,7 +743,11 @@
   * rather than waiting for integer multiplication to trigger bogus
@@ -17812,7 +17812,7 @@
  #endif
  
  #ifdef __cplusplus
---- Python-3.10.5/Lib/hashlib.py	2022-07-22 04:00:52.266678649 +0200
+--- Python-3.10.5/Lib/hashlib.py	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Lib/hashlib.py	2022-06-15 16:46:36.324076544 +0200
 @@ -55,10 +55,14 @@
  
@@ -17833,7 +17833,7 @@
  
  
  algorithms_guaranteed = set(__always_supported)
---- Python-3.10.5/Lib/subprocess.py	2022-07-22 04:00:52.266678649 +0200
+--- Python-3.10.5/Lib/subprocess.py	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Lib/subprocess.py	2022-06-15 16:46:36.356075511 +0200
 @@ -71,7 +71,8 @@
      _mswindows = True
@@ -17845,7 +17845,7 @@
      import select
      import selectors
  else:
---- Python-3.10.5/Lib/threading.py	2022-07-22 04:00:52.266678649 +0200
+--- Python-3.10.5/Lib/threading.py	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Lib/threading.py	2022-06-15 16:57:53.806197869 +0200
 @@ -265,7 +265,8 @@
          return self._lock.__enter__()
@@ -17867,7 +17867,7 @@
          waiter = _allocate_lock()
          waiter.acquire()
          self._waiters.append(waiter)
---- Python-3.10.5/Makefile.pre.in	2022-07-22 04:00:52.446672802 +0200
+--- Python-3.10.5/Makefile.pre.in	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Makefile.pre.in	2022-06-15 21:48:29.825125244 +0200
 @@ -238,7 +238,7 @@
  PY3LIBRARY=     @PY3LIBRARY@
@@ -17903,7 +17903,7 @@
  .PHONY: install altinstall oldsharedinstall bininstall altbininstall
  .PHONY: maninstall libinstall inclinstall libainstall sharedinstall
  .PHONY: frameworkinstall frameworkinstallframework frameworkinstallstructure
---- Python-3.10.5/Modules/clinic/signalmodule.c.h	2022-07-22 04:00:50.882723607 +0200
+--- Python-3.10.5/Modules/clinic/signalmodule.c.h	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Modules/clinic/signalmodule.c.h	2022-06-15 16:46:36.532069824 +0200
 @@ -382,9 +382,13 @@
      if (how == -1 && PyErr_Occurred()) {
@@ -17934,7 +17934,7 @@
 +#define _TYPING__IDFUNC_METHODDEF    \
 +    {"_idfunc", (PyCFunction)_typing__idfunc, METH_O, _typing__idfunc__doc__},
 +/*[clinic end generated code: output=e7ea2a3cb7ab301a input=a9049054013a1b77]*/
---- Python-3.10.5/Modules/_ctypes/callbacks.c	2022-07-22 04:00:50.926722177 +0200
+--- Python-3.10.5/Modules/_ctypes/callbacks.c	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Modules/_ctypes/callbacks.c	2022-06-15 17:36:45.255101680 +0200
 @@ -423,7 +423,7 @@
      } else
@@ -17945,7 +17945,7 @@
          PyErr_Format(PyExc_NotImplementedError, "ffi_prep_closure_loc() is missing");
          goto error;
  #else
---- Python-3.10.5/Modules/_ctypes/ctypes.h	2022-07-22 04:00:50.926722177 +0200
+--- Python-3.10.5/Modules/_ctypes/ctypes.h	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Modules/_ctypes/ctypes.h	2022-06-15 16:46:36.568068663 +0200
 @@ -53,7 +53,15 @@
      PyObject *b_objects;        /* dictionary of references we need to keep, or Py_None */
@@ -17963,7 +17963,7 @@
  typedef struct {
      PyObject_VAR_HEAD
      ffi_closure *pcl_write; /* the C callable, writeable */
---- Python-3.10.5/Modules/_decimal/_decimal.c	2022-07-22 04:00:50.910722697 +0200
+--- Python-3.10.5/Modules/_decimal/_decimal.c	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Modules/_decimal/_decimal.c	2022-06-16 11:47:13.466836264 +0200
 @@ -29,7 +29,7 @@
  #include <Python.h>
@@ -17974,7 +17974,7 @@
  
  #include <stdlib.h>
  
---- Python-3.10.5/Modules/_hashopenssl.c	2022-07-22 04:00:51.046718280 +0200
+--- Python-3.10.5/Modules/_hashopenssl.c	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Modules/_hashopenssl.c	2022-06-15 16:46:36.592067887 +0200
 @@ -40,8 +40,11 @@
  #include <openssl/crypto.h>       // FIPS_mode()
@@ -17988,7 +17988,7 @@
  
  #define MUNCH_SIZE INT_MAX
  
---- Python-3.10.5/Modules/posixmodule.c	2022-07-22 04:00:51.054718019 +0200
+--- Python-3.10.5/Modules/posixmodule.c	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Modules/posixmodule.c	2022-06-15 21:54:01.822444441 +0200
 @@ -296,6 +296,12 @@
  #  endif
@@ -18049,7 +18049,7 @@
          errno = posix_spawnattr_setsigdefault(attrp, &set);
          if (errno) {
              posix_error();
---- Python-3.10.5/Modules/_posixsubprocess.c	2022-07-22 04:00:51.046718280 +0200
+--- Python-3.10.5/Modules/_posixsubprocess.c	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Modules/_posixsubprocess.c	2022-06-15 16:46:36.692064656 +0200
 @@ -721,7 +721,7 @@
      return 0;  /* Dead code to avoid a potential compiler warning. */
@@ -18079,20 +18079,7 @@
      {NULL, NULL}  /* sentinel */
  };
  
---- Python-3.10.5/Modules/readline.c	2022-07-22 04:00:51.046718280 +0200
-+++ Python-3.10.5-pydk/Modules/readline.c	2022-06-13 04:07:55.357320826 +0200
-@@ -1324,7 +1324,9 @@
-         int has_input = 0, err = 0;
- 
-         while (!has_input)
--        {               struct timeval timeout = {0, 100000}; /* 0.1 seconds */
-+        {
-+
-+            struct timeval timeout = {0, 10000}; /* 0.01 seconds */
- 
-             /* [Bug #1552726] Only limit the pause if an input hook has been
-                defined.  */
---- Python-3.10.5/Modules/selectmodule.c	2022-07-22 04:00:51.046718280 +0200
+--- Python-3.10.5/Modules/selectmodule.c	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Modules/selectmodule.c	2022-06-15 16:46:36.700064398 +0200
 @@ -324,7 +324,11 @@
      do {
@@ -18328,7 +18315,7 @@
 +# Limited API template modules; must be built as shared modules.
 +@MODULE_XXLIMITED_TRUE@xxlimited xxlimited.c
 +@MODULE_XXLIMITED_35_TRUE@xxlimited_35 xxlimited_35.c
---- Python-3.10.5/Modules/socketmodule.c	2022-07-22 04:00:51.046718280 +0200
+--- Python-3.10.5/Modules/socketmodule.c	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Modules/socketmodule.c	2022-06-15 16:46:36.724063623 +0200
 @@ -1342,6 +1342,10 @@
         }
@@ -18341,7 +18328,7 @@
  #if defined(AF_VSOCK)
         case AF_VSOCK:
         {
---- Python-3.10.5/Modules/socketmodule.h	2022-07-22 04:00:51.046718280 +0200
+--- Python-3.10.5/Modules/socketmodule.h	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Modules/socketmodule.h	2022-06-15 16:46:36.736063237 +0200
 @@ -267,6 +267,11 @@
  #ifdef AF_QIPCRTR
@@ -24228,7 +24215,7 @@
 +
 +/* vim:ts=4:sw=4:et
 +*/
---- Python-3.10.5/Modules/_ssl.c	2022-07-22 04:00:51.046718280 +0200
+--- Python-3.10.5/Modules/_ssl.c	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Modules/_ssl.c	2022-06-15 16:46:36.752062720 +0200
 @@ -64,8 +64,11 @@
  #include "openssl/dh.h"
@@ -24304,7 +24291,7 @@
 +{
 +    return PyModuleDef_Init(&typingmodule);
 +}
---- Python-3.10.5/Objects/descrobject.c	2022-07-22 04:00:52.438673061 +0200
+--- Python-3.10.5/Objects/descrobject.c	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Objects/descrobject.c	2022-06-20 18:29:21.246372327 +0200
 @@ -15,6 +15,25 @@
  [clinic start generated code]*/
@@ -24332,7 +24319,7 @@
  static void
  descr_dealloc(PyDescrObject *descr)
  {
---- Python-3.10.5/Objects/methodobject.c	2022-07-22 04:00:52.438673061 +0200
+--- Python-3.10.5/Objects/methodobject.c	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Objects/methodobject.c	2022-06-20 18:29:52.801345524 +0200
 @@ -553,3 +553,12 @@
      }
@@ -24347,18 +24334,7 @@
 +    return wasmTable.get(func)(self, args, kw);
 +});
 +#endif
---- Python-3.10.5/Parser/pegen.c	2022-07-22 04:00:52.326676700 +0200
-+++ Python-3.10.5-pydk/Parser/pegen.c	2022-06-13 04:10:09.549166880 +0200
-@@ -432,7 +432,7 @@
-      * (multi-line) statement are stored in p->tok->interactive_src_start.
-      * If not, we're parsing from a string, which means that the whole source
-      * is stored in p->tok->str. */
--    assert((p->tok->fp == NULL && p->tok->str != NULL) || p->tok->fp == stdin);
-+    assert((p->tok->fp == NULL && p->tok->str != NULL) || p->tok->fp != NULL);
- 
-     char *cur_line = p->tok->fp_interactive ? p->tok->interactive_src_start : p->tok->str;
-     if (cur_line == NULL) {
---- Python-3.10.5/Programs/python.c	2022-07-22 04:00:52.438673061 +0200
+--- Python-3.10.5/Programs/python.c	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Programs/python.c	2022-06-15 17:16:18.178611366 +0200
 @@ -2,16 +2,72 @@
  
@@ -24438,7 +24414,7 @@
  }
 -#endif
 +#endif //#if __PYDK__
---- Python-3.10.5/Python/dup2.c	2022-07-22 04:00:50.610732442 +0200
+--- Python-3.10.5/Python/dup2.c	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Python/dup2.c	2022-06-15 16:46:36.808060910 +0200
 @@ -16,16 +16,27 @@
  
@@ -24480,7 +24456,7 @@
 -}
 +#endif
 +
---- Python-3.10.5/Python/fileutils.c	2022-07-22 04:00:50.610732442 +0200
+--- Python-3.10.5/Python/fileutils.c	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Python/fileutils.c	2022-06-15 16:46:36.836060007 +0200
 @@ -1304,6 +1304,9 @@
  static int
@@ -24500,7 +24476,7 @@
  }
  
  /* Make the file descriptor non-inheritable.
---- Python-3.10.5/Python/getplatform.c	2022-07-22 04:00:50.614732312 +0200
+--- Python-3.10.5/Python/getplatform.c	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Python/getplatform.c	2022-06-19 16:20:20.040704943 +0200
 @@ -5,6 +5,11 @@
  #define PLATFORM "unknown"
@@ -24514,7 +24490,7 @@
  const char *
  Py_GetPlatform(void)
  {
---- Python-3.10.5/Python/import.c	2022-07-22 04:00:50.614732312 +0200
+--- Python-3.10.5/Python/import.c	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Python/import.c	2022-06-20 18:25:17.826283444 +0200
 @@ -1038,7 +1038,12 @@
      Py_RETURN_NONE;
@@ -24559,7 +24535,7 @@
      return list;
  }
  
---- Python-3.10.5/Python/importdl.h	2022-07-22 04:00:50.614732312 +0200
+--- Python-3.10.5/Python/importdl.h	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Python/importdl.h	2022-06-20 18:23:36.565574826 +0200
 @@ -10,6 +10,14 @@
  
@@ -24576,7 +24552,7 @@
  /* Max length of module suffix searched for -- accommodates "module.slb" */
  #define MAXSUFFIXSIZE 12
  
---- Python-3.10.5/Python/pylifecycle.c	2022-07-22 04:00:50.610732442 +0200
+--- Python-3.10.5/Python/pylifecycle.c	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Python/pylifecycle.c	2022-06-15 16:46:36.900057940 +0200
 @@ -2907,6 +2907,8 @@
      if (sigaction(sig, NULL, &context) == -1)
@@ -24596,7 +24572,7 @@
  #else
      PyOS_sighandler_t oldhandler;
      oldhandler = signal(sig, handler);
---- Python-3.10.5/Python/pymath.c	2022-07-22 04:00:50.614732312 +0200
+--- Python-3.10.5/Python/pymath.c	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/Python/pymath.c	2022-06-16 12:39:38.957595912 +0200
 @@ -32,7 +32,7 @@
  
@@ -24612,7 +24588,7 @@
  }
  #endif /* HAVE_ROUND */
 +#endif /* __EMSCRIPTEN__ */
---- Python-3.10.5/setup.py	2022-07-22 04:00:52.442672931 +0200
+--- Python-3.10.5/setup.py	2022-06-06 13:53:30.000000000 +0200
 +++ Python-3.10.5-pydk/setup.py	2022-06-15 17:26:46.866368156 +0200
 @@ -2295,10 +2295,17 @@
              if not os.path.exists(ffi_h):

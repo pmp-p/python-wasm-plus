@@ -28,6 +28,13 @@ then
     REBUILD=true
 fi
 
+# 3.10 is not wasm stable
+if [ -f support/__EMSCRIPTEN__.patches/${PYBUILD}.diff ]
+then
+    pushd src/cpython 2>&1 >/dev/null
+    patch -p1 < ../../support/__EMSCRIPTEN__.patches/${PYBUILD}.diff
+    popd 2>&1 >/dev/null
+fi
 
 
 if [ -f $EMSDK/upstream/emscripten/cache/sysroot/lib/wasm32-emscripten/pic/libffi.a ]

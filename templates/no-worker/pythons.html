@@ -1,0 +1,15 @@
+<!doctype html><html lang="en-us"><script src="runpy.js?cpython#" type=module id="vt,gui,fs" defer>#<!--
+from pathlib import Path
+cdn = Path("https://cdn.jsdelivr.net/pyodide/dev/full")
+
+print(f"CDN: {cdn}")
+
+shell.wget("-O/tmp/data.json", cdn / "repodata.json")
+
+shell.cat("/tmp/data.json")
+
+
+# --></script>
+</html>
+
+

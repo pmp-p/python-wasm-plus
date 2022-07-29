@@ -207,7 +207,7 @@ if defined("embed") and hasattr(embed, "readline"):
 
         @classmethod
         def cat(cls, *argv):
-            for fn in argv:
+            for fn in map(str,argv):
                 with open(fn, "r") as out:
                     print(out.read())
 
@@ -215,7 +215,7 @@ if defined("embed") and hasattr(embed, "readline"):
         def ls(cls, *argv):
             if not len(argv):
                 argv = ["."]
-            for arg in argv:
+            for arg in map(str,argv):
                 for out in sorted(os.listdir(arg)):
                     print(out)
 
@@ -260,7 +260,8 @@ if defined("embed") and hasattr(embed, "readline"):
         def wget(cls, *argv, **env):
             import urllib.request
             filename = None
-            for arg in argv:
+            for arg in map(str,argv):
+
                 if arg.startswith("-O"):
                     filename = arg[2:].lstrip()
                     continue
@@ -517,17 +518,21 @@ if not aio.cross.simulator:
 
             async def process(self):
                 import inspect
+                from types import SimpleNamespace
                 while not aio.exit:
                     if len(self.events):
                         evtype , evdata = self.events.pop(0)
-                        print(evtype , evdata)
+                        discarded = True
                         for client in self.clients.get(evtype,[]):
                             is_coro = inspect.iscoroutinefunction(client)
                             print("    -> ", is_coro, client)
+                            discarded = False
                             if is_coro:
-                                await client(evdata)
+                                await client(SimpleNamespace(**evdata))
                             else:
-                                client(evdata)
+                                client(SimpleNamespace(**evdata))
+                        if discarded:
+                            print("DISCARD :",evtype , evdata)
 
                     await aio.sleep(0)
 
@@ -542,7 +547,7 @@ if not aio.cross.simulator:
         def urlretrieve(url, filename=None, reporthook=None, data=None):
             import platform
             filename = filename or f"/tmp/uru-{aio.ticks}"
-            rc=platform.window.DEPRECATED_wget_sync(url, filename)
+            rc=platform.window.python.DEPRECATED_wget_sync(url, filename)
             if rc==200:
                 return filename, []
             raise Exception(f"urlib.error {rc}")

@@ -495,7 +495,7 @@ function DEPRECATED_wget_sync(url, store){
         return 500;
     }
 }
-register(DEPRECATED_wget_sync)
+
 
 
 async function mount_at(archive, path, relpath, hint) {
@@ -656,7 +656,11 @@ function pythonvm(vterm, config) {
     if (!vterm) {
         config.xtermjs = false
         // xtermjs placeholder
-        vterm = { xterm : { write : console.log}, sixel : function(){}}
+        vterm = {
+            xterm : { write : console.log},
+            sixel : function(){},
+            nodup : 1
+        }
     }
 
     config.cdn =  config.cdn || ""
@@ -823,6 +827,9 @@ function pythonvm(vterm, config) {
         canvas: (() => document.getElementById('canvas'))(),
 
         vt : vterm,
+
+        DEPRECATED_wget_sync : DEPRECATED_wget_sync,
+
 
         PyRun_SimpleString : function(code) {
             if (window.worker) {
