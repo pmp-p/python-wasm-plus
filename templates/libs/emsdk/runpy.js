@@ -1,9 +1,12 @@
 "use strict";
 
-console.log("find python tags", window)
+const logLines = ["Property (Typeof): Value", `location (${typeof location}): ${location}`];
+for (const prop in location) {
+    logLines.push(`${prop} (${typeof location[prop]}): ${location[prop] || "n/a"}`);
+}
+console.log( logLines.join("\n") )
+
 var config = {}
-
-
 
 
 String.prototype.rsplit = function(sep, maxsplit) {

@@ -4,9 +4,23 @@ cdn = Path("https://cdn.jsdelivr.net/pyodide/dev/full")
 
 print(f"CDN: {cdn}")
 
-shell.wget("-O/tmp/data.json", cdn / "repodata.json")
+shell.wget("-O/tmp/pip.json", cdn / "repodata.json")
 
-shell.cat("/tmp/data.json")
+import json
+with open("/tmp/pip.json") as data:
+    repo = json.loads( data.read() )
+
+print( json.dumps(repo["packages"], sort_keys=True, indent=4) )
+
+def load_package(*mods)
+    global repo
+    for mod in *mods:
+        for deps in repo["packages"][mod].get("depends",[])
+            for dep in deps:
+                print(dep)
+
+
+imports("pyparsing","packaging","micropip","matplotlib")
 
 
 # --></script>

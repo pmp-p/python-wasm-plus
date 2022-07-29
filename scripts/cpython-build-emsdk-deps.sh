@@ -4,15 +4,22 @@
 
 . ./scripts/emsdk-fetch.sh
 
-# echo " ${PIMINOR}"|grep -q 11$
-if true
-then
-    HPFX=./devices/x86_64/usr/lib/python${PYBUILD}
-    rm ./devices/emsdk/usr/lib/python${PYBUILD}/ensurepip/_bundled/setuptools-*-py3-none-any.whl
-    cp -Rf $HPFX/setuptool* ./devices/emsdk/usr/lib/python${PYBUILD}/
-    cp -Rf $HPFX/_distutils* ./devices/emsdk/usr/lib/python${PYBUILD}/
-    cp -Rf $HPFX/pkg_resources ./devices/emsdk/usr/lib/python${PYBUILD}/
-fi
+HPFX=./devices/x86_64/usr/lib/python${PYBUILD}
+
+for moveit in setuptools distutils _distutils _distutils_hack pkg_resources
+do
+    if [ -d $HPFX/site-packages/${moveit} ]
+    then
+        echo "
+        * migrating ${moveit}
+"
+        cp -rf $HPFX/site-packages/${moveit}  $HPFX/
+        cp -rf $HPFX/site-packages/${moveit}-* $HPFX/
+    fi
+done
+
+
+
 
 # ../../devices/x86_64/usr/bin/python3-wasm -mpip install .
 # not working because python startup is skipped
