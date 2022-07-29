@@ -285,15 +285,18 @@ def PyConfig_InitPythonConfig(PyConfig):
 
         return True
 
+    import aio
 
-    import aio.clock
+    if PyConfig.get("interactive", False):
+        import aio.clock
+        aio.clock.start(x=80)
+        # org.python REPL no preload !
+        preload = (sys.argv[0] != 'org.python')
+    else:
+        # org.python script
+        preload = True
 
-    # could force start asyncio.run it's not blocking on that platform.
-    aio.clock.start(x=80)
-
-    # org.python no preload !
-
-    if (sys.argv[0] != 'org.python') and preload_apk():
+    if preload and preload_apk():
 
         def fix_preload_table_apk():
             global fix_preload_table, ROOTDIR
@@ -302,15 +305,8 @@ def PyConfig_InitPythonConfig(PyConfig):
             os.chdir(ROOTDIR)
 
             if os.path.isfile("main.py"):
-                def runmain(py):
-                    __main__ = execfile(py)
-                    if not aio.started:
-                        print("333: TODO setup+loop autostart")
-                        # __main__.setup()
-                        # aio.steps.append(__main__.loop)
-
-                print(f"317: running main.py for {sys.argv[0]} (deferred)")
-                aio.defer(runmain, ["main.py"], {})
+                print(f"317: running {ROOTDIR}/main.py for {sys.argv[0]} (deferred)")
+                aio.defer(execfile, [f"{ROOTDIR}/main.py"], {})
             else:
                 pdb(f"no main found for {sys.argv[0]} in {ROOTDIR}")
 

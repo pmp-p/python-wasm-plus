@@ -32,6 +32,9 @@ except:
 # for dom event subscriptions
 import webbrowser
 
+# for wget to overload urlretrieve
+import urllib.request
+
 # nodezator
 from logging.handlers import RotatingFileHandler
 from colorsys  import rgb_to_hls, hls_to_rgb

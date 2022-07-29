@@ -34,8 +34,13 @@ echo "
 [ -f ${ROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a ] && rm ${ROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a
 
 # remove anything that could be native
-rm -rf src/pygame-wasm/Setup src/pygame-wasm/build
-
+if [ -d src/pygame-wasm/build ]
+then
+    echo "
+    * cleaning up
+    "
+    rm -rf src/pygame-wasm/Setup src/pygame-wasm/build
+fi
 
 pushd src/pygame-wasm
 

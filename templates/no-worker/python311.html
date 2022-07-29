@@ -9,6 +9,17 @@
 
     <!-- <link rel="icon" type="image/png" href="favicon.png" sizes="16x16"> -->
 
+
+    <script type="application/javascript">
+    config = {
+        xtermjs : 1,
+        archive : 0,
+        autorun : 0,
+        PYBUILD : "3.11",
+        _sdl2   : "canvas"
+    }
+    </script>
+
     <link rel="stylesheet" href="./styles.css"/>
 
     <link rel="stylesheet" href="./xtermjsixel/xterm.css" />
@@ -43,14 +54,14 @@
 
         .topright{
            position:absolute;
-           top:0px;
-           right:0;
+           top:5px;
+           right:5px;
         }
 
         .framed{
            position:absolute;
-           top:100px;
-           right:10px;
+           top:420px;
+           right:5px;
            border: 1px solid black;
         }
     </style>
@@ -58,10 +69,6 @@
     <script src="./xtermjsixel/xterm.js"></script>
     <script src="./xtermjsixel/xterm-addon-image.js"></script>
     <script src="./browserfs.min.js"></script>
-
-    <script type="application/javascript">
-    config = { xtermjs : 1, _sdl2 : "canvas", archive: 0, autorun: 0, PYBUILD: "3.11" }
-    </script>
     <script type="module" src="pythons.js" async defer></script>
 
 </head>
@@ -75,35 +82,46 @@
 
 
     <div id="terminal" tabIndex=1><p></div>
+<!--
     <div class="button-container">
       VT340
       <button id="repl" disabled>Start REPL</button>
       <button id="clearvt" disabled>Clear</button>
       &nbsp;
     </div>
+-->
 
-        <div class="emscripten_border" align=center >
-            <canvas class="emscripten" id="canvas"
-width="800px" height="600px"
-style="width: 576px; height: 432px;"
-            oncontextmenu="event.preventDefault()" tabindex=0>
-            </canvas>
+        <div id=info class=topright style="width: 640px;height=415px;">
+
+            <div class="emscripten_border" align=center >
             <div class="button-container">
-                Canvas2D/3D (SDL2)
-                <button id="aiopaused_true" disabled>AIO ■</button>
-                <button id="aiopaused_false" disabled>AIO ▶</button>
-                <button id="pygame_music_pause" disabled>Music ■</button>
-                &nbsp;
+                <div id=load_min>min</div>
+                <div id=load_avg>avg</div>
+                <div id=load_max>max</div>
+              <button id="load_rst" disabled>RESET</button>
+            </div>
+            </div>
+
+            <div class="emscripten_border" align=center >
+                <canvas class="emscripten" id="canvas"
+width="800px" height="600px"
+style="width: 400px; height: 300px;"
+                oncontextmenu="event.preventDefault()" tabindex=0>
+                </canvas>
+                <div class="button-container">
+                    Canvas2D/3D (SDL2)
+                    <button id="aiopaused_true" disabled>AIO ■</button>
+                    <button id="aiopaused_false" disabled>AIO ▶</button>
+                    <button id="pygame_music_pause" disabled>Music ■</button>
+                    &nbsp;
+                </div>
+
             </div>
 
         </div>
 
-        <div id=info class=topright style="width: 640px;height=100px;">
-        </div>
-
-
         <iframe id="iframe" class=framed name="iframe"
-height="88%" width="640px"
+width="640px" height="480px"
             sandbox="allow-same-origin allow-top-navigation allow-scripts allow-pointer-lock"
             mozallowfullscreen="true"
             allow="autoplay; fullscreen *; geolocation; microphone; camera; midi; monetization; xr-spatial-tracking; gamepad; gyroscope; accelerometer; xr; cross-origin-isolated"
@@ -113,7 +131,8 @@ height="88%" width="640px"
             scrolling="yes"
             allowfullscreen="true"
             webkitallowfullscreen="true"
-            allowtransparency="true">
+            allowtransparency="true"
+            style="background: #FFFFFF;">
         </iframe>
 
     <!--    </div> -->

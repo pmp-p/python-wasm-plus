@@ -626,8 +626,9 @@ EM_ASM({
     {
         SDL_Init(SDL_INIT_EVERYTHING); //SDL_INIT_VIDEO | SDL_INIT_TIMER);
 
-        if (TTF_Init())
-            puts("TTF_Init error");
+        //if (TTF_Init())
+          // fprintf(stderr, "ERROR: TTF_Init error");
+
         const char *target = "1";
         SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, target);
 

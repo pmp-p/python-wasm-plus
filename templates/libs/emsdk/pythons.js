@@ -145,7 +145,7 @@ function _until(fn_solver){
           if ( fn_solver.apply(null, argv ) ) {
             console.log("_until has reached", argv)
             resolve();
-          } else if (Date.now() > start_time + 120000) {
+          } else if (Date.now() > start_time + 40000) {
             console.error('ERROR time out waiting for condition _until',argv);
             resolve();
           } else {
@@ -480,6 +480,23 @@ function* iterator(oprom) {
 }
 register(iterator)
 
+//urlretrieve
+function DEPRECATED_wget_sync(url, store){
+    const request = new XMLHttpRequest();
+    try {
+        request.open('GET', url, false);
+        request.send(null);
+        if (request.status === 200) {
+            console.log(`DEPRECATED_wget_sync(${url})`);
+            FS.writeFile( store, request.responseText);
+        }
+        return request.status
+    } catch (ex) {
+        return 500;
+    }
+}
+register(DEPRECATED_wget_sync)
+
 
 async function mount_at(archive, path, relpath, hint) {
     const mark = prom_count++;
@@ -639,7 +656,7 @@ function pythonvm(vterm, config) {
     if (!vterm) {
         config.xtermjs = false
         // xtermjs placeholder
-        vterm = { print : console.log, sixel : function(){}}
+        vterm = { xterm : { write : console.log}, sixel : function(){}}
     }
 
     config.cdn =  config.cdn || ""
@@ -711,7 +728,7 @@ function pythonvm(vterm, config) {
                         if (buffer_stdout.startsWith("Looks like you are rendering"))
                             return;
 
-                        VM.vt.xterm.write( b_utf8(buffer_stdout) )
+                        writer( b_utf8(buffer_stdout) )
                     }
                     buffer_stdout = ""
                     return
@@ -741,7 +758,7 @@ function pythonvm(vterm, config) {
             if (buffer_stderr != "") {
                 if (flush) {
                     console.log(buffer_stderr);
-                    VM.vt.xterm.write(buffer_stderr)
+                    writer(buffer_stderr)
                     buffer_stderr = ""
                     return
                 }

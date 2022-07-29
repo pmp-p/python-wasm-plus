@@ -257,6 +257,19 @@ if defined("embed") and hasattr(embed, "readline"):
                 os.makedirs(arg, exist_ok=exist_ok)
 
         @classmethod
+        def wget(cls, *argv, **env):
+            import urllib.request
+            filename = None
+            for arg in argv:
+                if arg.startswith("-O"):
+                    filename = arg[2:].lstrip()
+                    continue
+                filename,_ = urllib.request.urlretrieve(arg, filename=filename)
+                print(f"{arg} saved as : {filename}")
+                filename = None
+            return True
+
+        @classmethod
         def pwd(cls, *argv):
             print(os.getcwd())
 
@@ -297,24 +310,43 @@ if defined("embed") and hasattr(embed, "readline"):
             sys.settrace(aio.trace.calls)
             return _process_args(argv, env)
 
+# TODO: use run interactive c-api to run this one.
         @classmethod
-        def time(cls, *argv, **env):
-            cmd = " ".join(argv)
+        def run(cls, *argv, **env):
 
             __main__ = __import__("__main__")
             __main__dict = vars(__main__)
 
+            builtins._ = undefined
+            cmd =  " ".join(argv)
+
             try:
-                code = compile(cmd, "<stdin>", "exec")
+                time_start = time.time()
+                code = compile("builtins._ =" + cmd, "<stdin>", "exec")
                 exec(code, __main__dict, __main__dict)
-                return True
+                if builtins._ is undefined:
+                    return True
+                if aio.iscoroutine(_):
+                    async def run(coro):
+                        print(f"async[{cmd}] :",await coro)
+                        print(f"time[{cmd}] : {time.time() - time_start:.6f}")
+                    aio.create_task(run(_), name=cmd)
+                else:
+                    print(builtins._)
+                    print(f"time[{cmd}] : {time.time() - time_start:.6f}")
+                    return True
             except SyntaxError as e:
                 # try run a file or cmd
                 return cls._process_args(argv, env)
-            finally:
-                print(time.time() - time_start)
             return False
 
+        time = run
+
+        @classmethod
+        def ps(cls, *argv, **env):
+            for t in aio.all_tasks():
+                print(t)
+            return True
 
         @classmethod
         def stop(cls, *argv, **env):
@@ -325,6 +357,31 @@ if defined("embed") and hasattr(embed, "readline"):
                 # pgzrun does its own cleanup call
                 aio.defer(aio.recycle.cleanup, (), {}, delay=500)
                 aio.defer(embed.prompt, (), {}, delay=800)
+
+        @classmethod
+        def uptime(cls, *argv, **env):
+            import platform
+            import asyncio
+            if platform.is_browser:
+                async def perf_index():
+                    ft = [0.00001] * 60*10
+                    while not aio.exit:
+                        ft.pop(0)
+                        ft.append(aio.spent / 0.016666666666666666 )
+                        if not (aio.ticks % 60):
+                            avg =  sum(ft) / len(ft)
+                            try:
+                                window.load_avg.innerText = '{:.4f}'.format(avg)
+                                window.load_min.innerText = '{:.4f}'.format(min(ft))
+                                window.load_max.innerText = '{:.4f}'.format(max(ft))
+                            except:
+                                pdb("366:uptime: window.load_* widgets not found")
+                                break
+
+                        await asyncio.sleep(0)
+                aio.create_task( perf_index() )
+            else:
+                print(f"last frame : {aio.spent / 0.016666666666666666:.4f}")
 
     def _process_args(argv, env):
         catch = True
@@ -408,25 +465,94 @@ import random
 random.seed(1)
 
 if not aio.cross.simulator:
-    import webbrowser
+    def apply_patches():
+        import platform
 
-    def browser_open(url, new=0, autoraise=True):
-        __import__('__EMSCRIPTEN__').window.open(url, "_blank")
+        builtins.true = True
+        builtins.false = False
 
-    def browser_open_new(url):
-        return browser_open(url, 1)
+        import webbrowser
 
-    def browser_open_new_tab(url):
-        return browser_open(url, 2)
+        def browser_open(url, new=0, autoraise=True):
 
-    webbrowser.open = browser_open
-    webbrowser.open_new = browser_open_new
-    webbrowser.open_new_tab = browser_open_new_tab
+            platform.window.open(url, "_blank")
 
-    # merge emscripten browser module here ?
-    # https://rdb.name/panda3d-webgl.md.html#supplementalmodules/asynchronousloading
-    #
+        def browser_open_new(url):
+            return browser_open(url, 1)
 
+        def browser_open_new_tab(url):
+            return browser_open(url, 2)
+
+        webbrowser.open = browser_open
+        webbrowser.open_new = browser_open_new
+        webbrowser.open_new_tab = browser_open_new_tab
+
+        # extensions
+
+        def browser_open_file(target=None,accept="*"):
+            if target:
+                platform.EventTarget.addEventListener("upload", target)
+            platform.window.dlg_multifile.click()
+
+        webbrowser.open_file = browser_open_file
+
+        # merge emscripten browser module here ?
+        # https://rdb.name/panda3d-webgl.md.html#supplementalmodules/asynchronousloading
+        #
+
+
+        # dom events
+        class EventTarget:
+            clients = {}
+            events = []
+            def addEventListener(self, host, type, listener, options=None, useCapture=None ):
+                cli = self.clients.setdefault(type,[])
+                cli.append( listener )
+
+            def build(self, evt_name, jsondata ):
+                #print( evt_name, jsondata )
+                self.events.append( [evt_name, json.loads(jsondata) ] )
+
+            #def dispatchEvent
+
+            async def process(self):
+                import inspect
+                while not aio.exit:
+                    if len(self.events):
+                        evtype , evdata = self.events.pop(0)
+                        print(evtype , evdata)
+                        for client in self.clients.get(evtype,[]):
+                            is_coro = inspect.iscoroutinefunction(client)
+                            print("    -> ", is_coro, client)
+                            if is_coro:
+                                await client(evdata)
+                            else:
+                                client(evdata)
+
+                    await aio.sleep(0)
+
+        platform.EventTarget = EventTarget()
+        aio.create_task(platform.EventTarget.process())
+
+        # bad and deprecated use of sync XHR
+
+        import urllib
+        import urllib.request
+
+        def urlretrieve(url, filename=None, reporthook=None, data=None):
+            import platform
+            filename = filename or f"/tmp/uru-{aio.ticks}"
+            rc=platform.window.DEPRECATED_wget_sync(url, filename)
+            if rc==200:
+                return filename, []
+            raise Exception(f"urlib.error {rc}")
+
+
+        urllib.request.urlretrieve = urlretrieve
+
+
+    apply_patches()
+    del apply_patches
 
 # ======================================================
 
@@ -434,6 +560,9 @@ def ESC(*argv):
     for arg in argv:
         sys.__stdout__.write(chr(27),arg, sep="", endl="")
 
+def CSR(*argv):
+    for arg in argv:
+        sys.__stdout__.write(chr(27), "[", arg, sep="", endl="")
 
 if __WASM__ and __EMSCRIPTEN__ and __EMSCRIPTEN__.is_browser:
     from __EMSCRIPTEN__ import window,document
@@ -451,11 +580,14 @@ else:
     pdb("TODO: js sim")
 
 pgzrun = None
-try:
-    import pygame
-except Exception as e:
-    sys.print_exception(e)
-    print("pygame not loaded")
+if sys.argv[0]!="org.python":
+    try:
+        import pygame
+    except Exception as e:
+        sys.print_exception(e)
+        print("pygame not loaded")
+else:
+    shell.uptime()
 
 if os.path.isfile('/data/data/custom.py'):
     execfile('/data/data/custom.py')

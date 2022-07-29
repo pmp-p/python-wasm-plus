@@ -125,7 +125,7 @@ is_async_ctx = False
 no_exit = True
 
 enter = time_time()
-spent = 0.000000001
+spent = 0.00001
 leave = enter + spent
 
 
@@ -266,6 +266,13 @@ def step(*argv):
         leave = time_time()
         spent = leave - enter
 
+def delta(t=None):
+    global enter
+    if t:
+        return t - enter
+    return time_time() - enter
+
+
 async def sleep_ms(ms=0):
     await sleep(float(ms) / 1000)
 
@@ -292,9 +299,9 @@ def create_task(coro, *, name=None, context=None):
     tasks.append(coro)
     if context is None:
         # Use legacy API if context is not needed
-        task = loop.create_task(coro)
+        task = loop.create_task(coro, name=name)
     else:
-        task = loop.create_task(coro, context=context)
+        task = loop.create_task(coro, name=name, context=context)
 
     _set_task_name(task, name)
     return task

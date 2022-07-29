@@ -149,6 +149,8 @@ class __EMSCRIPTEN__(object):
     def system(cls):
         return 'Linux'
 
+    is_browser = False
+
     js = pdb
     run_script = pdb
 
