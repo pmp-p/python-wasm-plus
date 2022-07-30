@@ -84,6 +84,12 @@ IS_SHARED=false
 for arg do
     shift
 
+    if [ "\$arg" = "-v" ]
+    then
+        \$EMSDK_PYTHON -E \$0.py -v
+        exit 0
+    fi
+
     # that is for some very bad setup.py behaviour regarding cross compiling. should not be needed ..
     [ "\$arg" = "-I/usr/include" ] && continue
     [ "\$arg" = "-I/usr/include/SDL2" ] && continue

@@ -10,17 +10,32 @@ import json
 with open("/tmp/pip.json") as data:
     repo = json.loads( data.read() )
 
-print( json.dumps(repo["packages"], sort_keys=True, indent=4) )
+# print( json.dumps(repo["packages"], sort_keys=True, indent=4) )
 
-def load_package(*mods)
+def imports(*mods, lvl=0, wants=[]):
     global repo
-    for mod in *mods:
-        for deps in repo["packages"][mod].get("depends",[])
-            for dep in deps:
-                print(dep)
+    unseen = False
+    for mod in mods:
+        for dep in repo["packages"][mod].get("depends",[]):
+            if not dep in wants:
+                unseen = True
+                wants.insert(0, dep)
+    if lvl<3 and unseen:
+        imports(*wants, lvl= lvl+1, wants = wants )
+
+    if not lvl:
+        for dep in mods:
+            if not dep in wants:
+                wants.append(dep)
+    return wants
 
 
-imports("pyparsing","packaging","micropip","matplotlib")
+for dep in imports("distutils","pyparsing","packaging","micropip"):
+    print(dep)
+print("="*40)
+for dep in imports("matplotlib"):
+    print(dep)
+
 
 
 # --></script>

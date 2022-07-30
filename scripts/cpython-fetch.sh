@@ -59,14 +59,7 @@ then
     wget -q -c https://www.python.org/ftp/python/3.10.5/Python-3.10.5.tar.xz
     tar xf Python-3.10.5.tar.xz
 
-    if [ -d Python-3.10.5-pydk ]
-    then
-        PYPATCH=false
-        ln -s Python-3.10.5 cpython
-    else
-        PYPATCH=true
-        ln -s Python-3.10.5 cpython
-    fi
+    ln -s Python-3.10.5 cpython
 
     NOPATCH=true
     export REBUILD=true
@@ -76,7 +69,7 @@ fi
 popd
 
 # 3.10 is not wasm stable
-if [ -f support/__EMSCRIPTEN__.patches/${PYBUILD}.diff ]
+if [ -f support/__EMSCRIPTEN__.patches/${PYBUILD}-host.diff ]
 then
     pushd src/cpython 2>&1 >/dev/null
     patch -p1 < ../../support/__EMSCRIPTEN__.patches/${PYBUILD}-host.diff
@@ -89,16 +82,13 @@ fi
 
 if $NOPATCH
 then
-    echo "
-    * assuming cpython tree already patched, press <enter>
-"
+    echo -n
 else
-    # do some patching
+    # do some patching for 3.11+ to allow more shared libs
     pushd src/cpython 2>&1 >/dev/null
     patch -p1 < ../../support/__EMSCRIPTEN__.embed/cpython.diff
     popd 2>&1 >/dev/null
 fi
-
 
 echo "
     * fetched cpython source, status is :

@@ -4,21 +4,19 @@
 
 . ./scripts/emsdk-fetch.sh
 
-HPFX=./devices/x86_64/usr/lib/python${PYBUILD}
+HPFX=./devices/$(arch)/usr/lib/python${PYBUILD}
+TPFX=./devices/emsdk/usr/lib/python${PYBUILD}
+
+rm $TPFX/ensurepip/_bundled/setuptools-*.whl
 
 for moveit in setuptools distutils _distutils _distutils_hack pkg_resources
 do
-    if [ -d $HPFX/site-packages/${moveit} ]
-    then
-        echo "
-        * migrating ${moveit}
+    echo "
+    * migrating ${moveit}
 "
-        cp -rf $HPFX/site-packages/${moveit}  $HPFX/
-        cp -rf $HPFX/site-packages/${moveit}-* $HPFX/
-    fi
+    cp -rf $HPFX/site-packages/${moveit}   $TPFX/
+    cp -rf $HPFX/site-packages/${moveit}-* $TPFX/
 done
-
-
 
 
 # ../../devices/x86_64/usr/bin/python3-wasm -mpip install .
