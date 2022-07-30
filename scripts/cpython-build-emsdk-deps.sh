@@ -14,8 +14,8 @@ do
     echo "
     * migrating ${moveit}
 "
-    cp -rf $HPFX/site-packages/${moveit}   $TPFX/
-    cp -rf $HPFX/site-packages/${moveit}-* $TPFX/
+    cp -rf $HPFX/${moveit}   $TPFX/
+    cp -rf $HPFX/${moveit}-* $TPFX/
 done
 
 
