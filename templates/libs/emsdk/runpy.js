@@ -251,14 +251,21 @@ for (const script of document.getElementsByTagName('script')) {
             elems = url.rsplit('?',1)
             url = elems.shift()
 
-            elems = elems.shift().split('&')
-            vm.script.interpreter = elems.shift()
-
-            Array.prototype.push.apply(vm.argv, elems )
+            if ( script.src.substr( url.length ).length < 3 ) {
+                url = location.origin + location.pathname
+                elems = location.search.substr(1).split('&') // python argv
+                vm.script.interpreter = "cpython"+elems.shift()
+                Array.prototype.push.apply(vm.argv, elems )
+            } else {
+                elems = elems.shift().split('&')
+                vm.script.interpreter = elems.shift()
+                Array.prototype.push.apply(vm.argv, elems )
+            }
 
             console.log('script: interpreter=', vm.script.interpreter)
             console.log('script: url=', url)
             console.log('script: src=', script.src)
+            console.log('script: loc=', location.href)
             console.log('script: id=', script.id)
             console.log('code : ' , code.length)
 

@@ -198,9 +198,11 @@ mkdir -p $PYTHONPYCACHEPREFIX/sysconfig
 
 
 # FIXME: seems CI cannot locate that one with python3-wasm
-cp $PREFIX/lib/python${PYBUILD}/_sysconfigdata__emscripten_wasm32-emscripten.py $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
-sed -i 's|-Os|-O0|g' $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
-sed -i 's|-g0|-g3|g' $PYTHONPYCACHEPREFIX/sysconfig/_sysconfigdata__emscripten_debug.py
+cp $PREFIX/lib/python${PYBUILD}/_sysconfigdata__emscripten_wasm32-emscripten.py \
+ ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/_sysconfigdata__emscripten_debug.py
+
+sed -i 's|-Os|-O0|g' ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/_sysconfigdata__emscripten_debug.py
+sed -i 's|-g0|-g3|g' ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/_sysconfigdata__emscripten_debug.py
 
 
 # python setup.py install --single-version-externally-managed --root=/
@@ -298,7 +300,7 @@ export PYBUILD=\${PYBUILD:-$PYBUILD}
 export PYMAJOR=\$(echo -n \$PYBUILD|cut -d. -f1)
 export PYMINOR=\$(echo -n \$PYBUILD|cut -d. -f2)
 
-. $ROOT/${PYDK_PYTHON_HOST_PLATFORM}-shell.sh
+. ${SDKROOT}/${PYDK_PYTHON_HOST_PLATFORM}-shell.sh
 
 # most important
 export CC=cc
@@ -313,21 +315,22 @@ export PYTHONHOME=$PREFIX
 # so pip does not think everything in ~/.local is useable
 export HOME=${PYTHONPYCACHEPREFIX}
 
-
 # find sysconfig ( tweaked )
 # but still can load dynload and setuptools
+
 PYTHONPATH=${HOST_PREFIX}/lib/python\${PYBUILD}/site-packages:\$PYTHONPATH
-export PYTHONPATH=$PYTHONPYCACHEPREFIX/sysconfig:${HOST_PREFIX}/lib/python\${PYBUILD}/lib-dynload:\$PYTHONPATH
+export PYTHONPATH=${SDKROOT}/prebuilt/emsdk/${PYBUILD}:${HOST_PREFIX}/lib/python\${PYBUILD}/lib-dynload:\$PYTHONPATH
 
 
 # just in case
 export _PYTHON_HOST_PLATFORM=${PYDK_PYTHON_HOST_PLATFORM}
 export PYTHON_FOR_BUILD=${HOST_PREFIX}/bin/python\${PYBUILD}
 
-${HOST_PREFIX}/bin/python\${PYBUILD} -u -B \$@
+${HOST_PREFIX}/bin/python\${PYBUILD} -u -B "\$@"
 END
 
 chmod +x $HOST_PREFIX/bin/python3-wasm
+
 ln -sf $HOST_PREFIX/bin/python3-wasm $HOST_PREFIX/bin/python3
 
 cp -f $HOST_PREFIX/bin/python3-wasm ${ROOT}/
