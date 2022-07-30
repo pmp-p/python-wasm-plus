@@ -295,8 +295,8 @@ END
 cat > $HOST_PREFIX/bin/python3-wasm <<END
 #!/bin/bash
 export PYBUILD=\${PYBUILD:-$PYBUILD}
-export PYMAJOR=$(echo -n \$PYBUILD|cut -d. -f1)
-export PYMINOR=$(echo -n \$PYBUILD|cut -d. -f2)
+export PYMAJOR=\$(echo -n \$PYBUILD|cut -d. -f1)
+export PYMINOR=\$(echo -n \$PYBUILD|cut -d. -f2)
 
 . $ROOT/${PYDK_PYTHON_HOST_PLATFORM}-shell.sh
 
@@ -316,8 +316,8 @@ export HOME=${PYTHONPYCACHEPREFIX}
 
 # find sysconfig ( tweaked )
 # but still can load dynload and setuptools
-PYTHONPATH=$(echo -n ${HOST_PREFIX}/lib/python/\${PYBUILD}/site-packages):\$PYTHONPATH
-export PYTHONPATH=$PYTHONPYCACHEPREFIX/sysconfig:$(echo -n ${HOST_PREFIX}/lib/python\${PYBUILD}/lib-dynload):\$PYTHONPATH
+PYTHONPATH=${HOST_PREFIX}/lib/python\${PYBUILD}/site-packages):\$PYTHONPATH
+export PYTHONPATH=$PYTHONPYCACHEPREFIX/sysconfig:${HOST_PREFIX}/lib/python\${PYBUILD}/lib-dynload:\$PYTHONPATH
 
 
 # just in case
@@ -328,8 +328,9 @@ ${HOST_PREFIX}/bin/python\${PYBUILD} -u -B \$@
 END
 
 chmod +x $HOST_PREFIX/bin/python3-wasm
-cp -f $HOST_PREFIX/bin/python3-wasm ${ROOT}/
+ln -sf $HOST_PREFIX/bin/python3-wasm $HOST_PREFIX/bin/python3
 
+cp -f $HOST_PREFIX/bin/python3-wasm ${ROOT}/
 
 
 HPFX=./devices/$(arch)/usr/lib/python${PYBUILD}
