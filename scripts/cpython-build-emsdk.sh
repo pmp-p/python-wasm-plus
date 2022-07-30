@@ -331,7 +331,7 @@ END
 
 chmod +x $HOST_PREFIX/bin/python3-wasm
 
-ln -sf $HOST_PREFIX/bin/python3-wasm $HOST_PREFIX/bin/python3
+ln -sf $HOST_PREFIX/bin/python${PYBUILD} $HOST_PREFIX/bin/python3
 
 cp -f $HOST_PREFIX/bin/python3-wasm ${ROOT}/
 
