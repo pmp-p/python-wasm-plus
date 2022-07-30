@@ -13,7 +13,7 @@ pushd src 2>&1 >/dev/null
 NOPATCH=false
 PYPATCH=true
 
-[ -L cpython ] && rm cpython
+[ -L cpython${PYBUILD} ] && rm cpython${PYBUILD}
 
 [ -f $HPY ] || REBUILD=true
 

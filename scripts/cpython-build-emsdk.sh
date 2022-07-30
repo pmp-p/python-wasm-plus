@@ -316,7 +316,7 @@ export HOME=${PYTHONPYCACHEPREFIX}
 
 # find sysconfig ( tweaked )
 # but still can load dynload and setuptools
-PYTHONPATH=${HOST_PREFIX}/lib/python\${PYBUILD}/site-packages):\$PYTHONPATH
+PYTHONPATH=${HOST_PREFIX}/lib/python\${PYBUILD}/site-packages:\$PYTHONPATH
 export PYTHONPATH=$PYTHONPYCACHEPREFIX/sysconfig:${HOST_PREFIX}/lib/python\${PYBUILD}/lib-dynload:\$PYTHONPATH
 
 
