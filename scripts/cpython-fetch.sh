@@ -41,7 +41,7 @@ then
         export REBUILD=true
     fi
 
-    ln -s cpython-git cpython
+    ln -s cpython-git cpython${PYBUILD}
 
 fi
 
@@ -49,7 +49,7 @@ if echo $PYBUILD | grep -q 11$
 then
     wget -q -c https://www.python.org/ftp/python/3.11.0/Python-3.11.0b4.tar.xz
     tar xf Python-3.11.0b4.tar.xz
-    ln -s Python-3.11.0b4 cpython
+    ln -s Python-3.11.0b4 cpython${PYBUILD}
 
     export REBUILD=true
 fi
@@ -59,19 +59,20 @@ then
     wget -q -c https://www.python.org/ftp/python/3.10.5/Python-3.10.5.tar.xz
     tar xf Python-3.10.5.tar.xz
 
-    ln -s Python-3.10.5 cpython
+    ln -s Python-3.10.5 cpython${PYBUILD}
 
     NOPATCH=true
     export REBUILD=true
 fi
 
-
 popd
+
+
 
 # 3.10 is not wasm stable
 if [ -f support/__EMSCRIPTEN__.patches/${PYBUILD}-host.diff ]
 then
-    pushd src/cpython 2>&1 >/dev/null
+    pushd src/cpython${PYBUILD} 2>&1 >/dev/null
     patch -p1 < ../../support/__EMSCRIPTEN__.patches/${PYBUILD}-host.diff
     popd 2>&1 >/dev/null
 fi
@@ -85,7 +86,7 @@ then
     echo -n
 else
     # do some patching for 3.11+ to allow more shared libs
-    pushd src/cpython 2>&1 >/dev/null
+    pushd src/cpython${PYBUILD} 2>&1 >/dev/null
     patch -p1 < ../../support/__EMSCRIPTEN__.embed/cpython.diff
     popd 2>&1 >/dev/null
 fi

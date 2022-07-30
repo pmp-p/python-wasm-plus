@@ -4,37 +4,13 @@
 
 . ./scripts/emsdk-fetch.sh
 
-HPFX=./devices/$(arch)/usr/lib/python${PYBUILD}
-TPFX=./devices/emsdk/usr/lib/python${PYBUILD}
-
-rm $TPFX/ensurepip/_bundled/setuptools-*.whl
-
-for moveit in setuptools distutils _distutils _distutils_hack pkg_resources
-do
-    echo "
-    * migrating ${moveit}
-"
-    cp -rf $HPFX/${moveit}   $TPFX/
-    cp -rf $HPFX/${moveit}-* $TPFX/
-done
-
-
-# ../../devices/x86_64/usr/bin/python3-wasm -mpip install .
-# not working because python startup is skipped
-
-export PYSETUP="$HOST_PREFIX/bin/python3-wasm setup.py install --single-version-externally-managed --root=/"
-
-
 # https://download.osgeo.org/libtiff/tiff-4.3.0.tar.gz
 # http://code.google.com/intl/en-US/speed/webp/index.html
-#
 
 ALL="-fPIC -s USE_SDL=2 -sUSE_LIBPNG -sUSE_LIBJPEG $CPPFLAGS"
 CNF="emconfigure ./configure --prefix=$PREFIX --with-pic --disable-shared"
 
-
 # ncurses ncursesw
-
 
 # SDL_image
 

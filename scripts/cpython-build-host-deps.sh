@@ -19,7 +19,13 @@ $PIP install setuptools --upgrade
 
 
 HPFX=./devices/x86_64/usr/lib/python${PYBUILD}
+
 rm -rf $HPFX/ensurepip/_bundled/*-py3-none-any.whl
+
+if [ -f $HPFX/site-packages/distutils-precedence.pth ]
+then
+    mv $HPFX/site-packages/distutils-precedence.pth $HPFX/
+fi
 
 for moveit in setuptools _distutils _distutils_hack pkg_resources
 do
@@ -28,16 +34,12 @@ do
         echo "
         * migrating ${moveit}
 "
-        rm -rf $HPFX/${moveit} rm -rf $HPFX/${moveit}-*
+        rm -rf $HPFX/${moveit}
+        rm -rf $HPFX/${moveit}-*
         mv $HPFX/site-packages/${moveit}  $HPFX/
         mv $HPFX/site-packages/${moveit}-* $HPFX/
     fi
 done
-
-if [ -f $HPFX/site-packages/distutils-precedence.pth ]
-then
-    mv $HPFX/site-packages/distutils-precedence.pth $HPFX/
-fi
 
 
 # https://github.com/aroberge/ideas, for code transformation

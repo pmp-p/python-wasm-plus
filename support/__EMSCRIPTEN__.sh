@@ -3,11 +3,11 @@ echo "
 "
 
 
-if grep -q PYDK src/cpython/Programs/python.c
+if grep -q PYDK src/cpython${PYBUILD}/Programs/python.c
 then
     echo __EMSCRIPTEN__ support already added
 else
-    pushd src/cpython
+    pushd src/cpython${PYBUILD}
     if echo $PYBUILD |grep -q 3.12$
     then
         echo 3.12 does not need patching for interactive FD

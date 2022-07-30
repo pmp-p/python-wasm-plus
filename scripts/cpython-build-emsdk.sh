@@ -31,7 +31,7 @@ fi
 # 3.10 is not wasm stable
 if [ -f support/__EMSCRIPTEN__.patches/${PYBUILD}.diff ]
 then
-    pushd src/cpython 2>&1 >/dev/null
+    pushd src/cpython${PYBUILD} 2>&1 >/dev/null
     patch -p1 < ../../support/__EMSCRIPTEN__.patches/${PYBUILD}.diff
     popd 2>&1 >/dev/null
 fi
@@ -135,14 +135,14 @@ else
 
 # CFLAGS="-DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1"
 
-    CONFIG_SITE=$ROOT/src/cpython/Tools/wasm/config.site-wasm32-emscripten \
+    CONFIG_SITE=$ROOT/src/cpython${PYBUILD}/Tools/wasm/config.site-wasm32-emscripten \
     OPT="$CPOPTS -DNDEBUG -fwrapv" \
-    eval emconfigure $ROOT/src/cpython/configure -C --without-pymalloc --disable-ipv6 \
+    eval emconfigure $ROOT/src/cpython${PYBUILD}/configure -C --without-pymalloc --disable-ipv6 \
      --cache-file=${PYTHONPYCACHEPREFIX}/config.cache \
      --with-c-locale-coercion --without-pydebug \
      --enable-wasm-dynamic-linking $TESTSUITE\
      --host=$PYDK_PYTHON_HOST_PLATFORM \
-     --build=$($ROOT/src/cpython/config.guess) \
+     --build=$($ROOT/src/cpython${PYBUILD}/config.guess) \
      --with-emscripten-target=browser \
      --prefix=$PREFIX \
      --with-build-python=${PYTHON_FOR_BUILD} $QUIET
@@ -329,6 +329,22 @@ END
 
 chmod +x $HOST_PREFIX/bin/python3-wasm
 cp -f $HOST_PREFIX/bin/python3-wasm ${ROOT}/
+
+
+
+HPFX=./devices/$(arch)/usr/lib/python${PYBUILD}
+TPFX=./devices/emsdk/usr/lib/python${PYBUILD}
+
+rm $TPFX/ensurepip/_bundled/setuptools-*.whl
+
+for moveit in setuptools distutils _distutils _distutils_hack pkg_resources
+do
+    echo "
+    * migrating ${moveit}
+"
+    cp -rf $HPFX/${moveit}   $TPFX/
+    cp -rf $HPFX/${moveit}-* $TPFX/
+done
 
 
 unset PYTHON_FOR_BUILD

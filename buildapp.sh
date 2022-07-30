@@ -240,8 +240,10 @@ fi
 
 emcc -fPIC -D__PYDK__=1 -DNDEBUG $CF_SDL \
  -c -fwrapv -Wall $CPOPTS -std=gnu99 -Werror=implicit-function-declaration -fvisibility=hidden\
- -I$ROOT/src/cpython/Include/internal -IObjects -IInclude -IPython -I. -I$ROOT/src/cpython/Include -DPy_BUILD_CORE\
- -o Programs/${MODE}.o $ROOT/src/cpython/Programs/python.c
+ -I$ROOT/src/cpython${PYBUILD}/Include/internal \
+ -IObjects -IInclude -IPython -I. \
+ -I$ROOT/src/cpython${PYBUILD}/Include -DPy_BUILD_CORE \
+ -o Programs/${MODE}.o $ROOT/src/cpython${PYBUILD}/Programs/python.c
 
 #if $CI
 #then
