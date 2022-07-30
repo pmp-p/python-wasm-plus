@@ -92,7 +92,7 @@ END
         rm $HOST_PREFIX/bin/*3 $HOST_PREFIX/bin/python3-config
 
         patchelf --remove-needed libintl.so.8  $HOST_PREFIX/bin/python${PYBUILD}
-        sed -i 's|-lintl ||g' /opt/python-wasm-sdk/devices/x86_64/usr/bin/python${PYBUILD}-config
+        sed -i 's|-lintl ||g' ${SDKROOT}/devices/x86_64/usr/bin/python${PYBUILD}-config
 
         cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/${PYBUILD}/. $HOST_PREFIX/lib/python${PYBUILD}/
     else
