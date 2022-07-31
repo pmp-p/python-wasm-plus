@@ -1,6 +1,8 @@
 #!/bin/bash
 reset
-export ROOT=$(pwd)
+export SDKROOT=${SDKROOT:-$(pwd)}
+export PYBUILD=${PYBUILD:-3.11}
+
 
 mkdir -p build/pycache
 export PYTHONDONTWRITEBYTECODE=1
@@ -25,7 +27,8 @@ echo " ------------------- building cpython wasm -----------------------"
 if ./scripts/cpython-build-emsdk.sh > /dev/null
 then
     echo " ------------------- building cpython pygame -------------------"
-    ./scripts/pygame-all.sh > /dev/null
+    ./scripts/pygame-all.sh
+# > /dev/null
 
     # pygame won't build if python or sdl failed
     [ -f prebuilt/emsdk/libpygame.a ] || exit 1
