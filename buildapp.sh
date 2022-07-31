@@ -4,24 +4,29 @@ export ROOT=$(pwd)
 
 . ${CONFIG:-config}
 
-while true
-do
-    echo "Waiting for pygame (prebuilt/emsdk/libpygame${PYBUILD}.a) build to complete ..."
-    for i in 1 2 3 4
+if $CI
+then
+    echo "
+    * packing files for /python${PYMAJOR}${PYMINOR}/
+"
+else
+    while true
     do
+        echo "Waiting for pygame (prebuilt/emsdk/libpygame${PYBUILD}.a) build to complete ..."
+        for i in 1 2 3 4
+        do
+            [ -f ${SDKROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a ] && break
+            sleep 1
+        done
         [ -f ${SDKROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a ] && break
-        sleep 1
-    done
-    [ -f ${SDKROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a ] && break
 
-done
-reset
+    done
+    reset
+fi
+
 
 EXE=python${PYMAJOR}${PYMINOR}
 
-echo "
-    * packing files for /python${PYMAJOR}${PYMINOR}/
-"
 
 
 # check if initial repo
@@ -295,7 +300,7 @@ popd
 
 if $CI
 then
-    echo CI not running server
+    echo " * CI not running server *"
 else
 
     if [ -f build/${CN}/${EXE}/${MODE}.js ]

@@ -21,9 +21,17 @@ jobs:
             env|grep ANDROID
             sudo apt-get update
             sudo apt-get install -y bash wget
-            cd $GITHUB_WORKSPACE
+
+    - name: build
+      run: |
             echo " === Building  ===="
+            cd $GITHUB_WORKSPACE
             time bash ./python-wasm-plus.sh
+            du -hs du -hs prebuilt/emsdk/libpy*
+
+    - name: pack
+      run: | 
+            echo " === Packaging ==="
             time bash ./buildapp.sh
             cd $GITHUB_WORKSPACE
             mv build/demo $GITHUB_WORKSPACE/
