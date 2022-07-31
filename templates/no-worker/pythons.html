@@ -62,10 +62,10 @@ if 0:
 
 
 async def main():
-    async with platform.xopen( str(cdn / "repodata.json") ) as f:
+    async with platform.fopen( str(cdn / "repodata.json") ) as f:
         print( len( f.read() ) )
 
-    async with platform.xopen("this.jpg", "rb") as f:
+    async with platform.fopen("this.jpg", "rb") as f:
         print( len( f.read() ) )
 
 
