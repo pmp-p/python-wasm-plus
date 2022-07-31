@@ -66,10 +66,13 @@
         }
     </style>
 
+    <script src="./browserfs.min.js"></script>
+
     <script src="./xtermjsixel/xterm.js"></script>
     <script src="./xtermjsixel/xterm-addon-image.js"></script>
-    <script src="./browserfs.min.js"></script>
-    <script type="module" src="pythons.js" async defer></script>
+
+    <script type="module" src="./vtx.js"></script>
+    <script type="module" src="./pythons.js"></script>
 
 </head>
 
@@ -138,7 +141,7 @@ width="640px" height="480px"
     <!--    </div> -->
 
 
-    <script type="application/javascript">
+    <script type="application/javascript" defer>
 
     function custom_prerun(){
         // no python main and no (MEMFS + VFS) yet.
@@ -305,9 +308,9 @@ ${pycode}
 
     // startup
 
-    window.onload = function () {
+    window.onload = async function () {
         // nothing is ready.
-
+        console.log(" ---------- onload ------------")
 
         var wasmterm
 
@@ -330,7 +333,11 @@ print(sys.version)
 
         }
 
-        pythonvm(wasmterm, config)
+        try {
+            pythonvm(wasmterm, config)
+        } catch (x) {
+            console.error("pythonvm not loaded", x)
+        }
 
     }
 
