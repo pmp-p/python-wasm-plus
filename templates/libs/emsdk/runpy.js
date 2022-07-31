@@ -30,6 +30,52 @@ function _until(fn_solver){
     }
 }
 
+// promise to iterator converter
+var prom = {}
+var prom_count = 0
+window.iterator = function* iterator(oprom) {
+    const mark = prom_count++;
+    var counter = 0;
+    oprom.then( (value) => prom[mark] = value )
+    while (!prom[mark]) {
+        yield counter++;
+    }
+    yield prom[mark];
+    delete prom[mark]
+}
+
+//imgretrieve
+window.cross_img = function *cross_img(url, store) {
+    var done = 0
+    const cors_img = new Image();
+        cors_img.crossOrigin = "Anonymous";
+        cors_img.src = url;
+        cors_img.addEventListener("load", function(){ done = 1 }, false);
+    while (!done)
+        yield done
+    let canvas = document.createElement("canvas");
+    let context = canvas.getContext("2d");
+    canvas.width = cors_img.width;
+    canvas.height = cors_img.height;
+    context.drawImage(cors_img, 0, 0);
+    yield canvas.toDataURL("image/png")
+}
+
+//fileretrieve (binary). TODO: wasm compilation
+window.cross_file = function *cross_file(url, store) {
+    var content = 0
+
+    fetch(url,{})
+        .then( (response) => response.arrayBuffer() )
+        .then( (blob) => content = new Uint8Array(blob) )
+
+    while (!content)
+        yield content
+    FS.writeFile(store, content )
+    yield store
+}
+
+
 //urlretrieve
 function DEPRECATED_wget_sync(url, store){
     const request = new XMLHttpRequest();
@@ -528,37 +574,67 @@ __import__('platform').EventTarget.build('focus', json.dumps(${dump}))
 
         if (feature.startsWith("vt")) {
 
-            var stdio = document.getElementById('stdio')
-            if (!stdio){
-                stdio = document.createElement('div')
-                stdio.id = "stdio"
-                stdio.style.width = "640px";
-                stdio.style.height = "480px";
-                stdio.style.background = "black";
-                stdio.style.color = "yellow";
-                stdio.innerHTML = "vt100"
-                stdio.hidden = debug_hidden
-                stdio.setAttribute("tabIndex", 1)
-                document.body.appendChild(stdio)
-                br()
+
+            // simpleterm.js
+
+            if (feature === "vt") {
+                var stdio = document.getElementById('stdio')
+                if (!stdio){
+                    stdio = document.createElement('div')
+                    stdio.id = "stdio"
+                    stdio.style.width = "640px";
+                    stdio.style.height = "480px";
+                    stdio.style.background = "black";
+                    stdio.style.color = "yellow";
+                    stdio.innerHTML = "vt100"
+                    stdio.hidden = debug_hidden
+                    stdio.setAttribute("tabIndex", 1)
+                    document.body.appendChild(stdio)
+                    br()
+                }
+
+                const { Terminal, helper, handlevt } = await import("./vt.js")
+
+                vm.vt.xterm = new Terminal("stdio", 132,25)
+                vm.vt.xterm.set_vm_handler(vm, null, null)
+
+                vm.vt.xterm.open()
+                vm.vt.xterm.write('Please \x1B[1;3;31mwait\x1B[0m ...\r\n')
+
             }
+
+            // xterm.js
+
+            if (feature === "vtx") {
+                var terminal = document.getElementById('terminal')
+                if (!terminal){
+                    terminal = document.createElement('div')
+                    terminal.id = "terminal"
+/*
+                    terminal.style.width = "640px";
+                    terminal.style.height = "480px";
+
+
+                    terminal.style.background = "black";
+                    terminal.style.color = "yellow";
+                    terminal.innerHTML = "vt100"
+                    terminal.hidden = debug_hidden
+*/
+                    terminal.setAttribute("tabIndex", 1)
+                    document.body.appendChild(terminal)
+                    br()
+                }
+
+                const { WasmTerminal } = await import("./vtx.js")
+
+                vm.vt = new WasmTerminal("terminal", 132, 50, [
+                        { url : "./xtermjsixel/xterm-addon-image-worker.js", sixelSupport:true }
+                ] )
+
+            }
+
         }
 
-        if (feature === "vt") {
-            const { Terminal, helper, handlevt } = await import("./vt.js")
-
-            vm.vt.xterm = new Terminal(stdio, 132,25)
-            vm.vt.xterm.set_vm_handler(vm, null, null)
-
-            vm.vt.xterm.open()
-            vm.vt.xterm.write('Please \x1B[1;3;31mwait\x1B[0m ...\r\n')
-
-        }
-
-        if (feature === "vtx") {
-            const { Terminal } = await import("https://raw.githubusercontent.com/pmp-p/python-wasm-plus/main/templates/libs/xterm/xtermjsixel/xterm.js")
-            console.log("XTERM",Terminal)
-        }
 
         if (feature.startsWith("stdout")){
             var stdout = document.getElementById('stdout')
@@ -573,7 +649,6 @@ __import__('platform').EventTarget.build('focus', json.dumps(${dump}))
                 var buffer = stdout.innerHTML.split("\r\n")
                 for (const line of text.split("\r\n") ) {
                     if (line.length) {
-                        console.log(line.length,line)
                         buffer.push( line )
                     }
                 }
@@ -617,22 +692,6 @@ jswasmloader.setAttribute("type","text/javascript")
 jswasmloader.setAttribute("src", config.executable )
 jswasmloader.setAttribute('async', true);
 document.getElementsByTagName("head")[0].appendChild(jswasmloader)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -250,6 +250,14 @@ export class WasmTerminal {
         this.activeInput = true
         this.inputStartCursor = null
 
+
+        this.nodup = 1
+        this.sixel = function ni() {
+            console.warn("SIXEL N/I")
+        }
+
+console.warn("SIXEL N/I")
+
         this.xterm = new Terminal(
             {
                 allowTransparency: true,
@@ -273,7 +281,7 @@ export class WasmTerminal {
         }
 
 
-        this.xterm.open(document.getElementById( 'terminal'))
+        this.xterm.open(document.getElementById(hostid))
 
         // hack to hide scrollbar inside box
         //document.getElementsByClassName('xterm-viewport')[0].style.left="-15px"

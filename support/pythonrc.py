@@ -466,9 +466,10 @@ import random
 random.seed(1)
 
 if not aio.cross.simulator:
+    import platform
+
     def apply_patches():
         import platform
-
         builtins.true = True
         builtins.false = False
 
@@ -547,7 +548,7 @@ if not aio.cross.simulator:
         def urlretrieve(url, filename=None, reporthook=None, data=None):
             import platform
             filename = filename or f"/tmp/uru-{aio.ticks}"
-            rc=platform.window.python.DEPRECATED_wget_sync(url, filename)
+            rc=platform.window.python.DEPRECATED_wget_sync(str(url), str(filename))
             if rc==200:
                 return filename, []
             raise Exception(f"urlib.error {rc}")
@@ -555,9 +556,73 @@ if not aio.cross.simulator:
 
         urllib.request.urlretrieve = urlretrieve
 
+    if (__WASM__ and __EMSCRIPTEN__) or platform.is_browser:
+        from platform import window, document
 
-    apply_patches()
+
+        class xopen:
+            ticks = 0
+            def __init__(self, url, mode ="r"):
+                self.url = str(url)
+                self.mode = mode
+                self.tmpfile = None
+
+            async def __aenter__(self):
+                import platform
+                print('Starting')
+                if "b" in self.mode:
+                    self.__class__.ticks += 1
+                    self.tmpfile = f"/tmp/cf-{self.ticks}"
+                    cf = platform.window.cross_file(self.url, self.tmpfile)
+                    content = await platform.jsiter(cf)
+                    self.filelike = open(content, "rb")
+                else:
+                    import io
+                    jsp = platform.window.fetch(self.url)
+                    response = await platform.jsprom(jsp)
+                    content = await platform.jsprom(response.text())
+                    if len(content) == 4:
+                        print("XOPEN", f"Binary {self.url=} ?")
+                    self.filelike = io.StringIO(content)
+                return self.filelike
+
+            async def __aexit__(self, *exc):
+                print('Finishing')
+                self.filelike.close()
+                del self.filelike, self.url, self.mode
+                if self.tmpfile:
+                    os.unlink(self.tmpfile)
+                return False
+
+        platform.xopen = xopen
+
+
+        async def jsiter(iterator):
+            mark =None
+            value = undefined
+            while mark!=undefined:
+                value = mark
+                await asyncio.sleep(0)
+                mark = next( iterator, undefined )
+            return value
+        platform.jsiter = jsiter
+
+        async def jsprom(prom):
+            mark = None
+            value = undefined
+            wit = window.iterator( prom )
+            while mark!=undefined:
+                value = mark
+                await aio.sleep(0)
+                mark = next( wit , undefined )
+            return value
+        platform.jsprom = jsprom
+
+        apply_patches()
+
     del apply_patches
+else:
+    pdb("TODO: js simulator")
 
 # ======================================================
 
@@ -568,21 +633,6 @@ def ESC(*argv):
 def CSR(*argv):
     for arg in argv:
         sys.__stdout__.write(chr(27), "[", arg, sep="", endl="")
-
-if __WASM__ and __EMSCRIPTEN__ and __EMSCRIPTEN__.is_browser:
-    from __EMSCRIPTEN__ import window,document
-
-    async def jsp(prom):
-        mark = None
-        value = undefined
-        wit = window.iterator( prom )
-        while mark!=undefined:
-            value = mark
-            await aio.sleep(0)
-            mark = next( wit , undefined )
-        return value
-else:
-    pdb("TODO: js sim")
 
 pgzrun = None
 if sys.argv[0]!="org.python":

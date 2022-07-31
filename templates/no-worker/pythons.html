@@ -1,28 +1,34 @@
-<!doctype html><html lang="en-us"><script src="runpy.js?#" type=module id="fs,xvt,stdout,gui" async defer>#<!--
+<html><head><meta charset="utf-8"></head><script src="runpy.js?#" type=module id="fs,vtx,gui" async defer>#<!--
+import platform, asyncio
 from pathlib import Path
+
+
 cdn = Path("https://cdn.jsdelivr.net/pyodide/dev/full")
 
-print(f"CDN: {cdn}")
-
 if 0:
+    cdn = Path("https://cdn.jsdelivr.net/pyodide/dev/full")
+
+    print(f"CDN: {cdn}")
+
     shell.wget("-O/tmp/pip.json", cdn / "repodata.json")
 
     import json
-    with open("/tmp/pip.json") as data:
-        repo = json.loads( data.read() )
 
-    # print( json.dumps(repo["packages"], sort_keys=True, indent=4) )
+    with open("/tmp/pip.json") as data:
+        repo = json.loads(data.read())
+
+    print(json.dumps(repo["packages"], sort_keys=True, indent=4))
 
     def imports(*mods, lvl=0, wants=[]):
         global repo
         unseen = False
         for mod in mods:
-            for dep in repo["packages"][mod].get("depends",[]):
+            for dep in repo["packages"][mod].get("depends", []):
                 if not dep in wants:
                     unseen = True
                     wants.insert(0, dep)
-        if lvl<3 and unseen:
-            imports(*wants, lvl= lvl+1, wants = wants )
+        if lvl < 3 and unseen:
+            imports(*wants, lvl=lvl + 1, wants=wants)
 
         if not lvl:
             for dep in mods:
@@ -30,19 +36,44 @@ if 0:
                     wants.append(dep)
         return wants
 
-
-    for dep in imports("distutils","pyparsing","packaging","micropip"):
+    for dep in imports("distutils", "pyparsing", "packaging", "micropip"):
         print(dep)
-    print("="*40)
+    print("=" * 40)
     for dep in imports("matplotlib"):
         print(dep)
-if 1:
-    import pygame
-    pygame.init()
-    pygame.display.set_mode( (320,200) )
 
+
+if 0:
+
+    def on_upload_files(ev):
+        print("on_upload_files", ev)
+        if ev.mimetype.startswith("image/"):
+            # we can display that
+            shell.display(ev.text)
+
+    platform.EventTarget.addEventListener(None, "upload", on_upload_files)
+    platform.window.dlg_multifile.hidden = false
+
+    import pygame
+
+    pygame.init()
+    pygame.display.set_mode((320, 200))
+
+
+
+async def main():
+    async with platform.xopen( str(cdn / "repodata.json") ) as f:
+        print( len( f.read() ) )
+
+    async with platform.xopen("this.jpg", "rb") as f:
+        print( len( f.read() ) )
+
+
+    #it = platform.window.cross_img("this.jpg")
+    #print("IMG", len(await jsiter(it)))
+
+
+asyncio.run(main())
 
 
 # --></script></html>
-
-
