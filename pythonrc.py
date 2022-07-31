@@ -560,7 +560,7 @@ if not aio.cross.simulator:
         from platform import window, document
 
 
-        class xopen:
+        class fopen:
             ticks = 0
             def __init__(self, url, mode ="r"):
                 self.url = str(url)
@@ -594,7 +594,7 @@ if not aio.cross.simulator:
                     os.unlink(self.tmpfile)
                 return False
 
-        platform.xopen = xopen
+        platform.fopen = fopen
 
 
         async def jsiter(iterator):
