@@ -269,6 +269,7 @@ for (const script of document.getElementsByTagName('script')) {
                 url = location.origin + location.pathname
                 elems = location.search.substr(1).split('&') // python argv
                 vm.script.interpreter = "cpython"+elems.shift()
+                window.document.title =  vm.script.interpreter + location.hash
                 Array.prototype.push.apply(vm.argv, elems )
             } else {
                 elems = elems.shift().split('&')
@@ -341,6 +342,8 @@ for (const script of document.getElementsByTagName('script')) {
 
 // TODO scripts argv ( sys.argv )
 
+            // only one script tag for now
+            break
         }
     } else {
         console.log("script?", script.type, script.id, script.src, script.text )
@@ -358,184 +361,234 @@ async function onload() {
         console.warn("DEBUG MODE")
     }
 
+
     function br(){
         document.body.appendChild( document.createElement('br') )
     }
 
-    if (vm.config.features.includes("gui")) {
-
-        var canvas = document.getElementById('canvas')
-
-        if (!canvas) {
-            canvas = document.createElement('canvas')
-            canvas.setAttribute("id","canvas")
-            document.body.appendChild(canvas)
-            br()
-        }
-
-        vm.canvas = canvas
-
-        // window resize
-        function window_canvas_adjust() {
-            var want_w
-            var want_h
-
-            const ar = canvas.width / canvas.height
-
-            want_w = window.innerWidth
-            want_h = window.innerHeight
-
-            console.log("window:", want_w, want_h )
-            if (window.devicePixelRatio != 1 )
-                console.warn("Unsupported device pixel ratio", window.devicePixelRatio)
+    for (const feature of vm.config.features) {
 
 
-    // TODO: check height bounding box
-            if (!debug_hidden) {
-                want_w = Math.trunc(want_w /2)
-                want_h = Math.trunc(want_w / ar)
 
-                console.log("window[DEBUG]:", want_w, want_h, ar)
-            } else {
-                want_h = Math.trunc(want_w / ar)
+        // CANVAS
+
+        // TODO : variable SIZE ratio vs PARENT
+        //  default is 1/2
+
+        if (feature.startsWith("gui")) {
+
+            var canvas = document.getElementById('canvas')
+
+            if (!canvas) {
+                canvas = document.createElement('canvas')
+                canvas.setAttribute("id","canvas")
+                document.body.appendChild(canvas)
+                canvas.style.position = "absolute"
+                canvas.style.top = "10px"
+                canvas.style.right = "10px"
+                br()
             }
 
-            if (want_h > window.innerHeight) {
+            vm.canvas = canvas
+
+            // window resize
+            function window_canvas_adjust() {
+                var want_w
+                var want_h
+
+                const ar = canvas.width / canvas.height
+
+                want_w = window.innerWidth
                 want_h = window.innerHeight
-                want_w = want_h * ar
-            }
 
-            canvas.style.width = want_w + "px"
-            canvas.style.height = want_h + "px"
-            console.log("style[NEW]:", canvas.style.width, canvas.style.height)
-        }
+                console.log("window:", want_w, want_h )
+                if (window.devicePixelRatio != 1 )
+                    console.warn("Unsupported device pixel ratio", window.devicePixelRatio)
 
 
-        function window_resize() {
-            if (!window.canvas) {
-                console.warn("416: No canvas defined")
-                return
-            }
-            setTimeout(window_canvas_adjust, 100);
-            setTimeout(window.focus, 200);
-        }
+        // TODO: check height bounding box
+                if (!debug_hidden) {
+                    want_w = Math.trunc(want_w /2)
+                    want_h = Math.trunc(want_w / ar)
 
-        window.addEventListener('resize', window_resize);
-        window.window_resize = window_resize
-
-    }
-
-
-    // file upload widget
-
-    if (vm.config.features.includes("fs")) {
-
-        var uploaded_file_count = 0
-
-        function readFileAsArrayBuffer(file, success, error) {
-            var fr = new FileReader();
-            fr.addEventListener('error', error, false);
-            if (fr.readAsBinaryString) {
-                fr.addEventListener('load', function () {
-                    var string = this.resultString != null ? this.resultString : this.result;
-                    var result = new Uint8Array(string.length);
-                    for (var i = 0; i < string.length; i++) {
-                        result[i] = string.charCodeAt(i);
-                    }
-                    success(result.buffer);
-                }, false);
-                return fr.readAsBinaryString(file);
-            } else {
-                fr.addEventListener('load', function () {
-                    success(this.result);
-                }, false);
-                return fr.readAsArrayBuffer(file);
-            }
-        }
-
-
-
-        // file transfer
-        async function transfer_uploads(){
-            //let reader = new FileReader();
-
-            for (var i=0;i<dlg_multifile.files.length;i++) {
-                let file = dlg_multifile.files[i]
-                var frec = {}
-                const datapath = `/tmp/upload-${uploaded_file_count}`
-                    frec["name"] = file.name
-                frec["size"] = file.size
-                frec["mimetype"] = file.type
-                frec["text"] = datapath
-
-                function file_done(data) {
-                    const pydata = JSON.stringify(frec)
-                    console.warn("UPLOAD", pydata );
-                    python.FS.writeFile(datapath, new Int8Array(data) )
-                    python.PyRun_SimpleString(`#!
-__import__('platform').EventTarget.build('upload', json.dumps(${pydata}))
-`)
+                    console.log("window[DEBUG]:", want_w, want_h, ar)
+                } else {
+                    want_h = Math.trunc(want_w / ar)
                 }
-                readFileAsArrayBuffer(file, file_done, console.error )
-                uploaded_file_count++;
+
+                if (want_h > window.innerHeight) {
+                    want_h = window.innerHeight
+                    want_w = want_h * ar
+                }
+
+                canvas.style.width = want_w + "px"
+                canvas.style.height = want_h + "px"
+                console.log("style[NEW]:", canvas.style.width, canvas.style.height)
             }
 
-        }
-        var dlg_multifile = document.getElementById("dlg_multifile")
-        if (!dlg_multifile) {
-            dlg_multifile = document.createElement('input')
-            dlg_multifile.setAttribute("type","file")
-            dlg_multifile.setAttribute("id","dlg_multifile")
-            dlg_multifile.setAttribute("multiple",true)
-            dlg_multifile.setAttribute("hidden",true)
-            document.body.appendChild(dlg_multifile)
-            br()
-        }
-        dlg_multifile.addEventListener("change", transfer_uploads );
 
-    }
+            function window_resize() {
+                if (!window.canvas) {
+                    console.warn("416: No canvas defined")
+                    return
+                }
+                setTimeout(window_canvas_adjust, 100);
+                setTimeout(window.focus, 200);
+            }
 
-    window.addEventListener("focus", function(e){
-        const dump =  JSON.stringify(e)
-        console.warn(dump)
-        python.PyRun_SimpleString(`#!
+            window.addEventListener('resize', window_resize);
+            window.window_resize = window_resize
+
+        }
+
+
+        // file upload widget
+
+        if (feature.startsWith("fs")) {
+
+            var uploaded_file_count = 0
+
+            function readFileAsArrayBuffer(file, success, error) {
+                var fr = new FileReader();
+                fr.addEventListener('error', error, false);
+                if (fr.readAsBinaryString) {
+                    fr.addEventListener('load', function () {
+                        var string = this.resultString != null ? this.resultString : this.result;
+                        var result = new Uint8Array(string.length);
+                        for (var i = 0; i < string.length; i++) {
+                            result[i] = string.charCodeAt(i);
+                        }
+                        success(result.buffer);
+                    }, false);
+                    return fr.readAsBinaryString(file);
+                } else {
+                    fr.addEventListener('load', function () {
+                        success(this.result);
+                    }, false);
+                    return fr.readAsArrayBuffer(file);
+                }
+            }
+
+
+
+            // file transfer
+            async function transfer_uploads(){
+                //let reader = new FileReader();
+
+                for (var i=0;i<dlg_multifile.files.length;i++) {
+                    let file = dlg_multifile.files[i]
+                    var frec = {}
+                    const datapath = `/tmp/upload-${uploaded_file_count}`
+                        frec["name"] = file.name
+                    frec["size"] = file.size
+                    frec["mimetype"] = file.type
+                    frec["text"] = datapath
+
+                    function file_done(data) {
+                        const pydata = JSON.stringify(frec)
+                        console.warn("UPLOAD", pydata );
+                        python.FS.writeFile(datapath, new Int8Array(data) )
+                        python.PyRun_SimpleString(`#!
+__import__('platform').EventTarget.build('upload', json.dumps(${pydata}))
+    `)
+                    }
+                    readFileAsArrayBuffer(file, file_done, console.error )
+                    uploaded_file_count++;
+                }
+
+            }
+            var dlg_multifile = document.getElementById("dlg_multifile")
+            if (!dlg_multifile) {
+                dlg_multifile = document.createElement('input')
+                dlg_multifile.setAttribute("type","file")
+                dlg_multifile.setAttribute("id","dlg_multifile")
+                dlg_multifile.setAttribute("multiple",true)
+                dlg_multifile.hidden = debug_hidden
+                document.body.appendChild(dlg_multifile)
+                br()
+            }
+            dlg_multifile.addEventListener("change", transfer_uploads );
+
+        }
+
+        window.addEventListener("focus", function(e){
+            const dump =  JSON.stringify(e)
+            console.warn(dump)
+            python.PyRun_SimpleString(`#!
 __import__('platform').EventTarget.build('focus', json.dumps(${dump}))
-`)
-    })
+    `)
+        })
 
-    window.addEventListener("blur", function(){
-        console.log("lost focus")
-    })
+        window.addEventListener("blur", function(){
+            console.log("lost focus")
+        })
 
-    if (vm.config.features.includes("vt")) {
 
-        var stdio = document.getElementById('stdio')
-        if (!stdio){
-            stdio = document.createElement('div')
-            stdio.id = stdio
-            stdio.style.width = "640px";
-            stdio.style.height = "480px";
-            stdio.style.background = "black";
-            stdio.style.color = "yellow";
-            stdio.innerHTML = "vt100"
-            stdio.hidden = debug_hidden
-            stdio.setAttribute("tabIndex", 1)
-            document.body.appendChild(stdio)
-            br()
+        // TERMINAL
+
+        if (feature.startsWith("vt")) {
+
+            var stdio = document.getElementById('stdio')
+            if (!stdio){
+                stdio = document.createElement('div')
+                stdio.id = "stdio"
+                stdio.style.width = "640px";
+                stdio.style.height = "480px";
+                stdio.style.background = "black";
+                stdio.style.color = "yellow";
+                stdio.innerHTML = "vt100"
+                stdio.hidden = debug_hidden
+                stdio.setAttribute("tabIndex", 1)
+                document.body.appendChild(stdio)
+                br()
+            }
         }
 
-        const { Terminal, helper, handlevt } = await import("./vt.js")
+        if (feature === "vt") {
+            const { Terminal, helper, handlevt } = await import("./vt.js")
 
+            vm.vt.xterm = new Terminal(stdio, 132,25)
+            vm.vt.xterm.set_vm_handler(vm, null, null)
 
+            vm.vt.xterm.open()
+            vm.vt.xterm.write('Please \x1B[1;3;31mwait\x1B[0m ...\r\n')
 
-        vm.vt.xterm = new Terminal(stdio, 132,25)
-        vm.vt.xterm.set_vm_handler(vm, null, null)
+        }
 
-        vm.vt.xterm.open()
-        vm.vt.xterm.write('Please \x1B[1;3;31mwait\x1B[0m ...\r\n')
+        if (feature === "vtx") {
+            const { Terminal } = await import("https://raw.githubusercontent.com/pmp-p/python-wasm-plus/main/templates/libs/xterm/xtermjsixel/xterm.js")
+            console.log("XTERM",Terminal)
+        }
 
+        if (feature.startsWith("stdout")){
+            var stdout = document.getElementById('stdout')
+            if (!stdout){
+                stdout = document.createElement('pre')
+                stdout.id = "stdout"
+                stdout.style.whiteSpace = "pre-wrap"
+                stdout.hidden = false
+                document.body.appendChild(stdout)
+            }
+            stdout.write = function (text) {
+                var buffer = stdout.innerHTML.split("\r\n")
+                for (const line of text.split("\r\n") ) {
+                    if (line.length) {
+                        console.log(line.length,line)
+                        buffer.push( line )
+                    }
+                }
+
+                while (buffer.length>25)
+                    buffer.shift()
+
+                stdout.innerHTML =  buffer.join("\n")
+
+            }
+            vm.vt.xterm = stdout
+            stdout.write("Please wait ...")
+
+        }
     }
-
     window.busy--;
 }
 

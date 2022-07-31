@@ -1,10 +1,10 @@
-<!doctype html><html lang="en-us"><script src="runpy.js?#" type=module id="vt,gui,fs" async defer>#<!--
+<!doctype html><html lang="en-us"><script src="runpy.js?#" type=module id="fs,xvt,stdout,gui" async defer>#<!--
 from pathlib import Path
 cdn = Path("https://cdn.jsdelivr.net/pyodide/dev/full")
 
 print(f"CDN: {cdn}")
 
-if 1:
+if 0:
     shell.wget("-O/tmp/pip.json", cdn / "repodata.json")
 
     import json
@@ -36,14 +36,13 @@ if 1:
     print("="*40)
     for dep in imports("matplotlib"):
         print(dep)
-else:
+if 1:
     import pygame
     pygame.init()
     pygame.display.set_mode( (320,200) )
 
 
 
-# --></script>
-</html>
+# --></script></html>
 
 

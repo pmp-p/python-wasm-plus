@@ -27,15 +27,14 @@ echo " ------------------- building cpython wasm -----------------------"
 if ./scripts/cpython-build-emsdk.sh > /dev/null
 then
     echo " ------------------- building cpython pygame -------------------"
-    ./scripts/pygame-all.sh
-# > /dev/null
+    ./scripts/pygame-all.sh > /dev/null
 
     # pygame won't build if python or sdl failed
-    [ -f prebuilt/emsdk/libpygame.a ] || exit 1
+    [ -f prebuilt/emsdk/libpygame${PYBUILD}.a ] || exit 34
 
 else
     echo " cpython-build-emsdk failed"
-    exit 2
+    exit 38
 fi
 
 echo done
