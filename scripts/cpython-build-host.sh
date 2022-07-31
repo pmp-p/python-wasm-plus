@@ -21,6 +21,27 @@ else
     fi
 fi
 
+
+# in this special case build testsuite
+if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus
+then
+    TESTSUITE="--enable-test-modules"
+    echo "
+
+
+
+
+    ********** TESTSUITE test-modules enabled *******************
+
+
+
+
+    " 1>&2
+    TESTSUITE=""
+else
+    TESTSUITE=""
+fi
+
 if $REBUILD
 then
     pushd build/cpython-host
@@ -39,7 +60,7 @@ END
     CONFIG_SITE=$ROOT/src/cpython${PYBUILD}/Tools/wasm/config.host-wasm32-emscripten \
     PYOPTS="--disable-ipv6 \
      --with-c-locale-coercion --without-pymalloc --without-pydebug \
-     --with-ensurepip\
+     --with-ensurepip $TESTSUITE \
      --with-decimal-contextvar --disable-shared \
      --with-computed-gotos"
 

@@ -89,13 +89,13 @@ fi
 # in this special case build testsuite
 if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus
 then
-    #TESTSUITE="--enable-test-modules"
+    TESTSUITE="--enable-test-modules"
     echo "
 
 
 
 
-    ********** TESTSUITE test-modules disabled *******************
+    ********** TESTSUITE test-modules enabled *******************
 
 
 

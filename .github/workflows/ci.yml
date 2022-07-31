@@ -27,7 +27,8 @@ jobs:
             echo " === Building  ===="
             cd $GITHUB_WORKSPACE
             time bash ./python-wasm-plus.sh
-            du -hs prebuilt/emsdk/libpy*
+            du -hs $(find prebuild/emsdk/)
+
 
     - name: pack
       run: | 
