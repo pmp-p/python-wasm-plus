@@ -78,7 +78,11 @@ then
         do
             echo $obj
         done
+    else
+        exit 82
     fi
+else
+    exit 85
 fi
 popd
 

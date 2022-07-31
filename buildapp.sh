@@ -9,16 +9,20 @@ do
     echo "Waiting for pygame (prebuilt/emsdk/libpygame${PYBUILD}.a) build to complete ..."
     for i in 1 2 3 4
     do
-        [ -f ${ROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a ] && break
+        [ -f ${SDKROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a ] && break
         sleep 1
     done
-    [ -f ${ROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a ] && break
+    [ -f ${SDKROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a ] && break
 
 done
 reset
 
+EXE=python${PYMAJOR}${PYMINOR}
 
-EXE=python311
+echo "
+    * packing files for /python${PYMAJOR}${PYMINOR}/
+"
+
 
 # check if initial repo
 if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus/
@@ -28,10 +32,10 @@ then
     APK_DEFAULT="demos/org.python${PYBUILD}.0"
     mkdir -p $APK_DEFAULT
     pushd $APK_DEFAULT
-    cp -Ru $ROOT/devices/x86_64/usr/lib/python${PYBUILD} ./
+    cp -Ru $SDKROOT/devices/x86_64/usr/lib/python${PYBUILD} ./
     rm -rf ./python${PYBUILD}/lib-dynload/* ./python${PYBUILD}/site-packages/* ./python${PYBUILD}/config-*
-    cp -vf $ROOT/devices/emsdk/usr/lib/python${PYBUILD}/_sysconfigdata* ./python${PYBUILD}/
-    cp -vRf $ROOT/devices/emsdk/usr/lib/python${PYBUILD}/config-* ./python${PYBUILD}/
+    cp -vf $SDKROOT/devices/emsdk/usr/lib/python${PYBUILD}/_sysconfigdata* ./python${PYBUILD}/
+    cp -vRf $SDKROOT/devices/emsdk/usr/lib/python${PYBUILD}/config-* ./python${PYBUILD}/
     popd
 else
     APK_DEFAULT="demos/1-touchpong"
@@ -55,20 +59,17 @@ shift
 TMPL=$(realpath $TMPL)
 APK=$(realpath $APK)
 
-mkdir -p prebuilt/emsdk/${PYBUILD}/site-packages
-mkdir -p prebuilt/emsdk/${PYBUILD}/lib-dynload
-
 # pre populated site-packages
 REQUIREMENTS=$(realpath ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/site-packages)
 DYNLOAD=$(realpath ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/lib-dynload)
 
 # should already be done, but usefull when testing new modules
-if [ -d $ROOT/devices/emsdk/usr/lib/python${PYBUILD}/lib-dynload ]
+if [ -d $SDKROOT/devices/emsdk/usr/lib/python${PYBUILD}/lib-dynload ]
 then
     echo "
     * Adding new modules from $ROOT/devices/emsdk/usr/lib/python${PYBUILD}/lib-dynload
 "
-    mv $ROOT/devices/emsdk/usr/lib/python${PYBUILD}/lib-dynload/*.so $DYNLOAD/ 2>/dev/null
+    mv $SDKROOT/devices/emsdk/usr/lib/python${PYBUILD}/lib-dynload/*.so $DYNLOAD/ 2>/dev/null
 fi
 
 

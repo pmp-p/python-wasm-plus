@@ -19,6 +19,17 @@ window.__defineGetter__('__FILE__', function() {
 })
 
 
+const delay = (ms, fn_solver) => new Promise(resolve => setTimeout(() => resolve(fn_solver()), ms*1000));
+
+function _until(fn_solver){
+    return async function fwrapper(){
+        var argv = Array.from(arguments)
+        function solve_me(){return  fn_solver.apply(window, argv ) }
+        while (!await delay(0, solve_me ) )
+            {};
+    }
+}
+
 //urlretrieve
 function DEPRECATED_wget_sync(url, store){
     const request = new XMLHttpRequest();
@@ -241,6 +252,9 @@ if os.path.isfile("/data/data/pythonrc.py"):
 }
 
 
+
+
+
 for (const script of document.getElementsByTagName('script')) {
     if (script.type == 'module') {
         if ( (script.src.search('#')>0) && ( script.src.search('runpy') >0) ) {
@@ -320,18 +334,13 @@ for (const script of document.getElementsByTagName('script')) {
 `),
 
                 vm.config = config
-
-                const jswasmloader=document.createElement('script')
-                jswasmloader.setAttribute("type","text/javascript")
-                jswasmloader.setAttribute("src", config.executable )
-                jswasmloader.setAttribute('async', true);
-                document.getElementsByTagName("head")[0].appendChild(jswasmloader)
-
             }
 
-
+// TODO remote script
             vm.script.main = code
+
 // TODO scripts argv ( sys.argv )
+
         }
     } else {
         console.log("script?", script.type, script.id, script.src, script.text )
@@ -339,14 +348,82 @@ for (const script of document.getElementsByTagName('script')) {
 }
 
 
-function onload() {
+
+async function onload() {
     var debug_hidden = true;
 
-    if (location.hash == "#debug") {
+    // TODO:  -x
+    if (1) { //location.hash == "#debug") {
         debug_hidden = false;
         console.warn("DEBUG MODE")
     }
 
+    function br(){
+        document.body.appendChild( document.createElement('br') )
+    }
+
+    if (vm.config.features.includes("gui")) {
+
+        var canvas = document.getElementById('canvas')
+
+        if (!canvas) {
+            canvas = document.createElement('canvas')
+            canvas.setAttribute("id","canvas")
+            document.body.appendChild(canvas)
+            br()
+        }
+
+        vm.canvas = canvas
+
+        // window resize
+        function window_canvas_adjust() {
+            var want_w
+            var want_h
+
+            const ar = canvas.width / canvas.height
+
+            want_w = window.innerWidth
+            want_h = window.innerHeight
+
+            console.log("window:", want_w, want_h )
+            if (window.devicePixelRatio != 1 )
+                console.warn("Unsupported device pixel ratio", window.devicePixelRatio)
+
+
+    // TODO: check height bounding box
+            if (!debug_hidden) {
+                want_w = Math.trunc(want_w /2)
+                want_h = Math.trunc(want_w / ar)
+
+                console.log("window[DEBUG]:", want_w, want_h, ar)
+            } else {
+                want_h = Math.trunc(want_w / ar)
+            }
+
+            if (want_h > window.innerHeight) {
+                want_h = window.innerHeight
+                want_w = want_h * ar
+            }
+
+            canvas.style.width = want_w + "px"
+            canvas.style.height = want_h + "px"
+            console.log("style[NEW]:", canvas.style.width, canvas.style.height)
+        }
+
+
+        function window_resize() {
+            if (!window.canvas) {
+                console.warn("416: No canvas defined")
+                return
+            }
+            setTimeout(window_canvas_adjust, 100);
+            setTimeout(window.focus, 200);
+        }
+
+        window.addEventListener('resize', window_resize);
+        window.window_resize = window_resize
+
+    }
 
 
     // file upload widget
@@ -404,14 +481,18 @@ __import__('platform').EventTarget.build('upload', json.dumps(${pydata}))
             }
 
         }
-
-        const dlg_multifile = document.createElement('input')
-        dlg_multifile.setAttribute("type","file")
-        dlg_multifile.setAttribute("id","dlg_multifile")
-        dlg_multifile.setAttribute("multiple",true)
-        dlg_multifile.setAttribute("hidden",true)
+        var dlg_multifile = document.getElementById("dlg_multifile")
+        if (!dlg_multifile) {
+            dlg_multifile = document.createElement('input')
+            dlg_multifile.setAttribute("type","file")
+            dlg_multifile.setAttribute("id","dlg_multifile")
+            dlg_multifile.setAttribute("multiple",true)
+            dlg_multifile.setAttribute("hidden",true)
+            document.body.appendChild(dlg_multifile)
+            br()
+        }
         dlg_multifile.addEventListener("change", transfer_uploads );
-        document.body.appendChild(dlg_multifile)
+
     }
 
     window.addEventListener("focus", function(e){
@@ -427,92 +508,62 @@ __import__('platform').EventTarget.build('focus', json.dumps(${dump}))
     })
 
     if (vm.config.features.includes("vt")) {
-        console.error("[[[[[[[[[[[ TODO VT ]]]]]]]]]]]]")
+
+        var stdio = document.getElementById('stdio')
+        if (!stdio){
+            stdio = document.createElement('div')
+            stdio.id = stdio
+            stdio.style.width = "640px";
+            stdio.style.height = "480px";
+            stdio.style.background = "black";
+            stdio.style.color = "yellow";
+            stdio.innerHTML = "vt100"
+            stdio.hidden = debug_hidden
+            stdio.setAttribute("tabIndex", 1)
+            document.body.appendChild(stdio)
+            br()
+        }
+
+        const { Terminal, helper, handlevt } = await import("./vt.js")
+
+
+
+        vm.vt.xterm = new Terminal(stdio, 132,25)
+        vm.vt.xterm.set_vm_handler(vm, null, null)
+
+        vm.vt.xterm.open()
+        vm.vt.xterm.write('Please \x1B[1;3;31mwait\x1B[0m ...\r\n')
 
     }
 
-    if (vm.config.features.includes("gui")) {
-
-        var canvas = document.getElementById('canvas')
-
-        if (!canvas) {
-            canvas = document.createElement('canvas')
-            canvas.setAttribute("id","canvas")
-            document.body.appendChild(canvas)
-        }
-
-        vm.canvas = canvas
-
-        // window resize
-        function window_canvas_adjust() {
-            var want_w
-            var want_h
-
-            const ar = canvas.width / canvas.height
-
-            want_w = window.innerWidth
-            want_h = window.innerHeight
-
-            console.log("window:", want_w, want_h )
-            if (window.devicePixelRatio != 1 )
-                console.warn("Unsupported device pixel ratio", window.devicePixelRatio)
-
-
-    // TODO: check height bounding box
-            if (!debug_hidden) {
-                want_w = Math.trunc(want_w /2)
-                want_h = Math.trunc(want_w / ar)
-
-                console.log("window[DEBUG]:", want_w, want_h, ar)
-            } else {
-                want_h = Math.trunc(want_w / ar)
-            }
-
-            if (want_h > window.innerHeight) {
-                want_h = window.innerHeight
-                want_w = want_h * ar
-            }
-
-            canvas.style.width = want_w + "px"
-            canvas.style.height = want_h + "px"
-            console.log("style[NEW]:", canvas.style.width, canvas.style.height)
-        }
-
-
-        function window_resize() {
-            if (!window.canvas) {
-                console.warn("416: No canvas defined")
-                return
-            }
-            setTimeout(window_canvas_adjust, 100);
-            setTimeout(window.focus, 200);
-        }
-
-        window.addEventListener('resize', window_resize);
-        window.window_resize = window_resize
-
-    }
-
-
-
-
-
+    window.busy--;
 }
 
 
+window.busy = 1
 
 window.addEventListener("load", onload )
 
 
+function ready(value) {
+    return window.busy !== 1
+}
 
 
 
 
+console.log("waiting for loaded ... ")
+await _until(ready)(0)
+console.log("loaded ! ")
 
 
 
-
-
+console.warn("loading wasm python interpreter")
+const jswasmloader=document.createElement('script')
+jswasmloader.setAttribute("type","text/javascript")
+jswasmloader.setAttribute("src", config.executable )
+jswasmloader.setAttribute('async', true);
+document.getElementsByTagName("head")[0].appendChild(jswasmloader)
 
 
 

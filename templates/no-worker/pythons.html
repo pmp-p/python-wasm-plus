@@ -1,40 +1,45 @@
-<!doctype html><html lang="en-us"><script src="runpy.js?#" type=module id="vt,gui,fs" defer>#<!--
+<!doctype html><html lang="en-us"><script src="runpy.js?#" type=module id="vt,gui,fs" async defer>#<!--
 from pathlib import Path
 cdn = Path("https://cdn.jsdelivr.net/pyodide/dev/full")
 
 print(f"CDN: {cdn}")
 
-shell.wget("-O/tmp/pip.json", cdn / "repodata.json")
+if 1:
+    shell.wget("-O/tmp/pip.json", cdn / "repodata.json")
 
-import json
-with open("/tmp/pip.json") as data:
-    repo = json.loads( data.read() )
+    import json
+    with open("/tmp/pip.json") as data:
+        repo = json.loads( data.read() )
 
-# print( json.dumps(repo["packages"], sort_keys=True, indent=4) )
+    # print( json.dumps(repo["packages"], sort_keys=True, indent=4) )
 
-def imports(*mods, lvl=0, wants=[]):
-    global repo
-    unseen = False
-    for mod in mods:
-        for dep in repo["packages"][mod].get("depends",[]):
-            if not dep in wants:
-                unseen = True
-                wants.insert(0, dep)
-    if lvl<3 and unseen:
-        imports(*wants, lvl= lvl+1, wants = wants )
+    def imports(*mods, lvl=0, wants=[]):
+        global repo
+        unseen = False
+        for mod in mods:
+            for dep in repo["packages"][mod].get("depends",[]):
+                if not dep in wants:
+                    unseen = True
+                    wants.insert(0, dep)
+        if lvl<3 and unseen:
+            imports(*wants, lvl= lvl+1, wants = wants )
 
-    if not lvl:
-        for dep in mods:
-            if not dep in wants:
-                wants.append(dep)
-    return wants
+        if not lvl:
+            for dep in mods:
+                if not dep in wants:
+                    wants.append(dep)
+        return wants
 
 
-for dep in imports("distutils","pyparsing","packaging","micropip"):
-    print(dep)
-print("="*40)
-for dep in imports("matplotlib"):
-    print(dep)
+    for dep in imports("distutils","pyparsing","packaging","micropip"):
+        print(dep)
+    print("="*40)
+    for dep in imports("matplotlib"):
+        print(dep)
+else:
+    import pygame
+    pygame.init()
+    pygame.display.set_mode( (320,200) )
 
 
 

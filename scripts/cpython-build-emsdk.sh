@@ -331,6 +331,8 @@ END
 
 chmod +x $HOST_PREFIX/bin/python3-wasm
 
+# TODO: FIXME:
+echo "335 cannot use python3-wasm as python3 for setup.py in pygame build"
 ln -sf $HOST_PREFIX/bin/python${PYBUILD} $HOST_PREFIX/bin/python3
 
 cp -f $HOST_PREFIX/bin/python3-wasm ${ROOT}/
