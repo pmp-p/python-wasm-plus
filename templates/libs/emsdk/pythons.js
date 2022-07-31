@@ -1,5 +1,8 @@
 "use strict";
 
+console.log("=================================================================")
+
+
 window.__defineGetter__('__FILE__', function() {
   return (new Error).stack.split('/').slice(-1).join().split('?')[0].split(':')[0] +": "
 })
@@ -38,7 +41,7 @@ function defined(e,o){
 function register(fn,fn_dn){
     if (!defined(fn_dn) )
         fn_dn = fn.name;
-    console.log('  |-- added ' + fn_dn );
+    console.warn('  |-- added ' + fn_dn );
     window[fn_dn]=fn;
 }
 
@@ -220,255 +223,6 @@ function on_change(elem_id, pycode, jsfunc) {
         console.error(__FILE__, `cannot bind code to id=${button_id}`)
 }
 register(on_change)
-
-
-
-
-// READLINE ========================================================
-
-
-var readline = { last_cx : -1 , index : 0, history : ["help()"] }
-
-
-readline.complete = function (line) {
-    if ( readline.history[ readline.history.length -1 ] != line )
-        readline.history.push(line);
-    readline.index = 0;
-    python.PyRun_SimpleString(line + "\n")
-
-}
-
-window.readline = readline
-
-
-// Xterm Sixel ======================================================
-
-export class WasmTerminal {
-    constructor(hostid, cols, rows, addons_list) {
-        this.input = ''
-        this.resolveInput = null
-        this.activeInput = true
-        this.inputStartCursor = null
-
-
-        this.nodup = 1
-        this.sixel = function ni() {
-            console.warn("SIXEL N/I")
-        }
-
-console.warn("SIXEL N/I")
-
-        this.xterm = new Terminal(
-            {
-                allowTransparency: true,
-                scrollback: 10000,
-                fontSize: 14,
-                theme: { background: '#1a1c1f' },
-                cols: (cols || 100), rows: (rows || 25)
-            }
-        );
-
-        if (typeof(Worker) !== "undefined") {
-
-            for (const addon of (addons_list||[]) ) {
-                console.warn(hostid,cols,rows, addon)
-                const imageAddon = new ImageAddon.ImageAddon(addon.url , addon);
-                this.xterm.loadAddon(imageAddon);
-            }
-
-        } else {
-            console.warn("No worker support, not loading xterm addons")
-        }
-
-
-        this.xterm.open(document.getElementById(hostid))
-
-        // hack to hide scrollbar inside box
-        //document.getElementsByClassName('xterm-viewport')[0].style.left="-15px"
-
-        this.xterm.onKey((keyEvent) => {
-            // Fix for iOS Keyboard Jumping on space
-            if (keyEvent.key === " ") {
-                keyEvent.domEvent.preventDefault();
-            }
-
-        });
-
-        this.xterm.onData(this.handleTermData)
-    }
-
-    open(container) {
-        this.xterm.open(container);
-    }
-
-    ESC() {
-        for (var i=0; i < arguments.length; i++)
-            this.xterm.write("\x1b"+arguments[i])
-    }
-
-    handleTermData = (data) => {
-
-        const ord = data.charCodeAt(0);
-        let ofs;
-
-        const cx = this.xterm.buffer.active.cursorX
-
-        // TODO: Handle ANSI escape sequences
-        if (ord === 0x1b) {
-
-            // Handle special characters
-            switch ( data.charCodeAt(1) ) {
-                case 0x5b:
-
-                    const cursor = readline.history.length  + readline.index
-                    var histo = ">>> "
-
-                    switch ( data.charCodeAt(2) ) {
-
-                        case 65:
-                            //console.log("VT UP")
-                            // memo cursor pos before entering histo
-                            if (!readline.index) {
-                                if (readline.last_cx < 0 ) {
-                                    readline.last_cx = cx
-                                    readline.buffer = this.input
-                                }
-                                // TODO: get current line content from XTERM
-                            }
-
-                            if ( cursor >0 ) {
-                                readline.index--
-                                histo = ">>> " +readline.history[cursor-1]
-                                //console.log(__FILE__," histo-up  :", readline.index, cursor, histo)
-
-                                this.ESC("[132D","[2K")
-                                this.xterm.write(histo)
-                                this.input = histo.substr(4)
-                            }
-                            break;
-
-                        case 66:
-                            //console.log("VT DOWN")
-                            if ( readline.index < 0  ) {
-                                readline.index++
-                                histo = histo + readline.history[cursor]
-                                this.ESC("[132D","[2K")
-                                this.xterm.write(histo)
-                                this.input = histo.substr(4)
-                            } else {
-                                // we are back
-                                if (readline.last_cx >= 0) {
-                                    histo = histo + readline.buffer
-                                    readline.buffer = ""
-                                    this.ESC("[2K")
-                                    this.ESC("[132D")
-                                    this.xterm.write(histo)
-                                    this.input = histo.substr(4)
-                                    this.ESC("[132D")
-                                    this.ESC("["+readline.last_cx+"C")
-                                    //console.log(__FILE__," histo-back", readline.index, cursor, histo)
-                                    readline.last_cx = -1
-                                }
-                            }
-                            break;
-
-                        case 67:
-                            //console.log("VT RIGHT")
-                            break;
-
-                        case 68:
-                            //console.log("VT LEFT")
-                            break;
-
-                        default:
-                            console.log(__FILE__,"VT arrow ? "+data.charCodeAt(2))
-                    }
-                    break
-                default:
-
-                    console.log(__FILE__,"VT ESC "+data.charCodeAt(1))
-            }
-
-        } else if (ord < 32 || ord === 0x7f) {
-            switch (data) {
-                case "\r": // ENTER
-                case "\x0a": // CTRL+J
-                case "\x0d": // CTRL+M
-                    this.xterm.write('\r\n');
-                    readline.complete(this.input)
-                    this.input = '';
-                    break;
-                case "\x7F": // BACKSPACE
-                case "\x08": // CTRL+H
-                case "\x04": // CTRL+D
-                    this.handleCursorErase(true);
-                    break;
-
-                case "\0x03": // CTRL+C
-
-                    break
-
-                // ^L for clearing VT but keep X pos.
-                case "\x0c":
-                    const cy = this.xterm.buffer.active.cursorY
-
-                    if (cy < this.xterm.rows )
-                        this.ESC("[B","[J","[A")
-
-                    this.ESC("[A","[K","[1J")
-
-                    for (var i=1;i<cy;i++) {
-                        this.ESC("[A","[M")
-                    }
-
-                    this.ESC("[M")
-
-                    if ( cx>0 )
-                        this.ESC("["+cx+"C")
-                    break;
-
-            default:
-                switch (ord) {
-                    case 3:
-                        readline.complete("raise KeyboardInterrupt")
-                        break
-                default :
-                    console.log("vt:" + ord )
-                }
-            }
-        } else {
-            this.input += data;
-            this.xterm.write(data)
-        }
-    }
-
-    handleCursorErase() {
-        // Don't delete past the start of input
-        if (this.xterm.buffer.active.cursorX <= this.inputStartCursor) {
-            return
-        }
-        this.input = this.input.slice(0, -1)
-        this.xterm.write('\x1B[D')
-        this.xterm.write('\x1B[P')
-    }
-
-
-    clear() {
-        this.xterm.clear()
-    }
-
-    // direct write
-    sixel(data) {
-        this.xterm.write(data)
-    }
-
-    print(message) {
-        const normInput = message.replace(/[\r\n]+/g, "\n").replace(/\n/g, "\r\n")
-        this.xterm.write(normInput)
-    }
-
-}
-register(WasmTerminal)
 
 // Browser FS ====================================================
 var VM
@@ -705,7 +459,12 @@ function pythonvm(vterm, config) {
         return text_codec.decode(  new Uint8Array(ary) )
     }
 
+
     register(b_utf8)
+
+    const writer = function(data){
+            vterm.xterm.write(data)
+    }
 
     function pre1(VM){
 
@@ -714,69 +473,76 @@ function pythonvm(vterm, config) {
         }
 
         function stdout(code) {
+            try {
+                var flush = (code == 4)
+                if (flush) {
+                    flushed_stdout = true
+                } else {
+                    if (code == 10) {
+                        if (flushed_stdout) {
+                            flushed_stdout = false
+                            return
+                        }
 
-            var flush = (code == 4)
-            if (flush) {
-                flushed_stdout = true
-            } else {
-                if (code == 10) {
-                    if (flushed_stdout) {
-                        flushed_stdout = false
+                        buffer_stdout += "\r\n";
+                        flush = true
+                    }
+                    flushed_stdout = false
+                }
+
+                if (buffer_stdout != "") {
+                    if (flush) {
+                        if (buffer_stdout.startsWith(sixel_prefix)) {
+                            console.info("[sixel image]");
+                            VM.vt.sixel(buffer_stdout);
+                        } else {
+                            if (buffer_stdout.startsWith("Looks like you are rendering"))
+                                return;
+
+                            writer( b_utf8(buffer_stdout) )
+                        }
+                        buffer_stdout = ""
                         return
                     }
-
-                    buffer_stdout += "\r\n";
-                    flush = true
                 }
-                flushed_stdout = false
+                if (!flush)
+                    buffer_stdout += String.fromCharCode(code);
+            } catch (x) {
+                console.error(x)
             }
-
-            if (buffer_stdout != "") {
-                if (flush) {
-                    if (buffer_stdout.startsWith(sixel_prefix)) {
-                        console.info("[sixel image]");
-                        VM.vt.sixel(buffer_stdout);
-                    } else {
-                        if (buffer_stdout.startsWith("Looks like you are rendering"))
-                            return;
-
-                        writer( b_utf8(buffer_stdout) )
-                    }
-                    buffer_stdout = ""
-                    return
-                }
-            }
-            if (!flush)
-                buffer_stdout += String.fromCharCode(code);
         }
 
 
         function stderr(code) {
-            var flush = (code == 4)
-            if (flush) {
-                flushed_stderr = true
-            } else {
-                if (code === 10) {
-                    if (flushed_stderr) {
-                        flushed_stderr = false
+            try {
+                var flush = (code == 4)
+                if (flush) {
+                    flushed_stderr = true
+                } else {
+                    if (code === 10) {
+                        if (flushed_stderr) {
+                            flushed_stderr = false
+                            return
+                        }
+                        buffer_stderr += "\r\n";
+                        flush = true
+                    }
+                    flushed_stderr = false
+                }
+
+                if (buffer_stderr != "") {
+                    if (flush) {
+                        console.log(buffer_stderr);
+                        writer(buffer_stderr)
+                        buffer_stderr = ""
                         return
                     }
-                    buffer_stderr += "\r\n";
-                    flush = true
                 }
-                flushed_stderr = false
+                if (!flush)
+                    buffer_stderr += String.fromCharCode(code);
+            } catch (x) {
+                console.error(x)
             }
-
-            if (buffer_stderr != "") {
-                if (flush) {
-                    console.log(buffer_stderr);
-                    writer(buffer_stderr)
-                    buffer_stderr = ""
-                    return
-                }
-            }
-            if (!flush)
-                buffer_stderr += String.fromCharCode(code);
         }
 
         if (!modularized) {
