@@ -116,7 +116,7 @@ except:
     else:
         builtins.__EMSCRIPTEN__ = None
 
-    is_browser = not sys._emscripten_info.runtime.startswith('Node.js')
+
 
     from embed import *
 
@@ -126,6 +126,11 @@ except:
         from embed_emscripten import *
     else:
         pdb(__file__,":107 no browser/emscripten modules yet")
+
+try:
+    is_browser = not sys._emscripten_info.runtime.startswith('Node.js')
+except:
+    is_browser = False
 
 
 # force use a fixed, tested version of uasyncio to avoid non-determinism

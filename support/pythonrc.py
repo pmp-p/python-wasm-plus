@@ -361,7 +361,6 @@ if defined("embed") and hasattr(embed, "readline"):
 
         @classmethod
         def uptime(cls, *argv, **env):
-            import platform
             import asyncio
             if platform.is_browser:
                 async def perf_index():
@@ -466,10 +465,9 @@ import random
 random.seed(1)
 
 if not aio.cross.simulator:
-    import platform
+    import __EMSCRIPTEN__ as platform
 
     def apply_patches():
-        import platform
         builtins.true = True
         builtins.false = False
 
@@ -546,7 +544,7 @@ if not aio.cross.simulator:
         import urllib.request
 
         def urlretrieve(url, filename=None, reporthook=None, data=None):
-            import platform
+
             filename = filename or f"/tmp/uru-{aio.ticks}"
             rc=platform.window.python.DEPRECATED_wget_sync(str(url), str(filename))
             if rc==200:

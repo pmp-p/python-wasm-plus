@@ -4,14 +4,33 @@ import platform, asyncio
 from platform import window, document
 from pathlib import Path
 
+# fence from startup
+if 0:
+    import distutils
+    import pyparsing
+    import packaging
+    from micropip import *
+
+
+
 
 cdn = Path("https://cdn.jsdelivr.net/pyodide/dev/full")
 
-if 0:
-    cdn = Path("https://cdn.jsdelivr.net/pyodide/dev/full")
+if 1:
 
     print(f"CDN: {cdn}")
 
+    #read our python code from script tag
+    code = window.main.text
+
+
+    # or from local copy
+    with open(__file__) as fcode:
+        assert code == fcode.read()
+
+
+
+    # use synchronous download
     shell.wget("-O/tmp/pip.json", cdn / "repodata.json")
 
     import json
@@ -19,7 +38,7 @@ if 0:
     with open("/tmp/pip.json") as data:
         repo = json.loads(data.read())
 
-    print(json.dumps(repo["packages"], sort_keys=True, indent=4))
+    #print(json.dumps(repo["packages"], sort_keys=True, indent=4))
 
     def imports(*mods, lvl=0, wants=[]):
         global repo
@@ -38,8 +57,10 @@ if 0:
                     wants.append(dep)
         return wants
 
+
     for dep in imports("distutils", "pyparsing", "packaging", "micropip"):
         print(dep)
+
     print("=" * 40)
     for dep in imports("matplotlib"):
         print(dep)
@@ -64,10 +85,11 @@ if 0:
 
 
 async def main():
-    if 1:
+    if 0:
         async with platform.fopen( str(cdn / "repodata.json") ) as f:
             print( len( f.read() ) )
 
+    if 0:
         async with platform.fopen("this.jpg", "rb") as f:
             print( len( f.read() ) )
 

@@ -29,6 +29,7 @@ fi
 if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus/
 then
     TESTSUITE="--enable-test-modules"
+    TESTSUITE=""
 else
     TESTSUITE=""
 fi
