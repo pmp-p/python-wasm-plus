@@ -33,6 +33,17 @@ echo "
 # remove old lib
 [ -f ${ROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a ] && rm ${ROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a
 
+if $CI
+then
+    echo " * not building host pygame"
+else
+    echo " * building host pygame for desktop simulator"
+    pushd src/pygame-wasm
+    $HPY setup.py -config -auto -sdl2
+    $HPY setup.py install
+    popd
+fi
+
 # remove anything that could be native
 if [ -d src/pygame-wasm/build ]
 then
