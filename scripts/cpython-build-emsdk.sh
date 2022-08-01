@@ -87,30 +87,25 @@ echo "
 fi
 
 # in this special case build testsuite
-if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus
+if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus/
 then
     TESTSUITE="--enable-test-modules"
-    echo "
-
-
-
-
-    ********** TESTSUITE test-modules enabled *******************
-
-
-
-
-    " 1>&2
-    TESTSUITE=""
 else
     TESTSUITE=""
 fi
 
 echo "
 
-TESTSUITE=$TESTSUITE
 
-"
+
+
+    ********** TESTSUITE test-modules == $TESTSUITE *******************
+
+
+
+
+" 1>&2
+
 
 
 if [ -f build/cpython-wasm/libpython${PYBUILD}.a ]

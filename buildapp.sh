@@ -32,6 +32,7 @@ EXE=python${PYMAJOR}${PYMINOR}
 # check if initial repo
 if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus/
 then
+    echo " * packing testsuite * "
     # in this special case build testsuite frontend
     TMPL_DEFAULT="templates/no-worker"
     APK_DEFAULT="demos/org.python${PYBUILD}.0"
@@ -39,6 +40,7 @@ then
     pushd $APK_DEFAULT
     cp -Ru $SDKROOT/devices/x86_64/usr/lib/python${PYBUILD} ./
     rm -rf ./python${PYBUILD}/lib-dynload/* ./python${PYBUILD}/site-packages/* ./python${PYBUILD}/config-*
+    cp -rf ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/* ./python${PYBUILD}/
     cp -vf $SDKROOT/devices/emsdk/usr/lib/python${PYBUILD}/_sysconfigdata* ./python${PYBUILD}/
     cp -vRf $SDKROOT/devices/emsdk/usr/lib/python${PYBUILD}/config-* ./python${PYBUILD}/
     popd
