@@ -9,12 +9,13 @@ then
 "
 else
     pushd src
+    # if running from main repo use the upstreaming pygame-wasm
     if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus/
     then
         # pygame-wasm testing
         git clone --no-tags --depth 1 --single-branch -b pygame-wasm https://github.com/pmp-p/pygame-wasm pygame-wasm
     else
-        # git pygame
+        # git pygame for pygame-web
         git clone --no-tags --depth 1 --single-branch -b main https://github.com/pygame/pygame pygame-wasm
     fi
     popd

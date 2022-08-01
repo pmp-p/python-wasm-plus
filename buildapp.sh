@@ -30,7 +30,7 @@ EXE=python${PYMAJOR}${PYMINOR}
 
 
 # check if initial repo
-if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus/
+if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus
 then
     echo " * packing testsuite * "
     # in this special case build testsuite frontend

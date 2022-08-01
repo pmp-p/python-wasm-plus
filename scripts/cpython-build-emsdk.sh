@@ -87,10 +87,13 @@ echo "
 fi
 
 # in this special case build testsuite
+# main repo https://github.com/pmp-p/python-wasm-plus
+
+# pygame-web won't build test modules
+
 if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus/
 then
-    #TESTSUITE="--enable-test-modules"
-    TESTSUITE=""
+    TESTSUITE="--enable-test-modules"
 else
     TESTSUITE=""
 fi

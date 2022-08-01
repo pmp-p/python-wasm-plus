@@ -21,26 +21,30 @@ else
     fi
 fi
 
-
 # in this special case build testsuite
-if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus
+# main repo https://github.com/pmp-p/python-wasm-plus
+
+# pygame-web won't build test modules
+
+if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus/
 then
     TESTSUITE="--enable-test-modules"
-    echo "
-
-
-
-
-    ********** TESTSUITE test-modules enabled *******************
-
-
-
-
-    " 1>&2
-    TESTSUITE=""
 else
     TESTSUITE=""
 fi
+
+echo "
+
+
+
+
+    ********** TESTSUITE test-modules == $TESTSUITE *******************
+
+
+
+
+" 1>&2
+
 
 if $REBUILD
 then
