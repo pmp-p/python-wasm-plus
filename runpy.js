@@ -1,10 +1,12 @@
 "use strict";
 
+/*
 const logLines = ["Property (Typeof): Value", `location (${typeof location}): ${location}`];
 for (const prop in location) {
     logLines.push(`${prop} (${typeof location[prop]}): ${location[prop] || "n/a"}`);
 }
 console.log( logLines.join("\n") )
+*/
 
 var config = {}
 
@@ -19,13 +21,13 @@ window.__defineGetter__('__FILE__', function() {
 })
 
 
-const delay = (ms, fn_solver) => new Promise(resolve => setTimeout(() => resolve(fn_solver()), ms*1000));
+const delay = (ms, fn_solver) => new Promise(resolve => setTimeout(() => resolve(fn_solver()), ms));
 
 function _until(fn_solver){
     return async function fwrapper(){
         var argv = Array.from(arguments)
         function solve_me(){return  fn_solver.apply(window, argv ) }
-        while (!await delay(0, solve_me ) )
+        while (!await delay(16, solve_me ) )
             {};
     }
 }
@@ -323,17 +325,10 @@ for (const script of document.getElementsByTagName('script')) {
                 Array.prototype.push.apply(vm.argv, elems )
             }
 
-            console.log('script: interpreter=', vm.script.interpreter)
-            console.log('script: url=', url)
-            console.log('script: src=', script.src)
-            console.log('script: loc=', location.href)
-            console.log('script: id=', script.id)
-            console.log('code : ' , code.length)
-
             if (vm.script.interpreter.startsWith("cpython")){
 
                 config = {
-                    cdn     : "http://localhost:8000/",
+                    cdn     : script.src.split('runpy.js?',1)[0],
                     xtermjs : 0,
                     interactive : 0,
                     archive : 0,
@@ -342,9 +337,24 @@ for (const script of document.getElementsByTagName('script')) {
                     PYBUILD : vm.script.interpreter.substr(7) || "3.11",
                     _sdl2   : "canvas"
                 }
+
+                if (url.search("localhost")>0)
+                    config.cdn = "http://localhost:8000/"
+
                 config.pydigits = config.PYBUILD.replace(".","")
 
                 config.executable = `${config.cdn}python${config.pydigits}/main.js`
+
+console.log('script: interpreter=', vm.script.interpreter)
+console.log('script: url=', url)
+console.log('script: cdn=', config.cdn)
+console.log('script: src=', script.src)
+console.log('script: data-src=', script.dataset.src)
+console.log('script: loc=', location.href)
+console.log('script: id=', script.id)
+console.log('code : ' , code.length)
+
+
 
                 vm.PyConfig = JSON.parse(`
 {
@@ -610,16 +620,6 @@ __import__('platform').EventTarget.build('focus', json.dumps(${dump}))
                 if (!terminal){
                     terminal = document.createElement('div')
                     terminal.id = "terminal"
-/*
-                    terminal.style.width = "640px";
-                    terminal.style.height = "480px";
-
-
-                    terminal.style.background = "black";
-                    terminal.style.color = "yellow";
-                    terminal.innerHTML = "vt100"
-                    terminal.hidden = debug_hidden
-*/
                     terminal.setAttribute("tabIndex", 1)
                     document.body.appendChild(terminal)
                     br()
@@ -665,6 +665,16 @@ __import__('platform').EventTarget.build('focus', json.dumps(${dump}))
         }
     }
     window.busy--;
+
+
+    console.warn("Loading python interpreter from",config.executable)
+    const jswasmloader=document.createElement('script')
+    jswasmloader.setAttribute("type","text/javascript")
+    jswasmloader.setAttribute("src", config.executable )
+    jswasmloader.setAttribute('async', true);
+    document.getElementsByTagName("head")[0].appendChild(jswasmloader)
+
+
 }
 
 
@@ -672,7 +682,7 @@ window.busy = 1
 
 window.addEventListener("load", onload )
 
-
+/*
 function ready(value) {
     return window.busy !== 1
 }
@@ -684,15 +694,7 @@ console.log("waiting for loaded ... ")
 await _until(ready)(0)
 console.log("loaded ! ")
 
-
-
-console.warn("loading wasm python interpreter")
-const jswasmloader=document.createElement('script')
-jswasmloader.setAttribute("type","text/javascript")
-jswasmloader.setAttribute("src", config.executable )
-jswasmloader.setAttribute('async', true);
-document.getElementsByTagName("head")[0].appendChild(jswasmloader)
-
+*/
 
 
 
