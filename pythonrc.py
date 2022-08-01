@@ -569,7 +569,7 @@ if not aio.cross.simulator:
 
             async def __aenter__(self):
                 import platform
-                print('Starting')
+                print(f'572: Download start: "{self.url}"')
                 if "b" in self.mode:
                     self.__class__.ticks += 1
                     self.tmpfile = f"/tmp/cf-{self.ticks}"
@@ -582,20 +582,18 @@ if not aio.cross.simulator:
                     response = await platform.jsprom(jsp)
                     content = await platform.jsprom(response.text())
                     if len(content) == 4:
-                        print("XOPEN", f"Binary {self.url=} ?")
+                        print("585 fopen", f"Binary {self.url=} ?")
                     self.filelike = io.StringIO(content)
                 return self.filelike
 
             async def __aexit__(self, *exc):
-                print('Finishing')
                 self.filelike.close()
-                del self.filelike, self.url, self.mode
                 if self.tmpfile:
                     os.unlink(self.tmpfile)
+                del self.filelike, self.url, self.mode, self.tmpfile
                 return False
 
         platform.fopen = fopen
-
 
         async def jsiter(iterator):
             mark =None

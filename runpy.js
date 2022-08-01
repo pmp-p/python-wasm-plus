@@ -66,7 +66,7 @@ window.cross_img = function *cross_img(url, store) {
 //fileretrieve (binary). TODO: wasm compilation
 window.cross_file = function *cross_file(url, store) {
     var content = 0
-
+    console.log("cross_file.fetch", url )
     fetch(url,{})
         .then( (response) => response.arrayBuffer() )
         .then( (blob) => content = new Uint8Array(blob) )
@@ -304,11 +304,20 @@ if os.path.isfile("/data/data/pythonrc.py"):
 
 
 for (const script of document.getElementsByTagName('script')) {
+    const main = "runpy.js"
     if (script.type == 'module') {
-        if ( (script.src.search('#')>0) && ( script.src.search('runpy') >0) ) {
-            var elems = script.src.rsplit('#',1)
-            var url = elems.shift()
+        if (  script.src.search(main) >0 ) {
+            var url = script.src
+            if (script.src.endsWith(main)){
+                url = url+"?#"
+            }
+
+            var elems = url.rsplit('#',1)
+
+                url = elems.shift()
+
             var code = elems.shift() || script.text
+
 
             elems = url.rsplit('?',1)
             url = elems.shift()
@@ -328,12 +337,12 @@ for (const script of document.getElementsByTagName('script')) {
             if (vm.script.interpreter.startsWith("cpython")){
 
                 config = {
-                    cdn     : script.src.split('runpy.js?',1)[0],
+                    cdn     : script.src.split(main,1)[0],
                     xtermjs : 0,
                     interactive : 0,
                     archive : 0,
                     autorun : 0,
-                    features : script.id.split(","),
+                    features : script.dataset.src.split(","),
                     PYBUILD : vm.script.interpreter.substr(7) || "3.11",
                     _sdl2   : "canvas"
                 }
