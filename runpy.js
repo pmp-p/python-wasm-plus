@@ -1,12 +1,12 @@
 "use strict";
 
-/*
+
 const logLines = ["Property (Typeof): Value", `location (${typeof location}): ${location}`];
 for (const prop in location) {
     logLines.push(`${prop} (${typeof location[prop]}): ${location[prop] || "n/a"}`);
 }
 console.log( logLines.join("\n") )
-*/
+
 
 var config = {}
 
@@ -416,6 +416,137 @@ console.log('code : ' , code.length)
 }
 
 
+function feat_gui(debug_hidden) {
+
+    var canvas = document.getElementById("canvas")
+
+    if (!canvas) {
+        canvas = document.createElement("canvas")
+        canvas.id = "canvas"
+        canvas.style.position = "absolute"
+        canvas.style.top = "10px"
+        canvas.style.right = "10px"
+        document.body.appendChild(canvas)
+        //br()
+    }
+
+    vm.canvas = canvas
+
+    // window resize
+    function window_canvas_adjust(stretch) {
+        var want_w
+        var want_h
+
+        const ar = canvas.width / canvas.height
+
+        want_w = window.innerWidth
+        want_h = window.innerHeight
+
+        console.log("window:", want_w, want_h )
+        if (window.devicePixelRatio != 1 )
+            console.warn("Unsupported device pixel ratio", window.devicePixelRatio)
+
+
+// TODO: check height bounding box
+        if (!debug_hidden) {
+            stretch = stretch || 2
+        } else {
+            stretch = stretch || 1
+        }
+        console.log("window[DEBUG]:", want_w, want_h, ar, stretch)
+        want_w = Math.trunc(want_w / stretch )
+        want_h = Math.trunc(want_w / ar)
+        console.log("window[DEBUG]:", want_w, want_h, ar)
+
+        if (want_h > window.innerHeight) {
+            want_h = window.innerHeight
+            want_w = want_h * ar
+        }
+
+        canvas.style.width = want_w + "px"
+        canvas.style.height = want_h + "px"
+        console.log("style[NEW]:", canvas.style.width, canvas.style.height)
+    }
+
+
+    function window_resize(stretch) {
+        if (!window.canvas) {
+            console.warn("416: No canvas defined")
+            return
+        }
+        setTimeout(window_canvas_adjust, 100, stretch);
+        setTimeout(window.focus, 200);
+    }
+
+    window.addEventListener('resize', window_resize);
+    window.window_resize = window_resize
+
+}
+
+function feat_fs(debug_hidden) {
+    var uploaded_file_count = 0
+
+    function readFileAsArrayBuffer(file, success, error) {
+        var fr = new FileReader();
+        fr.addEventListener('error', error, false);
+        if (fr.readAsBinaryString) {
+            fr.addEventListener('load', function () {
+                var string = this.resultString != null ? this.resultString : this.result;
+                var result = new Uint8Array(string.length);
+                for (var i = 0; i < string.length; i++) {
+                    result[i] = string.charCodeAt(i);
+                }
+                success(result.buffer);
+            }, false);
+            return fr.readAsBinaryString(file);
+        } else {
+            fr.addEventListener('load', function () {
+                success(this.result);
+            }, false);
+            return fr.readAsArrayBuffer(file);
+        }
+    }
+
+    // file transfer
+    async function transfer_uploads(){
+        //let reader = new FileReader();
+
+        for (var i=0;i<dlg_multifile.files.length;i++) {
+            let file = dlg_multifile.files[i]
+            var frec = {}
+            const datapath = `/tmp/upload-${uploaded_file_count}`
+                frec["name"] = file.name
+            frec["size"] = file.size
+            frec["mimetype"] = file.type
+            frec["text"] = datapath
+
+            function file_done(data) {
+                const pydata = JSON.stringify(frec)
+                console.warn("UPLOAD", pydata );
+                python.FS.writeFile(datapath, new Int8Array(data) )
+                python.PyRun_SimpleString(`#!
+__import__('platform').EventTarget.build('upload', json.dumps(${pydata}))
+`)
+            }
+            readFileAsArrayBuffer(file, file_done, console.error )
+            uploaded_file_count++;
+        }
+
+    }
+    var dlg_multifile = document.getElementById("dlg_multifile")
+    if (!dlg_multifile) {
+        dlg_multifile = document.createElement('input')
+        dlg_multifile.setAttribute("type","file")
+        dlg_multifile.setAttribute("id","dlg_multifile")
+        dlg_multifile.setAttribute("multiple",true)
+        dlg_multifile.hidden = debug_hidden
+        document.body.appendChild(dlg_multifile)
+        //br()
+    }
+    dlg_multifile.addEventListener("change", transfer_uploads );
+
+}
+
 
 async function onload() {
     var debug_hidden = true;
@@ -441,139 +572,14 @@ async function onload() {
         //  default is 1/2
 
         if (feature.startsWith("gui")) {
-
-            var canvas = document.getElementById('canvas')
-
-            if (!canvas) {
-                canvas = document.createElement('canvas')
-                canvas.setAttribute("id","canvas")
-                document.body.appendChild(canvas)
-                canvas.style.position = "absolute"
-                canvas.style.top = "10px"
-                canvas.style.right = "10px"
-                br()
-            }
-
-            vm.canvas = canvas
-
-            // window resize
-            function window_canvas_adjust() {
-                var want_w
-                var want_h
-
-                const ar = canvas.width / canvas.height
-
-                want_w = window.innerWidth
-                want_h = window.innerHeight
-
-                console.log("window:", want_w, want_h )
-                if (window.devicePixelRatio != 1 )
-                    console.warn("Unsupported device pixel ratio", window.devicePixelRatio)
-
-
-        // TODO: check height bounding box
-                if (!debug_hidden) {
-                    want_w = Math.trunc(want_w /2)
-                    want_h = Math.trunc(want_w / ar)
-
-                    console.log("window[DEBUG]:", want_w, want_h, ar)
-                } else {
-                    want_h = Math.trunc(want_w / ar)
-                }
-
-                if (want_h > window.innerHeight) {
-                    want_h = window.innerHeight
-                    want_w = want_h * ar
-                }
-
-                canvas.style.width = want_w + "px"
-                canvas.style.height = want_h + "px"
-                console.log("style[NEW]:", canvas.style.width, canvas.style.height)
-            }
-
-
-            function window_resize() {
-                if (!window.canvas) {
-                    console.warn("416: No canvas defined")
-                    return
-                }
-                setTimeout(window_canvas_adjust, 100);
-                setTimeout(window.focus, 200);
-            }
-
-            window.addEventListener('resize', window_resize);
-            window.window_resize = window_resize
-
+            feat_gui(debug_hidden)
         }
 
 
         // file upload widget
 
         if (feature.startsWith("fs")) {
-
-            var uploaded_file_count = 0
-
-            function readFileAsArrayBuffer(file, success, error) {
-                var fr = new FileReader();
-                fr.addEventListener('error', error, false);
-                if (fr.readAsBinaryString) {
-                    fr.addEventListener('load', function () {
-                        var string = this.resultString != null ? this.resultString : this.result;
-                        var result = new Uint8Array(string.length);
-                        for (var i = 0; i < string.length; i++) {
-                            result[i] = string.charCodeAt(i);
-                        }
-                        success(result.buffer);
-                    }, false);
-                    return fr.readAsBinaryString(file);
-                } else {
-                    fr.addEventListener('load', function () {
-                        success(this.result);
-                    }, false);
-                    return fr.readAsArrayBuffer(file);
-                }
-            }
-
-
-
-            // file transfer
-            async function transfer_uploads(){
-                //let reader = new FileReader();
-
-                for (var i=0;i<dlg_multifile.files.length;i++) {
-                    let file = dlg_multifile.files[i]
-                    var frec = {}
-                    const datapath = `/tmp/upload-${uploaded_file_count}`
-                        frec["name"] = file.name
-                    frec["size"] = file.size
-                    frec["mimetype"] = file.type
-                    frec["text"] = datapath
-
-                    function file_done(data) {
-                        const pydata = JSON.stringify(frec)
-                        console.warn("UPLOAD", pydata );
-                        python.FS.writeFile(datapath, new Int8Array(data) )
-                        python.PyRun_SimpleString(`#!
-__import__('platform').EventTarget.build('upload', json.dumps(${pydata}))
-    `)
-                    }
-                    readFileAsArrayBuffer(file, file_done, console.error )
-                    uploaded_file_count++;
-                }
-
-            }
-            var dlg_multifile = document.getElementById("dlg_multifile")
-            if (!dlg_multifile) {
-                dlg_multifile = document.createElement('input')
-                dlg_multifile.setAttribute("type","file")
-                dlg_multifile.setAttribute("id","dlg_multifile")
-                dlg_multifile.setAttribute("multiple",true)
-                dlg_multifile.hidden = debug_hidden
-                document.body.appendChild(dlg_multifile)
-                br()
-            }
-            dlg_multifile.addEventListener("change", transfer_uploads );
-
+            feat_fs(debug_hidden)
         }
 
         window.addEventListener("focus", function(e){
