@@ -9,13 +9,15 @@ mkdir -p build/cpython-host
 if $REBUILD
 then
     echo "
-    * building CPython $PYBUILD for $CIVER
-"
+        * building CPython $PYBUILD for $CIVER
+    " 1>&2
 else
     if [ -f ${PYTHON_FOR_BUILD} ]
     then
         REBUILD=false
-        echo "  * will *RE-USE* PYTHON_FOR_BUILD found at ${PYTHON_FOR_BUILD}" 1>&2
+        echo "
+            * will *RE-USE* PYTHON_FOR_BUILD found at ${PYTHON_FOR_BUILD}
+        " 1>&2
     else
         REBUILD=true
     fi
@@ -29,7 +31,7 @@ fi
 if echo $GITHUB_WORKSPACE|grep -q /python-wasm-plus/
 then
     TESTSUITE="--enable-test-modules"
-    TESTSUITE=""
+    #TESTSUITE=""
 else
     TESTSUITE=""
 fi
@@ -104,7 +106,6 @@ END
         fi
     fi
 
-
 # OPT="$OPT"
 # CFLAGS="-DHAVE_FFI_PREP_CIF_VAR=1 -DHAVE_FFI_PREP_CLOSURE_LOC=1 -DHAVE_FFI_CLOSURE_ALLOC=1"
     if \
@@ -135,10 +136,9 @@ END
     popd
 else
     echo "
-
-    *   cpython host already built :
-            PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD}
-" 1>&2
+        *   cpython host already built :
+                PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD}
+    " 1>&2
 fi
 
 

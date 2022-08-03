@@ -20,9 +20,9 @@ PYPATCH=true
 
 if echo $PYBUILD |grep -q 12$
 then
-    if [ -d cpython-git ]
+    if [ -d cpython${PYBUILD} ]
     then
-        pushd cpython-git 2>&1 >/dev/null
+        pushd cpython${PYBUILD} 2>&1 >/dev/null
         # put the tree back to original state so we can pull
         # Programs/python.c Modules/readline.c
         git restore .
@@ -37,29 +37,47 @@ then
         #cat $ROOT/support/compilenone.py > ./Lib/compileall.py
         popd
     else
-        git clone --no-tags --depth 1 --single-branch --branch main https://github.com/python/cpython.git cpython-git
+        git clone --no-tags --depth 1 --single-branch --branch main https://github.com/python/cpython.git cpython${PYBUILD}
         export REBUILD=true
     fi
-
-    ln -s cpython-git cpython${PYBUILD}
-
 fi
 
 if echo $PYBUILD | grep -q 11$
 then
-    wget -q -c https://www.python.org/ftp/python/3.11.0/Python-3.11.0b4.tar.xz
-    tar xf Python-3.11.0b4.tar.xz
-    ln -s Python-3.11.0b4 cpython${PYBUILD}
+    if false
+    then
+        wget -q -c https://www.python.org/ftp/python/3.11.0/Python-3.11.0b4.tar.xz
+        tar xf Python-3.11.0b4.tar.xz
+        ln -s Python-3.11.0b4 cpython${PYBUILD}
+    else
+        if [ -d cpython${PYBUILD} ]
+        then
+            pushd cpython${PYBUILD} 2>&1 >/dev/null
+            git restore .
 
+            if git pull|grep -q 'Already up to date'
+            then
+                export REBUILD=${REBUILD:-false}
+            else
+                export REBUILD=true
+            fi
+            #not here or pip won't install properly anymore its wheels
+            #cat $ROOT/support/compilenone.py > ./Lib/compileall.py
+            popd
+        else
+            git clone --no-tags --depth 1 --single-branch --branch ${PYBUILD} https://github.com/python/cpython.git cpython${PYBUILD}
+            export REBUILD=true
+        fi
+    fi
     export REBUILD=true
 fi
 
 if echo $PYBUILD | grep -q 10$
 then
-    wget -q -c https://www.python.org/ftp/python/3.10.5/Python-3.10.5.tar.xz
-    tar xf Python-3.10.5.tar.xz
+    wget -q -c https://www.python.org/ftp/python/3.10.6/Python-3.10.6.tar.xz
+    tar xf Python-3.10.6.tar.xz
 
-    ln -s Python-3.10.5 cpython${PYBUILD}
+    ln -s Python-3.10.6 cpython${PYBUILD}
 
     NOPATCH=true
     export REBUILD=true

@@ -286,12 +286,13 @@ time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  --preload-file $ROOT/support/xterm@/etc/termcap \
  -o ${MODE}.js Programs/${MODE}.o ${ROOT}/prebuilt/emsdk/libpython${PYBUILD}.a \
  $CPY_EXTRALIB \
- ${ROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a $CFLDPFX $LD_SDL -lffi -ldl -lm
+ ${ROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a $CFLDPFX $LD_SDL -lsqlite3 -lffi -ldl -lm
 
 popd
 
 [ -f build/${CN}/${EXE}/${MODE}.js ] && rm build/${CN}/${EXE}/${MODE}.*
 
+mkdir -p build/${CN}/${EXE}
 mv -vf build/cpython-wasm/${MODE}.* build/${CN}/${EXE}/
 mv build/${CN}/${EXE}/*.map build/${CN}/
 

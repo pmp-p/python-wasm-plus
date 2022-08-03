@@ -1,3 +1,7 @@
+#!/bin/bash
+
+. ${CONFIG:-config}
+
 echo "
     *__EMSCRIPTEN__*
 "
@@ -5,7 +9,9 @@ echo "
 
 if grep -q PYDK src/cpython${PYBUILD}/Programs/python.c
 then
-    echo __EMSCRIPTEN__ support already added
+    echo "
+        * __EMSCRIPTEN__ support already added
+    " 1>&2
 else
     pushd src/cpython${PYBUILD}
     if echo $PYBUILD |grep -q 3.12$

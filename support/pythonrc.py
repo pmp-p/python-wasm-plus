@@ -266,7 +266,6 @@ if defined("embed") and hasattr(embed, "readline"):
                     filename = arg[2:].lstrip()
                     continue
                 filename,_ = urllib.request.urlretrieve(arg, filename=filename)
-                print(f"{arg} saved as : {filename}")
                 filename = None
             return True
 
@@ -544,7 +543,10 @@ if not aio.cross.simulator:
         import urllib.request
 
         def urlretrieve(url, filename=None, reporthook=None, data=None):
-
+            if url.startswith('https:/'):
+                url = "https://"+ url[6:]
+            elif url.startswith('http:/'):
+                url = "http://"+ url[5:]
             filename = filename or f"/tmp/uru-{aio.ticks}"
             rc=platform.window.python.DEPRECATED_wget_sync(str(url), str(filename))
             if rc==200:

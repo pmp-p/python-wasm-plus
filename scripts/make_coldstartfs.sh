@@ -5,14 +5,20 @@
 FS=$PYTHONPYCACHEPREFIX/fs
 
 echo "
+
+
+
     * packing minimal stdlib for
         PYTHON=$HPY
         FS=$FS
-"
+
+
+==================================================================================
+" 1>&2
 
 
 
-$HPY -v <<END 2>&1 |grep py$ > $FS
+$HPY -v <<END 2>&1 | tee $FS.log  |grep py$ > $FS
 from __future__ import annotations
 import sys
 
@@ -29,8 +35,9 @@ try:
 except:
     pass
 
-# for dom event subscriptions
+# for dom event subscriptions and js interface
 import webbrowser
+import platform
 
 # for wget to overload urlretrieve
 import urllib.request
@@ -85,7 +92,15 @@ if 0:
     ffi = FFI()
 END
 
-echo "=============================="
+grep -v ^# $FS.log | grep -v ^import 1>&2
+
+
+echo "
+==================================================================================
+
+
+" 1>&2
+
 $HPY -u -B <<END
 import sys, os
 stdlp=""
@@ -118,7 +133,6 @@ os.system(tarcmd)
 END
 
 
-echo "=============================="
 mkdir -p $PYTHONPYCACHEPREFIX/stdlib-coldstart
 #cp -vf devices/emsdk/usr/lib/python3.*/_sysconfigdata* $PYTHONPYCACHEPREFIX/stdlib-coldstart/python3.*/
 pushd $PYTHONPYCACHEPREFIX/stdlib-coldstart

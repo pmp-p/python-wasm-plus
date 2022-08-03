@@ -9,7 +9,8 @@ then
     then
         echo "
         * using emsdk from $(realpath emsdk)
-"
+            with sys python $SYS_PYTHON
+" 1>&2
     else
         # emsdk could have been deleted for full rebuild
         rm embuild.done
@@ -29,25 +30,24 @@ then
     then
         echo "
         * activating emsdk via emsdk_env.sh with EMSDK_PYTHON=$EMSDK_PYTHON
-"
+" 1>&2
         . ${SDKROOT}/emsdk/emsdk_env.sh
         # EMSDK_PYTHON may be cleared, restore it
 
     else
         echo "
         ERROR cannot find emsdk/emsdk_env.sh in $(pwd)
-"
-        exit 1
+" 1>&2
+        exit 41
     fi
 
     export EMSDK_PYTHON=$SYS_PYTHON
-
 
     if [ -f embuild.done ]
     then
         echo "
         * emsdk prereq ok
-    "
+    "  1>&2
     else
         # sdl2_image is too old
         ALL="libembind libgl libal libhtml5 libstubs libnoexit libsockets"
@@ -59,13 +59,13 @@ then
 
         echo "
         * building third parties libraries for emsdk ( can take time ... )
-    "
+    "  1>&2
 
         for one in $ALL
         do
             echo "
             + $done
-    "
+    "  1>&2
             embuilder --pic build $one
             embuilder build $one
         done
@@ -73,9 +73,15 @@ then
         cat > emsdk/upstream/emscripten/emcc <<END
 #!/bin/bash
 
+if [ -z "\$_EMCC_CCACHE" ]
+then
+
 unset _PYTHON_SYSCONFIGDATA_NAME
 unset PYTHONHOME
 unset PYTHONPATH
+
+# -Wwarn-absolute-paths
+# --valid-abspath ${SDKROOT}
 
 COMMON="-Wno-limited-postlink-optimizations"
 SHARED=""
@@ -122,6 +128,11 @@ then
 else
     $EMSDK_PYTHON -E \$0.py \$CPPFLAGS "\$@" \$COMMON
 fi
+else
+  unset _EMCC_CCACHE
+  exec ccache "\$0" "\$@"
+fi
+
 END
         cat emsdk/upstream/emscripten/emcc > emsdk/upstream/emscripten/em++
 
@@ -157,4 +168,44 @@ END
         export PATH=$EMSDK/upstream/emscripten/system/bin:$EMSDK/upstream/emscripten:$PATH
     fi
 
+    TRUE=$(which true)
+    for fix in readelf ldconfig
+    do
+        FIXED=$EMSDK/upstream/emscripten/system/bin/$fix
+        [ -f $FIXED ] || cp $TRUE $FIXED
+    done
+
+
+    if [ -f /lowend ]
+    then
+        # yes, i only have a amd200GE with 32G
+        NPROC=1
+        export EMSDK_NUM_CORES=1
+    else
+        NPROC=$(nproc)
+    fi
+
+    mkdir -p src
+    export PKG_CONFIG_PATH="${SDKROOT}/emsdk/upstream/emscripten/system/lib/pkgconfig:${HOST_PREFIX}/lib/pkgconfig"
+
+    export CPPFLAGS="-I$PREFIX/include"
+    export LDFLAGS="-msoft-float -L$PREFIX/lib"
+
+    # module build opts
+    export CFLDPFX="$CPPFLAGS $LDFLAGS -Wno-unused-command-line-argument"
+    export PYDK=minimal
+
+    if command -v ccache 2>&1 >/dev/null; then
+        export EM_COMPILER_WRAPPER=ccache
+        export _EMCC_CCACHE=1
+    fi
+
+    export EMCC_SKIP_SANITY_CHECK=1
+    export EM_IGNORE_SANITY=1
+
+else
+
+    echo "emsdk: config already set !" 1>&2
 fi
+
+

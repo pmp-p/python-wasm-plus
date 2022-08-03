@@ -58,12 +58,6 @@ fi
 
 # ================== SDL2_image ====================
 
-#if $CI
-#then
-#    echo "CI libtool does not handle SDL_image"
-#    embuilder --pic build sdl2_image
-#else
-
 if [ -f ../devices/emsdk/usr/lib/libSDL2_image.a ]
 then
     echo "
@@ -73,7 +67,9 @@ else
     #[ -d SDL_image ] || git clone https://github.com/libsdl-org/SDL_image
     if [ -d SDL2_image-2.5.1 ]
     then
-        echo "build SDL2_image pre release"
+        echo "
+            * build SDL2_image pre release
+        "  1>&2
     else
         wget -c -q https://github.com/libsdl-org/SDL_image/releases/download/candidate-2.5.1/SDL2_image-2.5.1.tar.gz
         tar xfz SDL2_image-2.5.1.tar.gz
@@ -88,9 +84,6 @@ else
     popd
     [ -f $PREFIX/include/SDL2/SDL_image.h ] || exit 1
 fi
-
-#fi
-
 
 # =============== ncurses ===========================
 # --disable-database --enable-termcap
@@ -109,17 +102,18 @@ then
     touch patch.done
     popd
 
-    mkdir ../build/ncurses
+    mkdir -p ../build/ncurses
 
 
-    if [ -f ../devices/emsdk/usr/lib/libncurses.a ]
+    if  true #[ -f ../devices/emsdk/usr/lib/libncurses.a ]
     then
         echo "
-        * ncurses/ncursesw already built
-    "
+            * skiping [ncurses] or already built
+        " 1>&2
     else
+        rm -rf ../build/ncurses/*
         pushd ../build/ncurses
-        make clean
+
         CC=clang CFLAGS="-fpic -Wno-unused-command-line-argument" $ROOT/src/ncurses-6.1/configure \
          $NCOPTS && make && make install
 
@@ -138,14 +132,14 @@ then
         popd
     fi
 
-
     if [ -f ../devices/emsdk/usr/lib/libncursesw.a ]
     then
         echo "
-        * ncursesw already built
-    "
+            * ncursesw already built
+        "  1>&2
     else
         # build wide char
+        rm -rf ../build/ncurses/*
         pushd ../build/ncurses
         make clean
         CC=clang CFLAGS="-fpic -Wno-unused-command-line-argument" $ROOT/src/ncurses-6.1/configure \

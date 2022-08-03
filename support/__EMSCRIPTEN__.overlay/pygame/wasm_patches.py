@@ -83,6 +83,71 @@ def patch_pygame_display_set_mode(size=(0,0), flags=0, depth=0):
 
 pygame.display.set_mode = patch_pygame_display_set_mode
 
+
+#=======================================================================
+# replace sdl thread music playing by browser native player
+#
+
+tracks = { "current": 0 }
+
+
+
+def patch_pygame_mixer_music_stop_pause_unload():
+    last = tracks["current"]
+    if last:
+        window.tracks.stop(last)
+        tracks["current"] = 0
+
+pygame.mixer.music.unload = patch_pygame_mixer_music_stop_pause_unload
+
+def patch_pygame_mixer_music_load(fileobj, namehint=""):
+    from platform import window
+    global tracks
+
+    patch_pygame_mixer_music_stop_pause_unload()
+
+    tid = tracks.get( fileobj, 0 )
+    # track was never loaded
+    if not tid:
+        tid = window.tracks.add(fileobj)
+    tracks["current"] = tid
+pygame.mixer.music.load = patch_pygame_mixer_music_load
+
+def patch_pygame_mixer_music_play(loops=0, start=0.0, fade_ms=0):
+    patch_pygame_mixer_music_stop_pause_unload()
+
+    window.tracks.play( tracks["current"], loops )
+
+pygame.mixer.music.play = patch_pygame_mixer_music_play
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # ====================================================================
 print("\n\n")
 print(open("/data/data/org.python/assets/pygame.six").read())
