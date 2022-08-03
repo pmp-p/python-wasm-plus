@@ -35,6 +35,9 @@ try:
 except:
     pass
 
+# intaller
+import compileall
+
 # for dom event subscriptions and js interface
 import webbrowser
 import platform
