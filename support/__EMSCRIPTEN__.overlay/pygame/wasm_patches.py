@@ -118,7 +118,7 @@ def patch_pygame_mixer_music_load(fileobj, namehint=""):
 
     # stop loaded track if any
     if tid:
-        window.MM.stop(trackid)
+        window.MM.stop(tid)
 
     # track was never loaded
     if not tid:
@@ -152,7 +152,6 @@ pygame.mixer.music.load = patch_pygame_mixer_music_load
 
 
 def patch_pygame_mixer_music_play(loops=0, start=0.0, fade_ms=0):
-    patch_pygame_mixer_music_stop_pause_unload()
     trackid = tracks["current"]
     if trackid:
         window.MM.stop(trackid)
