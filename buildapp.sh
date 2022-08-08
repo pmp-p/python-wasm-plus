@@ -273,6 +273,7 @@ done
 
 
 # -lffi
+# -lsqlite3 for latest/tot only
 
 time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  -s TOTAL_MEMORY=512MB -s ALLOW_TABLE_GROWTH \

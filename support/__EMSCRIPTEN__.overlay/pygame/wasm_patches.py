@@ -1,14 +1,19 @@
 import sys
 import asyncio
+import json
 
-# do no change import order
+from pathlib import Path
 
+#=================================================
+# do no change import order for *thread*
 # patching threading.Thread
 import aio.gthread
-
 # patched module
-
 from threading import Thread
+#=================================================
+
+from platform import window
+
 
 pygame = sys.modules[__package__]
 
@@ -95,28 +100,65 @@ tracks = { "current": 0 }
 def patch_pygame_mixer_music_stop_pause_unload():
     last = tracks["current"]
     if last:
-        window.tracks.stop(last)
+        window.MM.stop(last)
         tracks["current"] = 0
+    else:
+        pdb(__file__, "ERROR 106: no track is playing")
+
 
 pygame.mixer.music.unload = patch_pygame_mixer_music_stop_pause_unload
 
 def patch_pygame_mixer_music_load(fileobj, namehint=""):
-    from platform import window
+
     global tracks
 
     patch_pygame_mixer_music_stop_pause_unload()
 
-    tid = tracks.get( fileobj, 0 )
+    tid = tracks.get( fileobj, "")
+
+    # stop loaded track if any
+    if tid:
+        window.MM.stop(trackid)
+
     # track was never loaded
     if not tid:
-        tid = window.tracks.add(fileobj)
+        if Path(fileobj).is_file():
+            print(__file__, "119 TODO!")
+            transport = "url"
+        else:
+            transport = "url"
+
+        cfg= {
+            "url"  : fileobj,
+            "type" : "audio",
+            "io" : transport
+        }
+        track = window.MM.prepare(fileobj, json.dumps(cfg))
+        if track.error:
+            pdb("ERROR: on track",cfg)
+            # TODO stub track
+            return
+
+        tid = track.trackid
+
+        # auto
+        window.MM.load(tid)
+
+    # set new current track
     tracks["current"] = tid
+
+
 pygame.mixer.music.load = patch_pygame_mixer_music_load
+
 
 def patch_pygame_mixer_music_play(loops=0, start=0.0, fade_ms=0):
     patch_pygame_mixer_music_stop_pause_unload()
-
-    window.tracks.play( tracks["current"], loops )
+    trackid = tracks["current"]
+    if trackid:
+        window.MM.stop(trackid)
+        window.MM.play(trackid, loops )
+    else:
+        pdb(__file__, "ERROR 156: no track is loaded")
 
 pygame.mixer.music.play = patch_pygame_mixer_music_play
 

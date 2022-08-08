@@ -4,11 +4,12 @@
 # builtins.__UPY__ too can point to this module
 
 import sys, os, builtins
+import json
 
-# are they not ?
 builtins.builtins = builtins
 
-from platform import *
+builtins.true = True
+builtins.false = False
 
 try:
     import aio
@@ -88,7 +89,6 @@ def shed_yield():
     return True
 
 
-
 sys.breakpointhook = breakpointhook
 
 define("aio", aio)
@@ -107,30 +107,27 @@ except:
     else:
         builtins.__UPY__ = None
 
-
 try:
-    __EMSCRIPTEN__
-except:
+    is_browser = not sys._emscripten_info.runtime.startswith('Node.js')
     if sys.platform in ("emscripten", "asm.js", "wasm"):
         builtins.__EMSCRIPTEN__ = this
     else:
         builtins.__EMSCRIPTEN__ = None
 
+except:
+    is_browser = False
 
-
+try:
     from embed import *
 
     if not __UPY__:
         from platform import *
-        from embed_browser import *
+        from embed_browser import window, document, Object, fetch, console, prompt, alert, confirm
         from embed_emscripten import *
-    else:
-        pdb(__file__,":107 no browser/emscripten modules yet")
-
-try:
-    is_browser = not sys._emscripten_info.runtime.startswith('Node.js')
 except:
-    is_browser = False
+    pdb(__file__,":107 no browser/emscripten modules yet")
+
+
 
 
 # force use a fixed, tested version of uasyncio to avoid non-determinism
@@ -186,13 +183,59 @@ def init_platform(embed):
             pdb("WARNING: that wasm build does not support threads")
 
 
+
+
+# ========================================== DOM EVENTS ===============
+
+if is_browser:
+    # dom events
+    class EventTarget:
+        clients = {}
+        events = []
+        def addEventListener(self, host, type, listener, options=None, useCapture=None ):
+            cli = self.clients.setdefault(type,[])
+            cli.append( listener )
+
+        def build(self, evt_name, jsondata ):
+            #print( evt_name, jsondata )
+            self.events.append( [evt_name, json.loads(jsondata) ] )
+
+        #def dispatchEvent
+
+        async def process(self):
+            import inspect
+            from types import SimpleNamespace
+            while not aio.exit:
+                if len(self.events):
+                    evtype , evdata = self.events.pop(0)
+                    discarded = True
+                    for client in self.clients.get(evtype,[]):
+                        is_coro = inspect.iscoroutinefunction(client)
+                        print("    -> ", is_coro, client)
+                        discarded = False
+                        if is_coro:
+                            await client(SimpleNamespace(**evdata))
+                        else:
+                            client(SimpleNamespace(**evdata))
+                    if discarded:
+                        print("DISCARD :",evtype , evdata)
+
+                await aio.sleep(0)
+
+    EventTarget = EventTarget()
+
+
+#=============================  PRELOADING      ==============================
+
+
 ROOTDIR = f"/data/data/{sys.argv[0]}/assets"
 
 
 def explore(root):
     global prelist, preloadedWasm, preloadedImages, preloadedAudios, counter
 
-    counter = 0
+    if counter<0:
+        counter = 0
 
     import shutil
     preloads = f"{preloadedImages} {preloadedAudios} {preloadedWasm}".split(" ")
@@ -210,7 +253,6 @@ def explore(root):
                     shutil.copyfile(src, dst)
                     prelist[src] = dst
                     embed.preload(dst)
-
 
 
 def fix_preload_table():
@@ -333,12 +375,7 @@ def PyConfig_InitPythonConfig(PyConfig):
 
     # go pods !
     aio.started = True
-
-
-
-
-
-
+    aio.create_task(EventTarget.process())
 
 
 

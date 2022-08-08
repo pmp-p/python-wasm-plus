@@ -45,6 +45,7 @@ if sys.platform not in unsupported:
     import sys
     import builtins
     import ctypes
+    import time
 
     if not sys.flags.inspect:
         print(
@@ -86,20 +87,26 @@ if sys.platform not in unsupported:
         wrapper_ref = HOOKFUNC(scheduler)
         scheduler_c = ctypes.cast(wrapper_ref, c_void_p)
         PyOS_InputHookFunctionPointer.value = scheduler_c.value
-
-        # replace with faster function
-        def schedule(fn, a):
-            scheduled.append((fn, a))
-
-        sys.modules[__name__].schedule = schedule
+#
+#        # replace with faster function
+#        def schedule(fn, a):
+#            scheduled.append((fn, a))
+#
+#        sys.modules[__name__].schedule = schedule
 
         # now the init code is useless
         del sys.modules[__name__].init
 
     def schedule(fn, a):
-        global scheduled
+        global scheduled, next_tick
         if scheduled is None:
             init()
+            next_tick = time.time() + .016
+        else:
+            # cpu cool down
+            cooldown = next_tick - time.time()
+            if cooldown>0:
+                time.sleep(cooldown)
         scheduled.append((fn, a))
 
 else:

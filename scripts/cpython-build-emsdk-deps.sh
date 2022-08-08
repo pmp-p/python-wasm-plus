@@ -2,6 +2,51 @@
 
 . ${CONFIG:-config}
 
+# =============== ncurses ===========================
+# --disable-database --enable-termcap
+NCOPTS="--enable-ext-colors --enable-ext-mouse --prefix=$PREFIX --disable-echo --without-pthread \
+ --without-tests --without-tack --without-progs --without-manpages \
+ --disable-db-install --without-cxx --without-cxx-binding --enable-pc-files \
+ --with-pkg-config-libdir=$PREFIX/lib/pkgconfig \
+ --with-termlib --enable-termcap --disable-database"
+
+cd $ROOT/src
+
+if true
+then
+
+    wget -q -c https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.1.tar.gz && tar xfz ncurses-6.1.tar.gz
+
+    pushd ncurses-6.1
+    [ -f patch.done ] || patch -p1 < $ROOT/support/__EMSCRIPTEN__.deps/ncurses-6.1_emscripten.patch
+    touch patch.done
+    popd
+
+    cd $ROOT
+
+    if [ -f devices/emsdk/usr/lib/libncursesw.a ]
+    then
+        echo "
+            * ncursesw already built
+        "  1>&2
+    else
+        mkdir -p build/ncurses/
+
+        # build wide char
+        rm -rf build/ncurses/*
+
+        pushd build/ncurses
+        make clean
+        CC=clang CFLAGS="-fpic -Wno-unused-command-line-argument" $ROOT/src/ncurses-6.1/configure \
+         $NCOPTS --enable-widec && make && make install
+
+        popd
+    fi
+
+fi
+
+cd $ROOT
+
 . ./scripts/emsdk-fetch.sh
 
 # https://download.osgeo.org/libtiff/tiff-4.3.0.tar.gz
@@ -85,25 +130,9 @@ else
     [ -f $PREFIX/include/SDL2/SDL_image.h ] || exit 1
 fi
 
-# =============== ncurses ===========================
-# --disable-database --enable-termcap
-NCOPTS="--enable-ext-colors --enable-ext-mouse --prefix=$PREFIX --disable-echo --without-pthread \
-  --without-tests --without-tack --without-progs --without-manpages \
- --disable-db-install --without-cxx --without-cxx-binding --enable-pc-files \
- --with-pkg-config-libdir=$PREFIX/lib/pkgconfig \
- --with-termlib --enable-termcap --disable-database"
 
 if true
 then
-    wget -q -c https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.1.tar.gz && tar xfz ncurses-6.1.tar.gz
-
-    pushd ncurses-6.1
-    [ -f patch.done ] || patch -p1 < $ROOT/support/__EMSCRIPTEN__.deps/ncurses-6.1_emscripten.patch
-    touch patch.done
-    popd
-
-    mkdir -p ../build/ncurses
-
 
     if  true #[ -f ../devices/emsdk/usr/lib/libncurses.a ]
     then
@@ -139,17 +168,12 @@ then
         "  1>&2
     else
         # build wide char
-        rm -rf ../build/ncurses/*
         pushd ../build/ncurses
-        make clean
-        CC=clang CFLAGS="-fpic -Wno-unused-command-line-argument" $ROOT/src/ncurses-6.1/configure \
-         $NCOPTS --enable-widec && make && make install
 
         CFLAGS="-fpic -Wno-unused-command-line-argument" emconfigure \
-         $ROOT/src/ncurses-6.1/configure \
-         $NCOPTS --enable-widec
+         $ROOT/src/ncurses-6.1/configure $NCOPTS --enable-widec
 
-        if patch -p1 < $ROOT/support/__EMSCRIPTEN__.deps/ncurses-6.1_emscripten_makew.patch
+        if patch -p1 < $SDKROOT/support/__EMSCRIPTEN__.deps/ncurses-6.1_emscripten_makew.patch
         then
             emmake make clean
             if emmake make
@@ -167,5 +191,5 @@ fi
 
 
 
-
+cd $ROOT
 

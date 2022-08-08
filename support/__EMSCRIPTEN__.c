@@ -12,6 +12,9 @@ static void pymain_free(void);
 
     https://github.com/WebAssembly/design/issues/796
 
+tty ?
+https://github.com/emscripten-core/emscripten/blob/6dc4ac5f9e4d8484e273e4dcc554f809738cedd6/src/library_syscall.js#L311
+
 
 headless tests ?
 

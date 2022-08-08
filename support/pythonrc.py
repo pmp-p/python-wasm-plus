@@ -59,7 +59,7 @@ except:
 
         imports = []
 
-        with __import__("tokenize").open(filename) as f:
+        with __import__("tokenize").open(str(filename)) as f:
             __prepro = []
             myglobs = ["setup", "loop", "main"]
             tmpl = []
@@ -135,9 +135,9 @@ except:
 
             myglob = f"global {', '.join(myglobs)}\n"
 
+            # for helping fixing freshly ported code
             if aio.cross.simulator:
                 print(myglob)
-
 
             for mark, indent in tmpl:
                 __prepro[mark] = " " * indent + myglob
@@ -159,9 +159,9 @@ except:
             # whereever from we are called.
             __main__ = __import__("__main__")
             __main__dict = vars(__main__)
-            __main__dict["__file__"] = filename
+            __main__dict["__file__"] = str(filename)
             try:
-                code = compile("".join(__prepro), filename, "exec")
+                code = compile("".join(__prepro), str(filename), "exec")
             except SyntaxError as e:
                 # if not aio.cross.simulator:
                 dump_code()
@@ -198,6 +198,8 @@ except:
 if defined("embed") and hasattr(embed, "readline"):
 
     class shell:
+        out = []
+
         if aio.cross.simulator:
             ROOT = os.getcwd()
             HOME = os.getcwd()
@@ -208,7 +210,7 @@ if defined("embed") and hasattr(embed, "readline"):
         @classmethod
         def cat(cls, *argv):
             for fn in map(str,argv):
-                with open(fn, "r") as out:
+                with open(fn, "rb") as out:
                     print(out.read())
 
         @classmethod
@@ -273,6 +275,14 @@ if defined("embed") and hasattr(embed, "readline"):
         def pwd(cls, *argv):
             print(os.getcwd())
 
+
+        # only work if pkg name == dist name
+        @classmethod
+        async def pip(cls, *argv):
+            if argv[0] == 'install':
+                await importer.async_imports(argv[1])
+
+
         @classmethod
         def cd(cls, *argv):
             if len(argv):
@@ -280,6 +290,18 @@ if defined("embed") and hasattr(embed, "readline"):
             else:
                 os.chdir(cls.HOME)
             print("[ ", os.getcwd(), " ]")
+
+        @classmethod
+        def sha256sum(cls, *argv):
+            import hashlib
+            for arg in map(str,argv):
+                sha256_hash = hashlib.sha256()
+                with open(arg, "rb") as f:
+                    # Read and update hash string value in blocks of 4K
+                    for byte_block in iter(lambda: f.read(4096),b""):
+                        sha256_hash.update(byte_block)
+                    hx = sha256_hash.hexdigest()
+                    yield f"{hx}  {arg}"
 
         @classmethod
         def exec(cls, cmd, *argv, **env):
@@ -360,7 +382,7 @@ if defined("embed") and hasattr(embed, "readline"):
 
         @classmethod
         def uptime(cls, *argv, **env):
-            import asyncio
+            import asyncio, platform
             if platform.is_browser:
                 async def perf_index():
                     ft = [0.00001] * 60*10
@@ -383,6 +405,7 @@ if defined("embed") and hasattr(embed, "readline"):
                 print(f"last frame : {aio.spent / 0.016666666666666666:.4f}")
 
     def _process_args(argv, env):
+        import inspect
         catch = True
         for cmd in argv:
             cmd = cmd.strip()
@@ -393,8 +416,21 @@ if defined("embed") and hasattr(embed, "readline"):
                 args = ()
 
             if hasattr(shell, cmd):
+                fn = getattr(shell, cmd)
+
                 try:
-                    getattr(shell, cmd)(*args)
+                    if inspect.isgeneratorfunction(fn):
+                        for _ in fn(*args):
+                            print(_)
+                    elif inspect.iscoroutinefunction(fn):
+                        aio.create_task( fn(*args) )
+                    elif inspect.isasyncgenfunction(fn):
+                        print("asyncgen N/I")
+                    elif inspect.isawaitable(fn):
+                        print("awaitable N/I")
+                    else:
+                        fn(*args)
+
                 except Exception as cmderror:
                     print(cmderror, file=sys.stderr)
             else:
@@ -466,9 +502,261 @@ random.seed(1)
 if not aio.cross.simulator:
     import __EMSCRIPTEN__ as platform
 
+
+
+
+
+
+
+
+
+
+
+
+    """
+
+embed.preload("/usr/lib/python3.10/site-packages/numpy/core/_multiarray_umath.cpython-310-wasm32-emscripten.so")
+
+https://pypi.org/pypi/pygbag/0.1.3/json
+
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+    class importer:
+
+        repos = []
+        mapping = {}
+        may_need = []
+        ignore = ["sys", "os", "asyncio", "pathlib", "platform", "pygame", "json"]
+        ignore += ["distutils", "installer", "sysconfig", "sys"]
+
+        from pathlib import Path
+        if 1:
+            if platform.window.location.hostname == "localhost":
+                cdn = Path(platform.window.location.origin)
+            else:
+                cdn = Path("https://pygame-web.github.io/archives/0.2.0")
+
+            dl_cdn = Path("https://cdn.jsdelivr.net/pyodide/v0.20.0/full")
+            repodata = "packages.json"
+        else:
+            dl_cdn = Path("https://cdn.jsdelivr.net/pyodide/dev/full")
+            cdn = dl_cdn
+            repodata = "repodata.json"
+
+        print(f"552 CDN: {cdn}")
+
+        @classmethod
+        def code_imports(cls, code=''):
+
+            import platform
+            import json
+
+
+            def scan_imports(code, filename):
+                nonlocal cls
+                ast = __import__("ast")
+                root = ast.parse(code, filename)
+                required = []
+                for node in ast.walk(root):
+                    if isinstance(node, ast.Import):
+                        module = []
+                    elif isinstance(node, ast.ImportFrom):
+                        module = node.module.split(".")
+                    else:
+                        continue
+
+                    for n in node.names:
+                        if len(module):
+                            mod = module[0] or n.name.split(".")[0]
+                        else:
+                            mod = n.name.split(".")[0]
+
+                        if mod in cls.ignore:
+                            continue
+
+                        try:
+                            __import__(mod)
+                        except (ModuleNotFoundError, ImportError):
+                            required.append(mod)
+                return required
+
+            if code == '':
+                with open(__file__) as fcode:
+                    #assert code == fcode.read()
+                    cls.may_need.extend( scan_imports(fcode.read(), __file__) )
+            else:
+                cls.may_need.extend( scan_imports(code, "<stdin>") )
+
+        @classmethod
+        async def async_imports(cls, *wanted):
+
+            def imports(*mods, lvl=0, wants=[]):
+                nonlocal cls
+                unseen = False
+                for mod in mods:
+                    for dep in cls.repos[0]["packages"][mod].get("depends", []):
+                        if (not dep in wants) and (not dep in cls.ignore):
+                            unseen = True
+                            wants.insert(0, dep)
+                if lvl < 3 and unseen:
+                    imports(*wants, lvl=lvl + 1, wants=wants)
+
+                if not lvl:
+                    for dep in mods:
+                        if (not dep in wants) and (not dep in cls.ignore):
+                            wants.append(dep)
+                return wants
+
+
+            async def pkg_install(*packages):
+                nonlocal cls
+                import sys
+                import sysconfig
+                import importlib
+                refresh = False
+                for pkg in packages:
+                    pkg_info = cls.repos[0]["packages"].get(pkg, None)
+
+
+                    if pkg_info is None:
+                        pdb(f'144: package "{pkg}" not found in repodata')
+                        continue
+
+                    file_name = pkg_info.get("file_name",'')
+                    valid = False
+                    if file_name:
+                        pkg_file = f"/tmp/{file_name}"
+
+                        async with platform.fopen(cls.dl_cdn / file_name, "rb") as source:
+                            source.rename_to(pkg_file)
+                            for hex in shell.sha256sum(pkg_file):
+                                expected = hex.split(' ',1)[0].lower()
+                                maybe = pkg_info.get("sha256","").lower()
+                                if maybe and (maybe!=expected):
+                                    pdb(f"158: {pkg} download to {pkg_file} corrupt",pkg_info.get("sha256",""),expected)
+                                    break
+                            else:
+                                valid = True
+                                refresh = True
+                    else:
+                        pdb(f'144: package "{pkg}" invalid in repodata')
+                        continue
+
+                    if valid:
+
+                        from installer import install
+                        from installer.destinations import SchemeDictionaryDestination
+                        from installer.sources import WheelFile
+
+                        # Handler for installation directories and writing into them.
+                        destination = SchemeDictionaryDestination(
+                            sysconfig.get_paths(),
+                            interpreter=sys.executable,
+                            script_kind="posix",
+                        )
+
+                        with WheelFile.open(pkg_file) as source:
+                            install(
+                                source=source,
+                                destination=destination,
+                                # Additional metadata that is generated by the installation tool.
+                                additional_metadata={
+                                    "INSTALLER": b"pygbag",
+                                },
+                            )
+                if refresh:
+                    await asyncio.sleep(0)
+                    importlib.invalidate_caches()
+                    await asyncio.sleep(0)
+                    print("preload cnt", __EMSCRIPTEN__.counter )
+                    __EMSCRIPTEN__.explore( sysconfig.get_paths()["platlib"] )
+                    print("preload cnt", __EMSCRIPTEN__.counter )
+
+            # init importer
+
+            import sysconfig
+            if not sysconfig.get_paths()["platlib"] in sys.path:
+                sys.path.append(sysconfig.get_paths()["platlib"])
+
+
+            if not len(cls.repos):
+                async with platform.fopen(cdn / cls.repodata) as source:
+                    cls.repos.append( json.loads(source.read()) )
+
+            # print(json.dumps(cls.repo[0]["packages"], sort_keys=True, indent=4))
+            print("packages :", len( cls.repos[0]["packages"] ) )
+
+            await pkg_install(*imports(*wanted))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def fix_url(maybe_url):
+        url = str(maybe_url)
+        if url.startswith('http://'):
+            pass
+        elif url.startswith('https://'):
+            pass
+        elif url.startswith('https:/'):
+            url = "https:/"+ url[6:]
+        elif url.startswith('http:/'):
+            url = "http:/"+ url[5:]
+        return url
+
+    __EMSCRIPTEN__.fix_url = fix_url
+
     def apply_patches():
-        builtins.true = True
-        builtins.false = False
 
         import webbrowser
 
@@ -500,53 +788,14 @@ if not aio.cross.simulator:
         #
 
 
-        # dom events
-        class EventTarget:
-            clients = {}
-            events = []
-            def addEventListener(self, host, type, listener, options=None, useCapture=None ):
-                cli = self.clients.setdefault(type,[])
-                cli.append( listener )
-
-            def build(self, evt_name, jsondata ):
-                #print( evt_name, jsondata )
-                self.events.append( [evt_name, json.loads(jsondata) ] )
-
-            #def dispatchEvent
-
-            async def process(self):
-                import inspect
-                from types import SimpleNamespace
-                while not aio.exit:
-                    if len(self.events):
-                        evtype , evdata = self.events.pop(0)
-                        discarded = True
-                        for client in self.clients.get(evtype,[]):
-                            is_coro = inspect.iscoroutinefunction(client)
-                            print("    -> ", is_coro, client)
-                            discarded = False
-                            if is_coro:
-                                await client(SimpleNamespace(**evdata))
-                            else:
-                                client(SimpleNamespace(**evdata))
-                        if discarded:
-                            print("DISCARD :",evtype , evdata)
-
-                    await aio.sleep(0)
-
-        platform.EventTarget = EventTarget()
-        aio.create_task(platform.EventTarget.process())
 
         # bad and deprecated use of sync XHR
 
         import urllib
         import urllib.request
 
-        def urlretrieve(url, filename=None, reporthook=None, data=None):
-            if url.startswith('https:/'):
-                url = "https://"+ url[6:]
-            elif url.startswith('http:/'):
-                url = "http://"+ url[5:]
+        def urlretrieve(maybe_url, filename=None, reporthook=None, data=None):
+            url = platform.fix_url(maybe_url)
             filename = filename or f"/tmp/uru-{aio.ticks}"
             rc=platform.window.python.DEPRECATED_wget_sync(str(url), str(filename))
             if rc==200:
@@ -562,8 +811,8 @@ if not aio.cross.simulator:
 
         class fopen:
             ticks = 0
-            def __init__(self, url, mode ="r"):
-                self.url = str(url)
+            def __init__(self, maybe_url, mode ="r"):
+                self.url = fix_url(maybe_url)
                 self.mode = mode
                 self.tmpfile = None
 
@@ -576,6 +825,16 @@ if not aio.cross.simulator:
                     cf = platform.window.cross_file(self.url, self.tmpfile)
                     content = await platform.jsiter(cf)
                     self.filelike = open(content, "rb")
+                    self.filelike.path = content
+
+                    def rename_to(target):
+                        print("rename_to", content, target)
+                        # will be closed
+                        self.filelike.close()
+                        os.rename(self.tmpfile, target)
+                        self.tmpfile = None
+                        del self.filelike.rename_to
+                        return target
                 else:
                     import io
                     jsp = platform.window.fetch(self.url)
@@ -584,11 +843,20 @@ if not aio.cross.simulator:
                     if len(content) == 4:
                         print("585 fopen", f"Binary {self.url=} ?")
                     self.filelike = io.StringIO(content)
+
+                    def rename_to(target):
+                        with open(target,"wb") as data:
+                            date.write(self.filelike.read())
+                        del self.filelike.rename_to
+                        return target
+
+                self.filelike.rename_to = rename_to
                 return self.filelike
 
+
             async def __aexit__(self, *exc):
-                self.filelike.close()
                 if self.tmpfile:
+                    self.filelike.close()
                     os.unlink(self.tmpfile)
                 del self.filelike, self.url, self.mode, self.tmpfile
                 return False
@@ -638,9 +906,7 @@ if sys.argv[0]!="org.python":
         import pygame
     except Exception as e:
         sys.print_exception(e)
-        print("pygame not loaded")
-else:
-    shell.uptime()
+        print("pygame cannot load")
 
 if os.path.isfile('/data/data/custom.py'):
     execfile('/data/data/custom.py')

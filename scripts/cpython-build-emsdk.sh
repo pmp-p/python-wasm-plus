@@ -25,6 +25,7 @@ if $REBUILD || $REBUILD_WASMPY
 then
     rm -rf build/cpython-wasm/ build/pycache/config.cache
     rm build/cpython-wasm/libpython${PYBUILD}.a 2>/dev/null
+    rm prebuilt/emsdk/libpython${PYBUILD}.a prebuilt/emsdk/${PYBUILD}/*.so
     REBUILD=true
 fi
 
@@ -145,7 +146,7 @@ else
 
 #     --with-tzpath="/usr/share/zoneinfo" \
 
-    export EMCC_CFLAGS="$CPOPTS -I$PREFIX/include/ncursesw -sUSE_ZLIB -sUSE_BZIP2"
+    export EMCC_CFLAGS="$CPOPTS -D_XOPEN_SOURCE_EXTENDED=1 -I$PREFIX/include/ncursesw -sUSE_ZLIB -sUSE_BZIP2"
 
     CPPFLAGS="$CPPFLAGS -I$PREFIX/include/ncursesw"
     CFLAGS="$CPPFLAGS -I$PREFIX/include/ncursesw"
@@ -170,6 +171,7 @@ END
 # OPT="$CPOPTS -DNDEBUG -fwrapv" \
 #      --with-c-locale-coercion --without-pydebug --without-pymalloc --disable-ipv6  \
 
+#     --with-libs='-lz -lffi' \
 
 
     CONFIG_SITE=$ROOT/src/cpython${PYBUILD}/Tools/wasm/config.site-wasm32-pydk \
@@ -192,8 +194,12 @@ END
 _decimal
 xxsubtype
 _crypt
+curses
 
+*static*
+zlib zlibmodule.c
 END
+# _ctypes _ctypes/_ctypes.c _ctypes/callbacks.c _ctypes/callproc.c _ctypes/stgdict.c _ctypes/cfield.c
     else
         cat > Modules/Setup.local <<END
 *disabled*
@@ -324,6 +330,8 @@ NUMPY
 
 cat > $ROOT/${PYDK_PYTHON_HOST_PLATFORM}-shell.sh <<END
 #!/bin/bash
+export ROOT=${SDKROOT}
+export SDKROOT=${SDKROOT}
 
 if [[ ! -z \${EMSDK+z} ]]
 then

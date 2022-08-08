@@ -176,7 +176,7 @@ END
     done
 
 
-    if [ -f /lowend ]
+    if [ -f /pp ]
     then
         # yes, i only have a amd200GE with 32G
         NPROC=1
@@ -189,7 +189,8 @@ END
     export PKG_CONFIG_PATH="${SDKROOT}/emsdk/upstream/emscripten/system/lib/pkgconfig:${HOST_PREFIX}/lib/pkgconfig"
 
     export CPPFLAGS="-I$PREFIX/include"
-    export LDFLAGS="-msoft-float -L$PREFIX/lib"
+    export LDFLAGS="-L$PREFIX/lib"
+    # -msoft-float
 
     # module build opts
     export CFLDPFX="$CPPFLAGS $LDFLAGS -Wno-unused-command-line-argument"

@@ -3,8 +3,9 @@ reset
 unset PYTHONSTARTUP
 ROOT=$(dirname $(realpath $0))
 
-export PYMINOR=11
-
+export PYBUILD=${PYBUILD:-3.11}
+export PYMAJOR=$(echo -n $PYBUILD|cut -d. -f1)
+export PYMINOR=$(echo -n $PYBUILD|cut -d. -f2)
 
 export PLATFORM=$ROOT/support/sim.links
 

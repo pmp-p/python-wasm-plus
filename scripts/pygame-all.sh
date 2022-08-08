@@ -1,11 +1,10 @@
 #!/bin/bash
 
-if $CI
+
+. ${CONFIG:-config}
+
+if [ -f /pp ]
 then
-    echo "
-        * not building host pygame
-    " 1>&2
-else
     if $HPY -c "import pygame"
     then
         echo "
@@ -21,9 +20,11 @@ else
         $HPY setup.py install
         popd
     fi
+else
+    echo "
+        * not building host pygame
+    " 1>&2
 fi
-
-. ${CONFIG:-config}
 
 mkdir -p prebuilt
 

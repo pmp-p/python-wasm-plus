@@ -1,6 +1,6 @@
 #!/bin/bash
 export LC_ALL=C
-export ROOT=$(pwd)
+export ROOT=${ROOT:-$(pwd)}
 export SDKROOT=${SDKROOT:-$ROOT}
 
 export PYTHONDONTWRITEBYTECODE=1

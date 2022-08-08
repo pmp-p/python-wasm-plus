@@ -287,18 +287,17 @@ async function mount_at(archive, path, relpath, hint) {
         );
     }
 
-    const response = await fetch(archive);
-    const zipData = await response.arrayBuffer();
+    var zipData
+    if (typeof archive === 'string' || archive instanceof String) {
+        const response = await fetch(archive);
+        const zipData = await response.arrayBuffer();
+    } else {
+        zipData = archive
+    }
+
     await BrowserFS.FileSystem.ZipFS.Create(
         {"zipData" : VM.Buffer.from(zipData), "name": hint}, apk_cb)
 
-/*
-    fetch(archive).then(function(response) {
-        return response.arrayBuffer();
-    }).then(function(zipData) {
-        BrowserFS.FileSystem.ZipFS.Create({"zipData" : VM.Buffer.from(zipData),"name":"apkfs"}, apk_cb)
-    })
-*/
     await _until(defined, ""+mark, prom)
     delete prom[mark]
     return `${hint} mounted`

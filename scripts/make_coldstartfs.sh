@@ -30,13 +30,18 @@ for mod in (M1+M2).split(', '):
     except:
         pass
 try:
+    b'xx'.decode('cp437')
+    b'xx'.decode('cp850')
+    b'xx'.decode('latin1')
     sys.stdout.reconfigure(encoding='utf-16')
     sys.stdout.reconfigure(encoding='utf-8')
 except:
     pass
 
-# intaller
-import compileall
+# intaller "cp437"
+import compileall, csv, configparser, zlib
+# micropip
+import importlib.metadata
 
 # for dom event subscriptions and js interface
 import webbrowser
