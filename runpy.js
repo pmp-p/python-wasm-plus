@@ -8,7 +8,15 @@ for (const prop in location) {
 console.log( logLines.join("\n") )
 
 
-var config = {}
+
+if (window.config) {
+   var config = window.config
+} else {
+   var config = {}
+}
+
+
+
 
 
 String.prototype.rsplit = function(sep, maxsplit) {
@@ -32,10 +40,23 @@ function _until(fn_solver){
     }
 }
 
+function defined(e, o){
+    if (typeof o === 'undefined' || o === null)
+        o = window;
+    try {
+        e = o[e];
+    } catch (x) { return false }
+
+    if (typeof e === 'undefined' || e === null)
+        return false;
+    return true;
+}
+
+
 // promise to iterator converter
 var prom = {}
 var prom_count = 0
-window.iterator = function* iterator(oprom) {
+window.iterator = function * iterator(oprom) {
     const mark = prom_count++;
     var counter = 0;
     oprom.then( (value) => prom[mark] = value )
@@ -47,7 +68,7 @@ window.iterator = function* iterator(oprom) {
 }
 
 //imgretrieve
-window.cross_img = function *cross_img(url, store) {
+window.cross_img = function * cross_img(url, store) {
     var done = 0
     const cors_img = new Image();
         cors_img.crossOrigin = "Anonymous";
@@ -63,17 +84,29 @@ window.cross_img = function *cross_img(url, store) {
     yield canvas.toDataURL("image/png")
 }
 
+function checkStatus(response) {
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+  }
+  return response;
+}
+
+
+
 //fileretrieve (binary). TODO: wasm compilation
-window.cross_file = function *cross_file(url, store) {
+window.cross_file = function * cross_file(url, store) {
     var content = 0
     console.log("cross_file.fetch", url )
     fetch(url,{})
-        .then( (response) => response.arrayBuffer() )
-        .then( (blob) => content = new Uint8Array(blob) )
+        .then( response => checkStatus(response) && response.arrayBuffer() )
+        .then( buffer => content = new Uint8Array(buffer) )
+        .catch(x => console.error(x))
+
 
     while (!content)
         yield content
     FS.writeFile(store, content )
+    console.log("cross_file.fetch",store,"r/w=", content.byteLength )
     yield store
 }
 
@@ -96,6 +129,13 @@ function DEPRECATED_wget_sync(url, store){
 
 
 function prerun(VM) {
+
+    console.warn("VM.prerun")
+
+    if (window.BrowserFS) {
+        vm.BFS = new BrowserFS.EmscriptenFS()
+        VM.BFS.Buffer = BrowserFS.BFSRequire('buffer').Buffer
+    }
 
     const sixel_prefix = String.fromCharCode(27)+"Pq"
 
@@ -199,7 +239,7 @@ function prerun(VM) {
 
     // put script namespace in sys.argv[0]
     // default is org.python
-    VM.arguments.push(vm.APK)
+    VM.arguments.push(VM.APK)
 
     VM.FS.init(stdin, stdout, stderr);
 }
@@ -268,11 +308,10 @@ const vm = {
         } ]
 }
 
-window.Module = vm
 
 
 async function custom_postrun() {
-    console.warn("custom_postrun")
+    console.warn("VM.postrun")
     if (await _rcp("pythonrc.py")) {
         python.PyConfig.executable = "windows.url"
         var runsite = `#!
@@ -290,7 +329,7 @@ if os.path.isfile("/data/data/pythonrc.py"):
 `
 
 
-        vm.FS.writeFile( "/data/data/org.python/assets/main.py" , vm.script.main )
+        vm.FS.writeFile( "/data/data/org.python/assets/main.py" , vm.script.main[0] )
 
         python.PyRun_SimpleString(runsite)
 
@@ -301,12 +340,11 @@ if os.path.isfile("/data/data/pythonrc.py"):
 
 
 
-
-
 for (const script of document.getElementsByTagName('script')) {
     const main = "runpy.js"
     if (script.type == 'module') {
-        if (  script.src.search(main) >0 ) {
+
+        if (  script.src.search(main) >=0 ) {
             var url = script.src
             if (script.src.endsWith(main)){
                 url = url+"?#"
@@ -334,76 +372,82 @@ for (const script of document.getElementsByTagName('script')) {
                 Array.prototype.push.apply(vm.argv, elems )
             }
 
-            if (vm.script.interpreter.startsWith("cpython")){
-
-                config = {
-                    cdn     : script.src.split(main,1)[0],
-                    xtermjs : 0,
-                    interactive : 0,
-                    archive : 0,
-                    autorun : 0,
-                    features : script.dataset.src.split(","),
-                    PYBUILD : vm.script.interpreter.substr(7) || "3.11",
-                    _sdl2   : "canvas"
-                }
-
-                if (url.search("localhost")>0)
-                    config.cdn = "http://localhost:8000/"
-
-                config.pydigits = config.PYBUILD.replace(".","")
-
-                config.executable = `${config.cdn}python${config.pydigits}/main.js`
-
-console.log('script: interpreter=', vm.script.interpreter)
-console.log('script: url=', url)
-console.log('script: cdn=', config.cdn)
-console.log('script: src=', script.src)
-console.log('script: data-src=', script.dataset.src)
-console.log('script: loc=', location.href)
-console.log('script: id=', script.id)
-console.log('code : ' , code.length)
-
-
-
-                vm.PyConfig = JSON.parse(`
-{
-    "base_executable" : null,
-    "base_prefix" : null,
-    "buffered_stdio" : null,
-    "bytes_warning" : 0,
-    "warn_default_encoding" : 0,
-    "code_debug_ranges" : 1,
-    "check_hash_pycs_mode" : "default",
-    "configure_c_stdio" : 1,
-    "dev_mode" : -1,
-    "dump_refs" : 0,
-    "exec_prefix" : null,
-    "executable" : "${config.executable}",
-    "faulthandler" : 0,
-    "filesystem_encoding" : "utf-8",
-    "filesystem_errors" : "surrogatepass",
-    "use_hash_seed" : 1,
-    "hash_seed" : 1,
-    "home": null,
-    "import_time" : 0,
-    "inspect" : 1,
-    "install_signal_handlers" :0 ,
-    "interactive" : ${config.interactive},
-    "isolated" : 1,
-    "legacy_windows_stdio":0,
-    "malloc_stats" : 0 ,
-    "platlibdir" : "lib",
-    "prefix" : "/data/data/org.python/assets/site-packages",
-    "ps1" : ">>> ",
-    "ps2" : "... "
-}
-`),
-
-                vm.config = config
+            // running pygbag proxy or lan testing ?
+            if (location.hostname === "localhost") {
+                config.cdn = location.origin + "/"
             }
 
+            if (vm.script.interpreter.startsWith("cpython")){
+
+                config.cdn     ??= script.src.split(main,1)[0],
+                config.xtermjs ??= 0
+                config.interactive ??= 0
+                //config.archive  ??= 0
+config.archive = 0
+
+                if (location.hash.search("#debug")>=0) {
+                    config.gui_divider ??= 2
+                } else {
+                    config.gui_divider ??= 1
+                }
+
+                config.autorun  ??= 0,
+                config.features ??= script.dataset.src.split(","),
+                config.PYBUILD  ??= vm.script.interpreter.substr(7) || "3.11",
+                config._sdl2    ??= "canvas"
+
+                config.pydigits ??= config.PYBUILD.replace(".","")
+                config.executable ??= `${config.cdn}python${config.pydigits}/main.js`
+            }
+
+
+            vm.PyConfig = JSON.parse(`
+                {
+                    "base_executable" : null,
+                    "base_prefix" : null,
+                    "buffered_stdio" : null,
+                    "bytes_warning" : 0,
+                    "warn_default_encoding" : 0,
+                    "code_debug_ranges" : 1,
+                    "check_hash_pycs_mode" : "default",
+                    "configure_c_stdio" : 1,
+                    "dev_mode" : -1,
+                    "dump_refs" : 0,
+                    "exec_prefix" : null,
+                    "executable" : "${config.executable}",
+                    "faulthandler" : 0,
+                    "filesystem_encoding" : "utf-8",
+                    "filesystem_errors" : "surrogatepass",
+                    "use_hash_seed" : 1,
+                    "hash_seed" : 1,
+                    "home": null,
+                    "import_time" : 0,
+                    "inspect" : 1,
+                    "install_signal_handlers" :0 ,
+                    "interactive" : ${config.interactive},
+                    "isolated" : 1,
+                    "legacy_windows_stdio":0,
+                    "malloc_stats" : 0 ,
+                    "platlibdir" : "lib",
+                    "prefix" : "/data/data/org.python/assets/site-packages",
+                    "ps1" : ">>> ",
+                    "ps2" : "... "
+                }`)
+
+            for (const prop in config)
+                console.log(`config.${prop} =`, config[prop] )
+
+            console.log('interpreter=', vm.script.interpreter)
+            console.log('url=', url)
+            console.log('src=', script.src)
+            console.log('data-src=', script.dataset.src)
+            console.log('script: id=', script.id)
+            console.log('code : ' , code.length)
+
+            vm.config = config
+
 // TODO remote script
-            vm.script.main = code
+            vm.script.main = [ code ]
 
 // TODO scripts argv ( sys.argv )
 
@@ -415,6 +459,19 @@ console.log('code : ' , code.length)
     }
 }
 
+for (const script of document.getElementsByTagName('script')) {
+    // process py-script brython whatever and push to vm.script.main
+    // for concat with vm.FS.writeFile
+}
+
+
+
+
+
+// CANVAS
+
+// TODO : variable SIZE ratio vs PARENT
+//  default is 1/2
 
 function feat_gui(debug_hidden) {
 
@@ -433,7 +490,7 @@ function feat_gui(debug_hidden) {
     vm.canvas = canvas
 
     // window resize
-    function window_canvas_adjust(stretch) {
+    function window_canvas_adjust(gui_divider) {
         var want_w
         var want_h
 
@@ -449,12 +506,13 @@ function feat_gui(debug_hidden) {
 
 // TODO: check height bounding box
         if (!debug_hidden) {
-            stretch = stretch || 2
+            gui_divider = gui_divider || 2
         } else {
-            stretch = stretch || 1
+            gui_divider = gui_divider || 1
         }
-        console.log("window[DEBUG]:", want_w, want_h, ar, stretch)
-        want_w = Math.trunc(want_w / stretch )
+
+        console.log("window[DEBUG]:", want_w, want_h, ar, gui_divider)
+        want_w = Math.trunc(want_w / gui_divider )
         want_h = Math.trunc(want_w / ar)
         console.log("window[DEBUG]:", want_w, want_h, ar)
 
@@ -469,19 +527,28 @@ function feat_gui(debug_hidden) {
     }
 
 
-    function window_resize(stretch) {
+    function window_resize(gui_divider) {
         if (!window.canvas) {
             console.warn("416: No canvas defined")
             return
         }
-        setTimeout(window_canvas_adjust, 100, stretch);
+        vm.config.gui_divider = gui_divider || 1
+        setTimeout(window_canvas_adjust, 100, gui_divider);
         setTimeout(window.focus, 200);
     }
 
-    window.addEventListener('resize', window_resize);
+    function window_resize_event() {
+        window_resize(vm.config.gui_divider)
+    }
+
+    window.addEventListener('resize', window_resize_event);
     window.window_resize = window_resize
 
 }
+
+
+
+// file transfer (upload)
 
 function feat_fs(debug_hidden) {
     var uploaded_file_count = 0
@@ -507,7 +574,6 @@ function feat_fs(debug_hidden) {
         }
     }
 
-    // file transfer
     async function transfer_uploads(){
         //let reader = new FileReader();
 
@@ -547,6 +613,115 @@ __import__('platform').EventTarget.build('upload', json.dumps(${pydata}))
 
 }
 
+// simpleterm
+async function feat_vt(debug_hidden) {
+    var stdio = document.getElementById('stdio')
+    if (!stdio){
+        stdio = document.createElement('div')
+        stdio.id = "stdio"
+        stdio.style.width = "640px";
+        stdio.style.height = "480px";
+        stdio.style.background = "black";
+        stdio.style.color = "yellow";
+        stdio.innerHTML = "vt100"
+        stdio.hidden = debug_hidden
+        stdio.setAttribute("tabIndex", 1)
+        document.body.appendChild(stdio)
+        //br()
+    }
+
+    const { Terminal, helper, handlevt } = await import("./vt.js")
+
+    vm.vt.xterm = new Terminal("stdio", 132,25)
+    vm.vt.xterm.set_vm_handler(vm, null, null)
+
+    vm.vt.xterm.open()
+
+}
+
+// xterm.js + sixel
+async function feat_vtx(debug_hidden) {
+    var terminal = document.getElementById('terminal')
+    if (!terminal){
+        terminal = document.createElement('div')
+        terminal.id = "terminal"
+        terminal.setAttribute("tabIndex", 1)
+        document.body.appendChild(terminal)
+        //br()
+    }
+
+    const { WasmTerminal } = await import("./vtx.js")
+
+    vm.vt = new WasmTerminal("terminal", 132, 50, [
+            { url : "./xtermjsixel/xterm-addon-image-worker.js", sixelSupport:true }
+    ] )
+}
+
+
+// simple <pre> output
+function feat_stdout() {
+    var stdout = document.getElementById('stdout')
+    if (!stdout){
+        stdout = document.createElement('pre')
+        stdout.id = "stdout"
+        stdout.style.whiteSpace = "pre-wrap"
+        stdout.hidden = false
+        document.body.appendChild(stdout)
+    }
+    stdout.write = function (text) {
+        var buffer = stdout.innerHTML.split("\r\n")
+        for (const line of text.split("\r\n") ) {
+            if (line.length) {
+                buffer.push( line )
+            }
+        }
+
+        while (buffer.length>25)
+            buffer.shift()
+
+        stdout.innerHTML =  buffer.join("\n")
+
+    }
+    vm.vt.xterm = stdout
+}
+
+// TODO make a queue, python is not always ready to receive those events
+// right after page load
+
+function feat_lifecycle() {
+        window.addEventListener("focus", function(e){
+            const dump =  JSON.stringify(e)
+            if (window.python)
+                python.PyRun_SimpleString(`#!
+__EMSCRIPTEN__.EventTarget.build('focus', json.dumps(${dump}))
+`)
+        })
+
+        window.addEventListener("blur", function(e){
+            console.log("lost focus")
+
+            const dump =  JSON.stringify(e)
+            if (window.python)
+                python.PyRun_SimpleString(`#!
+__EMSCRIPTEN__.EventTarget.build('blur', json.dumps(${dump}))
+`)
+        })
+/*
+    // Enable navigation prompt
+    window.onbeforeunload = function() {
+        return true;
+    }
+*/
+//    window.onbeforeunload =    "Are you sure you want to leave?";
+        window.onbeforeunload = function() {
+            var message = "Are you sure you want to navigate away from this page ?";
+                if (confirm(message)) return message;
+                else return false;
+        }
+
+}
+
+
 
 async function onload() {
     var debug_hidden = true;
@@ -562,14 +737,12 @@ async function onload() {
         document.body.appendChild( document.createElement('br') )
     }
 
+    feat_lifecycle()
+
+
     for (const feature of vm.config.features) {
 
 
-
-        // CANVAS
-
-        // TODO : variable SIZE ratio vs PARENT
-        //  default is 1/2
 
         if (feature.startsWith("gui")) {
             feat_gui(debug_hidden)
@@ -582,113 +755,46 @@ async function onload() {
             feat_fs(debug_hidden)
         }
 
-        window.addEventListener("focus", function(e){
-            const dump =  JSON.stringify(e)
-            console.warn(dump)
-            python.PyRun_SimpleString(`#!
-__import__('platform').EventTarget.build('focus', json.dumps(${dump}))
-    `)
-        })
-
-        window.addEventListener("blur", function(){
-            console.log("lost focus")
-        })
-
 
         // TERMINAL
 
         if (feature.startsWith("vt")) {
 
-
             // simpleterm.js
 
             if (feature === "vt") {
-                var stdio = document.getElementById('stdio')
-                if (!stdio){
-                    stdio = document.createElement('div')
-                    stdio.id = "stdio"
-                    stdio.style.width = "640px";
-                    stdio.style.height = "480px";
-                    stdio.style.background = "black";
-                    stdio.style.color = "yellow";
-                    stdio.innerHTML = "vt100"
-                    stdio.hidden = debug_hidden
-                    stdio.setAttribute("tabIndex", 1)
-                    document.body.appendChild(stdio)
-                    br()
-                }
-
-                const { Terminal, helper, handlevt } = await import("./vt.js")
-
-                vm.vt.xterm = new Terminal("stdio", 132,25)
-                vm.vt.xterm.set_vm_handler(vm, null, null)
-
-                vm.vt.xterm.open()
-                vm.vt.xterm.write('Please \x1B[1;3;31mwait\x1B[0m ...\r\n')
+                await feat_vt(debug_hidden)
 
             }
 
             // xterm.js
 
             if (feature === "vtx") {
-                var terminal = document.getElementById('terminal')
-                if (!terminal){
-                    terminal = document.createElement('div')
-                    terminal.id = "terminal"
-                    terminal.setAttribute("tabIndex", 1)
-                    document.body.appendChild(terminal)
-                    br()
-                }
-
-                const { WasmTerminal } = await import("./vtx.js")
-
-                vm.vt = new WasmTerminal("terminal", 132, 50, [
-                        { url : "./xtermjsixel/xterm-addon-image-worker.js", sixelSupport:true }
-                ] )
-
+                await feat_vtx(debug_hidden)
             }
 
         }
 
 
         if (feature.startsWith("stdout")){
-            var stdout = document.getElementById('stdout')
-            if (!stdout){
-                stdout = document.createElement('pre')
-                stdout.id = "stdout"
-                stdout.style.whiteSpace = "pre-wrap"
-                stdout.hidden = false
-                document.body.appendChild(stdout)
-            }
-            stdout.write = function (text) {
-                var buffer = stdout.innerHTML.split("\r\n")
-                for (const line of text.split("\r\n") ) {
-                    if (line.length) {
-                        buffer.push( line )
-                    }
-                }
-
-                while (buffer.length>25)
-                    buffer.shift()
-
-                stdout.innerHTML =  buffer.join("\n")
-
-            }
-            vm.vt.xterm = stdout
-            stdout.write("Please wait ...")
-
+            feat_stdout()
         }
     }
+
+
     window.busy--;
 
+    vm.vt.xterm.write('OK\r\nPlease \x1B[1;3;31mwait\x1B[0m ...\r\n')
 
-    console.warn("Loading python interpreter from",config.executable)
+
+    window.Module = vm
+
+    console.warn("Loading python interpreter from", config.executable)
     const jswasmloader=document.createElement('script')
     jswasmloader.setAttribute("type","text/javascript")
     jswasmloader.setAttribute("src", config.executable )
     jswasmloader.setAttribute('async', true);
     document.getElementsByTagName("head")[0].appendChild(jswasmloader)
-
 
 }
 
@@ -710,6 +816,252 @@ await _until(ready)(0)
 console.log("loaded ! ")
 
 */
+
+
+
+
+
+// media manager
+
+
+window.MM = { tracks : 0 }
+
+
+window.cross_dl = async function cross_dl(trackid, url, autoready) {
+    var response = await fetch(url);
+
+    const reader = response.body.getReader();
+
+    const len = +response.headers.get("Content-Length");
+
+
+
+    // concatenate chunks into single Uint8Array
+    MM[trackid].data = new Uint8Array(len);
+    MM[trackid].pos = 0
+    MM[trackid].len = len
+
+    console.warn(url, MM[trackid].len)
+
+    while(true) {
+        const {done, value} = await reader.read()
+
+        if (done) {
+            MM[trackid].avail = true
+            return
+        }
+
+        MM[trackid].data.set(value, MM[trackid].pos)
+
+        MM[trackid].pos += value.length
+
+        console.log(`${trackid}:${url} Received ${MM[trackid].pos} of ${MM[trackid].len}`)
+    }
+}
+
+
+MM.prepare = function prepare(url, cfg) {
+        MM.tracks++;
+        const trackid = MM.tracks
+        var audio
+
+        cfg = JSON.parse(cfg)
+
+
+        const transport = cfg.io || 'packed'
+        const type = cfg.type || 'bin'
+
+        MM[trackid] = { ...cfg, ...{
+                "trackid": trackid,
+                "type"  : type,
+                "url"   : url,
+                "error" : false,
+                "len"   : 0,
+                "pos"   : 0,
+                "io"    : transport,
+                "ready" : undefined,
+                "avail" : undefined,
+                "media" : undefined,
+                "data"  : undefined
+            }
+        }
+
+console.log("MM.prepare", trackid, transport, type)
+
+        if (transport === 'packed') {
+            if ( type === "audio" ) {
+                audio = new Audio()
+                console.error("packed audio N/I")
+            }
+            MM[trackid].error = true
+            return MM[trackid]
+        }
+
+        if (transport === "url" ) {
+
+            // audio tag can download itself
+            if ( type === "audio" ) {
+                audio = new Audio(url)
+                MM[trackid].avail = true
+            } else {
+console.log("MM.cross_dl", url )
+                cross_dl(trackid, url)
+            }
+        }
+
+        if (audio)
+            MM[trackid].media = audio
+
+console.log("MM.prepare", url,"queuing as",trackid)
+        media_prepare(trackid)
+console.log("MM.prepare", url,"queued as",trackid)
+    return MM[trackid]
+}
+
+async function media_prepare(trackid) {
+    const track = MM[trackid]
+    console.log("MM.media_prepare wait avail")
+
+    await _until(defined)("avail",track)
+/*
+    while ( ! track.avail ) {
+        yield trackid
+    }
+*/
+    console.log("MM.media_prepare avail now")
+
+    if (track.type === "audio") {
+        console.log(`audio ${trackid}:${track.url} ready`)
+        return trackid
+    }
+
+    if (track.type === "mount") {
+        // async
+        MM[trackid].media = vm.BFS.Buffer.from( MM[trackid].data )
+
+        track.mount.path ??= '/'
+
+        const hint = `${track.mount.path}@${track.mount.point}:${trackid}`
+
+        function apk_cb(e, apkfs){
+            console.log(__FILE__, "930 mounting", hint, "onto", track.mount.point)
+
+            BrowserFS.FileSystem.InMemory.Create(
+                function(e, memfs) {
+                    BrowserFS.FileSystem.OverlayFS.Create({"writable" :  memfs, "readable" : apkfs },
+                        function(e, ovfs) {
+                            BrowserFS.FileSystem.MountableFileSystem.Create({
+                                '/' : ovfs
+                                }, async function(e, mfs) {
+                                    await BrowserFS.initialize(mfs);
+                                    await vm.FS.mount(vm.BFS, {root: track.mount.path}, track.mount.point );
+                                    setTimeout(()=>{track.ready=true}, 0)
+                                })
+                        }
+                    );
+                }
+            );
+        }
+
+        await BrowserFS.FileSystem.ZipFS.Create(
+            {"zipData" : track.media, "name": hint},
+            apk_cb
+        )
+    }
+
+}
+
+
+
+MM.load = function load(trackid, loops) {
+// loops =0 play once, loops>0 play number of time, <0 loops forever
+    const track = MM[trackid]
+
+    loops ??= 0
+    track.loops = loops
+
+    if (!track.avail) {
+        // FS not ready
+        console.error("981 TODO: bounce with setTimeout")
+        return 0
+    }
+
+
+    if (track.type === "audio") {
+        const media = track.media
+
+        media.addEventListener("canplaythrough", (event) => {
+            track.ready = true
+            media.play()
+        })
+
+        media.addEventListener('ended', (event) => {
+            if (track.loops<0)
+                media.play()
+
+            if (track.loops>0) {
+                track.loops--;
+                media.play()
+            }
+        })
+
+        return trackid
+    }
+
+    if (track.type === "mount") {
+        const mount = track
+        console.log(track.mount.point , track.mount.path, trackid )
+        mount_ab( track.data , track.mount.point , track.mount.path, trackid )
+        return trackid
+    }
+// unsupported type
+    return -1
+}
+
+
+MM.play = function play(trackid, loops, start, fade_ms) {
+console.log("MM.play",trackid, loops, MM[trackid] )
+            MM[trackid].loops = loops
+            MM[trackid].media.play()
+        }
+
+MM.stop = function stop(trackid) {
+console.log("MM.stop", trackid, MM[trackid] )
+            MM[trackid].media.pause()
+        }
+
+
+
+
+window.TEST= async function TEST(lib) {
+// usr/lib/python3.10/site-packages/numpy/core/
+    const buffer = FS.readFile(lib || "/data/data/org.python/assets/site-packages/numpy/core/_multiarray_umath.cpython-310-wasm32-emscripten.so", { encoding: 'binary'} )
+    console.log(buffer.length)
+window.b = buffer
+    const module = await WebAssembly.compile(buffer);
+    const instance = await WebAssembly.instantiate(module, WASM_INFO)
+    console.log(instance)
+//    const instance = new WebAssembly.Instance(module);
+//    const result = instance.exports.fibonacci(42);
+
+
+
+    // if < 4K
+    //const module = new WebAssembly.Module(buffer);
+    //const instance = new WebAssembly.Instance(module);
+
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 

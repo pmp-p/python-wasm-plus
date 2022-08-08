@@ -1,7 +1,7 @@
 <html><head><meta charset="utf-8"></head><script src="runpy.js" type=module id="main" data-src="fs,vtx,gui" async defer>#<!--
-
-import platform, asyncio
-from platform import window, document
+import sys
+import platform
+import asyncio
 from pathlib import Path
 
 
@@ -12,10 +12,14 @@ if 0:
     import packaging
     from micropip import *
 
-if window.location.hostname == "localhost":
-    cdn = Path(window.location.origin)
-else:
-    cdn = Path("https://cdn.jsdelivr.net/pyodide/dev/full")
+
+if sys.platform == 'emscripten':
+    from platform import window, document
+
+    if window.location.hostname == "localhost":
+        cdn = Path(window.location.origin)
+    else:
+        cdn = Path("https://cdn.jsdelivr.net/pyodide/dev/full")
 
 
 
@@ -48,106 +52,8 @@ async def main():
         async with platform.fopen("this.jpg", "rb") as f:
             print(len(f.read()))
 
-    if 1:
-        print(f"CDN: {cdn}")
-
-        ignore = ["sys", "os", "asyncio", "pathlib", "platform", "pygame", "json"]
-        ignore += ["distutils"]
-
-
-        def imports_scan(code, filename):
-            nonlocal ignore
-            ast = __import__("ast")
-            print("@" * 60)
-            root = ast.parse(code, filename)
-            required = []
-            for node in ast.walk(root):
-                if isinstance(node, ast.Import):
-                    module = []
-                elif isinstance(node, ast.ImportFrom):
-                    module = node.module.split(".")
-                else:
-                    continue
-
-                for n in node.names:
-                    if len(module):
-                        mod = module[0] or n.name.split(".")[0]
-                    else:
-                        mod = n.name.split(".")[0]
-
-                    if mod in ignore:
-                        continue
-
-                    try:
-                        print("import", mod)
-                        __import__(mod)
-                    except ModuleNotFoundError:
-                        required.append(mod)
-
-            for mod in required:
-                print(f"pip install {mod}")
-
-            print("@" * 60)
-            return required
-
-        # read our python code from script tag
-        code = window.main.text
-
-        # or from local copy
-        with open(__file__) as fcode:
-            assert code == fcode.read()
-            required = imports_scan(code, __file__)
-
-
-        # use synchronous download
-        shell.wget("-O/tmp/pip.json", cdn / "repodata.json")
-
-        import json
-
-        with open("/tmp/pip.json") as data:
-            repo = json.loads(data.read())
-
-        # print(json.dumps(repo["packages"], sort_keys=True, indent=4))
-        print("packages :", len( repo["packages"] ) )
-
-
-        cdn = Path("https://cdn.jsdelivr.net/pyodide/dev/full")
-
-
-        def imports(*mods, lvl=0, wants=[]):
-            nonlocal repo, ignore
-            unseen = False
-            for mod in mods:
-                for dep in repo["packages"][mod].get("depends", []):
-                    if (not dep in wants) and (not dep in ignore):
-                        unseen = True
-                        wants.insert(0, dep)
-            if lvl < 3 and unseen:
-                imports(*wants, lvl=lvl + 1, wants=wants)
-
-            if not lvl:
-                for dep in mods:
-                    if (not dep in wants) and (not dep in ignore):
-                        wants.append(dep)
-            return wants
-
-        for dep in imports(*required):
-            print()
-            print(dep)
-            print("_"*30)
-            file_name = ""
-            try:
-                file_name = repo["packages"][dep]["file_name"]
-
-
-            except:
-                print(json.dumps(repo["packages"][dep], sort_keys=True, indent=4))
-
-            if file_name:
-                print( file_name )
-                async with platform.fopen(cdn / file_name, "rb") as f:
-                    print(len(f.read()))
-
+    if 0:
+        await importer.async_imports()
 
 
 asyncio.run(main())
