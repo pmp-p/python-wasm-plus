@@ -879,27 +879,27 @@ MM.prepare = function prepare(url, cfg) {
         }
         const track = MM[trackid]
 
-console.log("MM.prepare", trackid, transport, type)
+//console.log("MM.prepare", trackid, transport, type)
 
         if (transport === 'fs') {
-            const blob = new Blob([FS.readFile(track.url)])
             if ( type === "audio" ) {
-                console.error("fs audio N/I")
+                const blob = new Blob([FS.readFile(track.url)])
                 audio = new Audio(URL.createObjectURL(blob))
                 track.avail = true
+            } else {
+                console.error("fs transport is only for audio", JSON.stringify(track))
+                track.error = true
+                return track
             }
-            //track.error = true
-            //return track
         }
 
         if (transport === "url" ) {
-
             // audio tag can download itself
             if ( type === "audio" ) {
                 audio = new Audio(url)
                 track.avail = true
             } else {
-console.log("MM.cross_dl", url )
+console.log("MM.cross_dl", trackid, transport, type, url )
                 cross_dl(trackid, url)
             }
         }
@@ -912,9 +912,9 @@ console.log("MM.cross_dl", url )
             track.stop = () => { track.media.pause() }
         }
 
-console.log("MM.prepare", url,"queuing as",trackid)
+//console.log("MM.prepare", url,"queuing as",trackid)
         media_prepare(trackid)
-console.log("MM.prepare", url,"queued as",trackid)
+//console.log("MM.prepare", url,"queued as",trackid)
     return track
 }
 
@@ -922,18 +922,11 @@ console.log("MM.prepare", url,"queued as",trackid)
 
 async function media_prepare(trackid) {
     const track = MM[trackid]
-    console.log("MM.media_prepare wait avail")
 
-    await _until(defined)("avail",track)
-/*
-    while ( ! track.avail ) {
-        yield trackid
-    }
-*/
-    console.log("MM.media_prepare avail now")
+    await _until(defined)("avail", track)
 
     if (track.type === "audio") {
-        console.log(`audio ${trackid}:${track.url} ready`)
+        //console.log(`audio ${trackid}:${track.url} ready`)
         return trackid
     }
 
@@ -970,7 +963,6 @@ async function media_prepare(trackid) {
             apk_cb
         )
     }
-
 }
 
 
@@ -1023,13 +1015,13 @@ MM.load = function load(trackid, loops) {
 
 
 MM.play = function play(trackid, loops, start, fade_ms) {
-console.log("MM.play",trackid, loops, MM[trackid] )
+//console.log("MM.play",trackid, loops, MM[trackid] )
             MM[trackid].loops = loops
             MM[trackid].media.play()
         }
 
 MM.stop = function stop(trackid) {
-console.log("MM.stop", trackid, MM[trackid] )
+//console.log("MM.stop", trackid, MM[trackid] )
             MM[trackid].media.pause()
         }
 

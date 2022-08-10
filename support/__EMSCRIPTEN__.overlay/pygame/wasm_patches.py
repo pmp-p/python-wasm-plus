@@ -95,15 +95,11 @@ pygame.display.set_mode = patch_pygame_display_set_mode
 tracks = { "current": 0 }
 
 
-
 def patch_pygame_mixer_music_stop_pause_unload():
     last = tracks["current"]
     if last:
         window.MM.stop(last)
         tracks["current"] = 0
-    else:
-        pdb(__file__, "ERROR 106: no track is playing")
-
 
 pygame.mixer.music.unload = patch_pygame_mixer_music_stop_pause_unload
 

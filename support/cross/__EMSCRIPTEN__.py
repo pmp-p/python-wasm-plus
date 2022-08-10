@@ -218,7 +218,7 @@ if is_browser:
                         else:
                             client(SimpleNamespace(**evdata))
                     if discarded:
-                        print("DISCARD :",evtype , evdata)
+                        console.log(f"221 DISCARD : {evtype} {evdata}")
 
                 await aio.sleep(0)
 
