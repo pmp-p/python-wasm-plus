@@ -111,14 +111,15 @@ def patch_pygame_mixer_music_load(fileobj, namehint=""):
 
     global tracks
 
-    tid = tracks.get( fileobj, "")
+    patch_pygame_mixer_music_stop_pause_unload()
 
-    # stop loaded track if any
-    if tid:
+    tid = tracks.get( fileobj, None)
+
+    # stop previously loaded track
+    if tid is not None:
         window.MM.stop(tid)
-
-    # track was never loaded
-    if not tid:
+    else:
+        # track was never loaded before
         track = patch_pygame_mixer_sound(fileobj, auto=True)
         tid = track.trackid
 
@@ -158,7 +159,7 @@ def patch_pygame_mixer_sound(data, auto=False):
         # TODO stub track
         return "stub track"
 
-    tracks[data] = track
+    tracks[data] = track.trackid
     window.MM.load(track.trackid)
     return track
 
