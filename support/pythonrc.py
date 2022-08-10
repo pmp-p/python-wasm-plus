@@ -332,6 +332,14 @@ if defined("embed") and hasattr(embed, "readline"):
             sys.settrace(aio.trace.calls)
             return _process_args(argv, env)
 
+        @classmethod
+        def mute(cls, *argv, **env):
+            try:
+                pygame.mixer.music.unload()
+            except:
+                pass
+
+
 # TODO: use run interactive c-api to run this one.
         @classmethod
         def run(cls, *argv, **env):
@@ -703,45 +711,6 @@ https://pypi.org/pypi/pygbag/0.1.3/json
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def fix_url(maybe_url):
         url = str(maybe_url)
         if url.startswith('http://'):
@@ -755,6 +724,8 @@ https://pypi.org/pypi/pygbag/0.1.3/json
         return url
 
     __EMSCRIPTEN__.fix_url = fix_url
+
+    del fix_url
 
     def apply_patches():
 
@@ -795,7 +766,7 @@ https://pypi.org/pypi/pygbag/0.1.3/json
         import urllib.request
 
         def urlretrieve(maybe_url, filename=None, reporthook=None, data=None):
-            url = platform.fix_url(maybe_url)
+            url = __EMSCRIPTEN__.fix_url(maybe_url)
             filename = filename or f"/tmp/uru-{aio.ticks}"
             rc=platform.window.python.DEPRECATED_wget_sync(str(url), str(filename))
             if rc==200:
@@ -812,7 +783,7 @@ https://pypi.org/pypi/pygbag/0.1.3/json
         class fopen:
             ticks = 0
             def __init__(self, maybe_url, mode ="r"):
-                self.url = fix_url(maybe_url)
+                self.url = __EMSCRIPTEN__.fix_url(maybe_url)
                 self.mode = mode
                 self.tmpfile = None
 

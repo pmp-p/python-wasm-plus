@@ -32,7 +32,6 @@ https://github.com/pygame-web/pygbag/issues/16
 #   - could be possibly very late
 #   - delay cannot be less than frametime at device refresh rate.
 
-
 def patch_set_timer(cust_event_no, millis, loops=0):
     dlay = float(millis) / 1000
     cevent = pygame.event.Event(cust_event_no)
@@ -112,8 +111,6 @@ def patch_pygame_mixer_music_load(fileobj, namehint=""):
 
     global tracks
 
-    patch_pygame_mixer_music_stop_pause_unload()
-
     tid = tracks.get( fileobj, "")
 
     # stop loaded track if any
@@ -122,33 +119,54 @@ def patch_pygame_mixer_music_load(fileobj, namehint=""):
 
     # track was never loaded
     if not tid:
-        if Path(fileobj).is_file():
-            print(__file__, "119 TODO!")
-            transport = "url"
-        else:
-            transport = "url"
-
-        cfg= {
-            "url"  : fileobj,
-            "type" : "audio",
-            "io" : transport
-        }
-        track = window.MM.prepare(fileobj, json.dumps(cfg))
-        if track.error:
-            pdb("ERROR: on track",cfg)
-            # TODO stub track
-            return
-
+        track = patch_pygame_mixer_sound(fileobj, auto=True)
         tid = track.trackid
-
-        # auto
-        window.MM.load(tid)
 
     # set new current track
     tracks["current"] = tid
 
-
 pygame.mixer.music.load = patch_pygame_mixer_music_load
+
+# TODO various buffer input
+# FIXME tracks hash key
+def patch_pygame_mixer_sound(data, auto=False):
+    global tracks
+    if isinstance(data, (Path,str) ):
+        data = str(data)
+        track = tracks.get(data,None)
+        if track is not None:
+            return track
+    else:
+        pdb(__file__, "137 TODO buffer types !")
+
+    if Path(data).is_file():
+        transport = "fs"
+    else:
+        transport = "url"
+
+    cfg= {
+        "url"  : data,
+        "type" : "audio",
+        "auto" : auto,
+        "io" : transport
+    }
+
+    track = window.MM.prepare(data, json.dumps(cfg))
+
+    if track.error:
+        pdb("ERROR: on track",cfg)
+        # TODO stub track
+        return "stub track"
+
+    tracks[data] = track
+    window.MM.load(track.trackid)
+    return track
+
+def patch_pygame_mixer_SoundPatch():
+    print("pygame mixer SFX patch is now active")
+    pygame.mixer.Sound = patch_pygame_mixer_sound
+
+pygame.mixer.SoundPatch = patch_pygame_mixer_SoundPatch
 
 
 def patch_pygame_mixer_music_play(loops=0, start=0.0, fade_ms=0):

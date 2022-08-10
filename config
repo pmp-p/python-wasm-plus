@@ -13,8 +13,11 @@ export PYMINOR=$(echo -n $PYBUILD|cut -d. -f2)
 
 export HOST_PREFIX=${HOST_PREFIX:-${SDKROOT}/devices/$(arch)/usr}
 export PREFIX=${PREFIX:-${SDKROOT}/devices/emsdk/usr}
+
+mkdir -p ${SDKROOT}/build/pycache
 export PYTHONPYCACHEPREFIX=${PYTHONPYCACHEPREFIX:-$(realpath ${SDKROOT}/build/pycache)}
 
+export HOME=${SDKROOT}
 
 export HPY=${HOST_PREFIX}/bin/python${PYBUILD}
 export PIP=${HOST_PREFIX}/bin/pip${PYBUILD}

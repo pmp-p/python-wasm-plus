@@ -385,13 +385,10 @@ for (const script of document.getElementsByTagName('script')) {
                 //config.archive  ??= 0
 config.archive = 0
 
-                if (location.hash.search("#debug")>=0) {
-                    config.gui_divider ??= 2
-                } else {
-                    config.gui_divider ??= 1
-                }
+                config.debug ??= (location.hash.search("#debug")>=0)
+                config.gui_debug ??= 2
 
-                config.autorun  ??= 0,
+                config.autorun  ??= 0
                 config.features ??= script.dataset.src.split(","),
                 config.PYBUILD  ??= vm.script.interpreter.substr(7) || "3.11",
                 config._sdl2    ??= "canvas"
@@ -490,7 +487,7 @@ function feat_gui(debug_hidden) {
     vm.canvas = canvas
 
     // window resize
-    function window_canvas_adjust(gui_divider) {
+    function window_canvas_adjust(divider) {
         var want_w
         var want_h
 
@@ -504,15 +501,15 @@ function feat_gui(debug_hidden) {
             console.warn("Unsupported device pixel ratio", window.devicePixelRatio)
 
 
-// TODO: check height bounding box
-        if (!debug_hidden) {
-            gui_divider = gui_divider || 2
+        // TODO: check height bounding box
+        if (vm.config.debug) {
+            divider = vm.config.gui_debug
         } else {
-            gui_divider = gui_divider || 1
+            divider ??= vm.config.gui_divider || 1
         }
 
-        console.log("window[DEBUG]:", want_w, want_h, ar, gui_divider)
-        want_w = Math.trunc(want_w / gui_divider )
+        console.log("window[DEBUG]:", want_w, want_h, ar, divider)
+        want_w = Math.trunc(want_w / divider )
         want_h = Math.trunc(want_w / ar)
         console.log("window[DEBUG]:", want_w, want_h, ar)
 
@@ -526,13 +523,11 @@ function feat_gui(debug_hidden) {
         console.log("style[NEW]:", canvas.style.width, canvas.style.height)
     }
 
-
     function window_resize(gui_divider) {
         if (!window.canvas) {
             console.warn("416: No canvas defined")
             return
         }
-        vm.config.gui_divider = gui_divider || 1
         setTimeout(window_canvas_adjust, 100, gui_divider);
         setTimeout(window.focus, 200);
     }
@@ -546,6 +541,14 @@ function feat_gui(debug_hidden) {
 
 }
 
+function queue_event(evname, data) {
+    if (window.python)
+        python.PyRun_SimpleString(`#!
+__EMSCRIPTEN__.EventTarget.build('${evname}', """${JSON.stringify(data)}""")
+`)
+    else
+        console.warn(`Event "${evname}" dropped : too early`)
+}
 
 
 // file transfer (upload)
@@ -590,9 +593,7 @@ function feat_fs(debug_hidden) {
                 const pydata = JSON.stringify(frec)
                 console.warn("UPLOAD", pydata );
                 python.FS.writeFile(datapath, new Int8Array(data) )
-                python.PyRun_SimpleString(`#!
-__import__('platform').EventTarget.build('upload', json.dumps(${pydata}))
-`)
+                queue_event("upload", pydata )
             }
             readFileAsArrayBuffer(file, file_done, console.error )
             uploaded_file_count++;
@@ -690,21 +691,11 @@ function feat_stdout() {
 
 function feat_lifecycle() {
         window.addEventListener("focus", function(e){
-            const dump =  JSON.stringify(e)
-            if (window.python)
-                python.PyRun_SimpleString(`#!
-__EMSCRIPTEN__.EventTarget.build('focus', json.dumps(${dump}))
-`)
+            queue_event("focus", e )
         })
 
         window.addEventListener("blur", function(e){
-            console.log("lost focus")
-
-            const dump =  JSON.stringify(e)
-            if (window.python)
-                python.PyRun_SimpleString(`#!
-__EMSCRIPTEN__.EventTarget.build('blur', json.dumps(${dump}))
-`)
+            queue_event("blur", e )
         })
 /*
     // Enable navigation prompt
@@ -727,8 +718,9 @@ async function onload() {
     var debug_hidden = true;
 
     // TODO:  -x
-    if (1) { //location.hash == "#debug") {
+    if ( location.hash.search("#debug")>=0) {
         debug_hidden = false;
+        vm.config.gui_divider = 2
         console.warn("DEBUG MODE")
     }
 
@@ -885,16 +877,19 @@ MM.prepare = function prepare(url, cfg) {
                 "data"  : undefined
             }
         }
+        const track = MM[trackid]
 
 console.log("MM.prepare", trackid, transport, type)
 
-        if (transport === 'packed') {
+        if (transport === 'fs') {
+            const blob = new Blob([FS.readFile(track.url)])
             if ( type === "audio" ) {
-                audio = new Audio()
-                console.error("packed audio N/I")
+                console.error("fs audio N/I")
+                audio = new Audio(URL.createObjectURL(blob))
+                track.avail = true
             }
-            MM[trackid].error = true
-            return MM[trackid]
+            //track.error = true
+            //return track
         }
 
         if (transport === "url" ) {
@@ -902,21 +897,28 @@ console.log("MM.prepare", trackid, transport, type)
             // audio tag can download itself
             if ( type === "audio" ) {
                 audio = new Audio(url)
-                MM[trackid].avail = true
+                track.avail = true
             } else {
 console.log("MM.cross_dl", url )
                 cross_dl(trackid, url)
             }
         }
 
-        if (audio)
-            MM[trackid].media = audio
+
+        if (audio) {
+            track.set_volume = (v) => { track.media.volume = 0.0 + v }
+            track.media = audio
+            track.play = () => { track.media.play() }
+            track.stop = () => { track.media.pause() }
+        }
 
 console.log("MM.prepare", url,"queuing as",trackid)
         media_prepare(trackid)
 console.log("MM.prepare", url,"queued as",trackid)
-    return MM[trackid]
+    return track
 }
+
+
 
 async function media_prepare(trackid) {
     const track = MM[trackid]
@@ -992,7 +994,8 @@ MM.load = function load(trackid, loops) {
 
         media.addEventListener("canplaythrough", (event) => {
             track.ready = true
-            media.play()
+            if (track.auto)
+                media.play()
         })
 
         media.addEventListener('ended', (event) => {

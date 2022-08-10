@@ -31,10 +31,12 @@ sys.print_exception = print_exception
 # aioprompt ======== have asyncio loop runs interleaved with repl ============
 # from https://github.com/pmp-p/aioprompt
 
-scheduled = None
+scheduled = []
 scheduler = None
 wrapper_ref = None
 loop = None
+
+next_tick = 0
 
 unsupported = ("bionic", "wasm", "emscripten", "wasi", "android")
 
@@ -54,12 +56,12 @@ if sys.platform not in unsupported:
         )
         raise SystemExit
 
-    def init():
+    def sched_init():
         global scheduled, scheduler, wrapper_ref
         #! KEEP IT WOULD BE GC OTHERWISE!
         # wrapper_ref
 
-        scheduled = []
+        #scheduled = []
         import ctypes
 
         try:
@@ -87,26 +89,25 @@ if sys.platform not in unsupported:
         wrapper_ref = HOOKFUNC(scheduler)
         scheduler_c = ctypes.cast(wrapper_ref, c_void_p)
         PyOS_InputHookFunctionPointer.value = scheduler_c.value
-#
+
 #        # replace with faster function
 #        def schedule(fn, a):
 #            scheduled.append((fn, a))
 #
-#        sys.modules[__name__].schedule = schedule
+        sys.modules[__name__].schedule = schedule
 
         # now the init code is useless
-        del sys.modules[__name__].init
+        del sys.modules[__name__].sched_init
 
     def schedule(fn, a):
         global scheduled, next_tick
-        if scheduled is None:
-            init()
-            next_tick = time.time() + .016
-        else:
-            # cpu cool down
-            cooldown = next_tick - time.time()
-            if cooldown>0:
-                time.sleep(cooldown)
+        if next_tick==0:
+            sched_init()
+        next_tick = time.time() + .016
+        # cpu cool down
+        cooldown = next_tick - time.time()
+        if cooldown>0:
+            time.sleep(cooldown)
         scheduled.append((fn, a))
 
 else:

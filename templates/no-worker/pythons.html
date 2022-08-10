@@ -11,6 +11,7 @@ if 0:
     import pyparsing
     import packaging
     from micropip import *
+    import pygame as pg
 
 
 if sys.platform == 'emscripten':
@@ -35,14 +36,17 @@ if 0:
     platform.EventTarget.addEventListener(None, "upload", on_upload_files)
     platform.window.dlg_multifile.hidden = false
 
-    import pygame as pg
 
-    pg.init()
-    pg.display.set_mode((320, 200))
+if 1:
+    import pygame
+
+    pygame.init()
+    pygame.display.set_mode((320, 200))
+
 
 
 async def main():
-    global cdn
+    global cdn, snd
 
     if 0:
         async with platform.fopen(str(cdn / "repodata.json")) as f:
@@ -54,6 +58,10 @@ async def main():
 
     if 0:
         await importer.async_imports()
+
+    snd = pygame.mixer.Sound("/data/data/org.python/assets/site-packages/pygame/beep.ogg")
+    print(f"{snd=}")
+
 
 
 asyncio.run(main())
