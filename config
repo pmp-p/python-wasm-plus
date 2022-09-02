@@ -28,7 +28,7 @@ export CPOPTS="-Os -g0 -fPIC"
 
 if [ -f ${ROOT}/dev ]
 then
-    export COPTS="-O0 -g3 -fPIC"
+    export COPTS="-O1 -g3 -fPIC"
     export QUIET=""
 else
     export COPTS="-Os -g0 -fPIC"

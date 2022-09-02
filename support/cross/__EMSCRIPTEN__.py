@@ -11,93 +11,19 @@ builtins.builtins = builtins
 builtins.true = True
 builtins.false = False
 
-try:
-    import aio
-except Exception as e:
-    try:
-        sys.print_exception(e)
-    except:
-        __import__("traceback").print_exc()
-
-    # non asyncio stepper as a fallback
-    class aio:
-        paused = False
-        steps = []
-        oneshots = []
-        ticks = 0
-        protect = []
-        enter = 0
-        spent = 0
-
-        @classmethod
-        def breakpointhook(cls, *argv, **kw):
-            cls.paused = True
-
-        @classmethod
-        def step(cls):
-            cls.enter = time.time()
-            try:
-                if cls.paused:
-                    return
-
-                if aio.protect:
-                    aio.protect.clear()
-
-                try:
-                    # NEED a scheduler + timesort
-                    early = []
-                    while len(cls.oneshots):
-                        deferred = cls.oneshots.pop()
-                        if deferred[0] > cls.ticks:
-                            deferred[0] -= 1
-                            early.append(deferred)
-                        else:
-                            _, fn, argv, kw = deferred
-                            fn(*argv, **kw)
-                    while len(early):
-                        cls.oneshots.append(early.pop())
-
-                    for step in cls.steps:
-                        step()
-                except Exception as e:
-                    sys.print_exception(e)
-                    cls.paused = True
-                    pdb("- aio paused -")
-            finally:
-                cls.leave = time_time()
-                cls.spent = cls.leave - cls.enter
-        @classmethod
-        def defer(cls, fn, argv, kw, deadline=0):
-            # FIXME: set ticks + deadline for alarm
-            cls.oneshots.append(
-                [
-                    cls.ticks + deadline,
-                    fn,
-                    argv,
-                    kw,
-                ]
-            )
-
-
 def breakpointhook(*argv, **kw):
     aio.paused = True
-
 
 def shed_yield():
     #TODO: coroutine id as pid
     print("86", time_time() - aio.enter, aio.spent )
     return True
 
-
 sys.breakpointhook = breakpointhook
-
-define("aio", aio)
-
 
 this = __import__(__name__)
 
 # those  __dunder__ are usually the same used in C conventions.
-
 
 try:
     __UPY__
@@ -122,12 +48,12 @@ try:
 
     if not __UPY__:
         from platform import *
-        from embed_browser import window, document, Object, fetch, console, prompt, alert, confirm
         from embed_emscripten import *
+        from embed_browser import window, document, navigator, Object
+        from embed_browser import fetch, console, prompt, alert, confirm
+        Object_type = type( Object() )
 except:
     pdb(__file__,":107 no browser/emscripten modules yet")
-
-
 
 
 # force use a fixed, tested version of uasyncio to avoid non-determinism
@@ -261,8 +187,8 @@ def fix_preload_table():
     if embed.counter() < 0:
         pdb("233: asset manager not ready 0>", embed.counter())
         aio.defer(fix_preload_table, (), {}, delay=60)
-    else:
-        pdb("236: all assets were ready at", embed.counter())
+#    else:
+#        pdb("236: all assets were ready at", embed.counter())
 
     for (
         src,
@@ -283,8 +209,13 @@ def fix_preload_table():
         # print(swap)
 
 
-def PyConfig_InitPythonConfig(PyConfig):
+def run_main(PyConfig, loaderhome=None, loadermain="main.py"):
+    global ROOTDIR
     global preloadedWasm, preloadedImages, preloadedAudios
+
+    if loaderhome:
+        pdb(f"218: appdir mapped to {loaderhome} by loader")
+        ROOTDIR = str(loaderhome)
 
     # simulator won't run javascript for now
     if not hasattr(embed, "run_script"):
@@ -294,6 +225,7 @@ def PyConfig_InitPythonConfig(PyConfig):
     # do not do stuff if not called properly from our js loader.
     if PyConfig.get("executable", None) is None:
         # running in sim
+        pdb("223: running in simulator")
         return False
 
     sys.executable = PyConfig["executable"]
@@ -337,27 +269,31 @@ def PyConfig_InitPythonConfig(PyConfig):
     if PyConfig.get("interactive", False):
         import aio.clock
         aio.clock.start(x=80)
+
         # org.python REPL no preload !
         preload = (sys.argv[0] != 'org.python')
     else:
         # org.python script
         preload = True
 
+    pdb(f"274: preload status {preload}")
+
     if preload and preload_apk():
 
         def fix_preload_table_apk():
             global fix_preload_table, ROOTDIR
             fix_preload_table()
-
             os.chdir(ROOTDIR)
-
-            if os.path.isfile("main.py"):
-                print(f"317: running {ROOTDIR}/main.py for {sys.argv[0]} (deferred)")
-                aio.defer(execfile, [f"{ROOTDIR}/main.py"], {})
-            else:
-                pdb(f"no main found for {sys.argv[0]} in {ROOTDIR}")
-
-            aio.defer(embed.prompt, (), {}, delay=2000)
+            sys.path.insert(0, ROOTDIR)
+            if loadermain:
+                if os.path.isfile("main.py"):
+                    print(f"283: running {ROOTDIR}/{loadermain} for {sys.argv[0]} (deferred)")
+                    aio.defer(execfile, [f"{ROOTDIR}/{loadermain}"], {})
+                else:
+                    pdb(f"no {loadermain} found for {sys.argv[0]} in {ROOTDIR}")
+                aio.defer(embed.prompt, (), {}, delay=2000)
+#            else:
+#                pdb(f"297: no loadermain request for {ROOTDIR=}")
 
         # C should unlock aio loop when preload count reach 0.
 
@@ -373,9 +309,11 @@ def PyConfig_InitPythonConfig(PyConfig):
 
     aio.defer(fix_preload_table_apk, (), {}, delay=1000)
 
-    # go pods !
-    aio.started = True
-    aio.create_task(EventTarget.process())
+    if not aio.started:
+        aio.started = True
+        aio.create_task(EventTarget.process())
+    else:
+        print("308: EventTarget delayed by loader")
 
 
 

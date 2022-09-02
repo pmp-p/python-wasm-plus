@@ -17,8 +17,10 @@ echo "
 " 1>&2
 
 
+# TODO check if opt.pyc are really interesting.
+# unset PYTHONDONTWRITEBYTECODE
 
-$HPY -v <<END 2>&1 | tee $FS.log  |grep py$ > $FS
+$HPY -O -v <<END 2>&1 | tee $FS.log  |grep py$ > $FS
 from __future__ import annotations
 import sys
 

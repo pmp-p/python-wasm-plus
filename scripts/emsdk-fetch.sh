@@ -134,6 +134,7 @@ else
 fi
 
 END
+
         cat emsdk/upstream/emscripten/emcc > emsdk/upstream/emscripten/em++
 
         cat > emsdk/upstream/emscripten/emar <<END
@@ -205,7 +206,6 @@ END
     export EM_IGNORE_SANITY=1
 
 else
-
     echo "emsdk: config already set !" 1>&2
 fi
 

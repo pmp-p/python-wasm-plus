@@ -6,6 +6,8 @@ from time import time as time_time
 
 DEBUG = True
 
+builtins.aio = sys.modules[__name__]
+
 # try to acquire syslog early
 try:
     import embed
@@ -341,13 +343,25 @@ def run(coro, *, debug=False):
         # the stepper when called from  window.requestAnimationFrame()
         # https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
         elif __EMSCRIPTEN__ or __wasi__:
-            print("AIO will auto-start at 0+, now is", embed.counter())
+            # handle special sitecustomize() case
+            if coro.__name__ == "sitecustomize":
+                embed.run()
+                run_called = False
+            else:
+                # let prelinker start asyncio loop
+                print("AIO will auto-start at 0+, now is", embed.counter())
+
         # fallback to blocking asyncio
         else:
             loop.run_forever()
     elif run_called:
         pdb("273: aio.run called twice !!!")
 
+    # run called after a sitecustomize() completion
+    elif coro.__name__!= "sitecustomize":
+        pdb("360: * sitecustomize done *")
+    else:
+        pdb("364: aio.run", coro.__name__ )
 
 def exit_now(ec):
     global exit, paused

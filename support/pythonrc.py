@@ -209,12 +209,31 @@ if defined("embed") and hasattr(embed, "readline"):
 
         @classmethod
         def cat(cls, *argv):
+            """ dump binary file content """
             for fn in map(str,argv):
                 with open(fn, "rb") as out:
                     print(out.read())
 
         @classmethod
+        def more(cls, *argv):
+            """ dump text file content """
+            for fn in map(str,argv):
+                with open(fn, "r") as out:
+                    print(out.read())
+
+        @classmethod
+        def pp(cls, *argv):
+            """ pretty print objects via json """
+            for obj in argv:
+                obj = eval( obj, vars(__import__("__main__") ) )
+                if isinstance(obj, platform.Object_type):
+                    obj = json.loads( platform.window.JSON.stringify(obj) )
+                yield json.dumps(obj, sort_keys=True, indent=4)
+
+
+        @classmethod
         def ls(cls, *argv):
+            """ list directory content """
             if not len(argv):
                 argv = ["."]
             for arg in map(str,argv):
@@ -223,23 +242,29 @@ if defined("embed") and hasattr(embed, "readline"):
 
         @classmethod
         def clear(cls, *argv,**kw):
+            """ clear terminal screen """
             import pygame
-            screen = pygame.display.set_mode()
+            screen = pygame.display.set_mode([1024,600])
             screen.fill( (0, 0, 0) )
             pygame.display.update()
 
         @classmethod
         def display(cls,*argv,**kw):
+            """ show images, or last repl pygame surface from _ """
             import pygame
             if not len(argv):
                 surf = _
             else:
-                if argv[-1].lower().endswith('bmp'):
+                ext = argv[-1].lower()
+                if ext.endswith('.six'):
+                    cls.more(argv[-1])
+                    return
+                if ext.endswith('bmp'):
                     surf = pygame.image.load_basic( argv[-1] )
                 else:
                     surf = pygame.image.load( argv[-1] )
 
-            screen = pygame.display.set_mode()
+            screen = pygame.display.set_mode([1024,600])
             screen.blit( surf, (1,1) )
             pygame.display.update()
 
@@ -336,8 +361,33 @@ if defined("embed") and hasattr(embed, "readline"):
         def mute(cls, *argv, **env):
             try:
                 pygame.mixer.music.unload()
+                yield "music muted"
             except:
                 pass
+
+        @classmethod
+        def debug(cls, *argv, **env):
+            try:
+                platform.window.debug()
+                yield f"debug mode : on, canvas divider {window.python.config.gui_debug}"
+            except:
+                pass
+
+        @classmethod
+        def help(cls, *objs):
+            print("""
+pygbag shell help
+________________________
+""")
+            if not len(objs):
+                objs = [cls]
+            for obj in objs:
+                for cmd, item in vars(obj).items():
+                    if isinstance(item, str):
+                        continue
+                    if cmd[0]!='_' and item.__doc__:
+                        print(cmd,":", item.__doc__)
+                        print()
 
 
 # TODO: use run interactive c-api to run this one.
@@ -486,39 +536,40 @@ if defined("embed") and hasattr(embed, "readline"):
     sys.excepthook = excepthook
 
 
+
 try:
     PyConfig
-    aio.cross.simulator = (
-        __EMSCRIPTEN__ or __wasi__ or __WASM__
-    ).PyConfig_InitPythonConfig(PyConfig)
+    aio.cross.simulator = False
+    print(sys._emscripten_info )
+#    aio.cross.simulator = (
+#        __EMSCRIPTEN__ or __wasi__ or __WASM__
+#    ).PyConfig_InitPythonConfig(PyConfig)
+
 # except NameError:
 except Exception as e:
     sys.print_exception(e)
     #   TODO: get a pyconfig from C here
-    #    <vstinner> pmp-p: JSON au C : connais les API secrète
-    # _PyConfig_FromDict(), _PyInterpreterState_SetConfig() et _testinternalcapi.set_config()?
-    #    <vstinner> pmp-p: j'utilise du JSON pour les tests unitaires sur PyConfig dans test_embed
 
     PyConfig = {}
-    print(" - running in simulator - ")
+    print(" - running in wasm simulator - ")
     aio.cross.simulator = True
+
 
 # make simulations same each time, easier to debug
 import random
 random.seed(1)
 
+
+
+
+
+
+
+
+
+
 if not aio.cross.simulator:
     import __EMSCRIPTEN__ as platform
-
-
-
-
-
-
-
-
-
-
 
 
     """
@@ -528,18 +579,6 @@ embed.preload("/usr/lib/python3.10/site-packages/numpy/core/_multiarray_umath.cp
 https://pypi.org/pypi/pygbag/0.1.3/json
 
 """
-
-
-
-
-
-
-
-
-
-
-
-
 
     class importer:
 
@@ -553,11 +592,12 @@ https://pypi.org/pypi/pygbag/0.1.3/json
         if 1:
             if platform.window.location.hostname == "localhost":
                 cdn = Path(platform.window.location.origin)
+                dl_cdn = cdn
+                repodata = "pip.json"
             else:
                 cdn = Path("https://pygame-web.github.io/archives/0.2.0")
-
-            dl_cdn = Path("https://cdn.jsdelivr.net/pyodide/v0.20.0/full")
-            repodata = "packages.json"
+                dl_cdn = Path("https://cdn.jsdelivr.net/pyodide/v0.20.0/full")
+                repodata = "packages.json"
         else:
             dl_cdn = Path("https://cdn.jsdelivr.net/pyodide/dev/full")
             cdn = dl_cdn
@@ -865,22 +905,18 @@ else:
 
 def ESC(*argv):
     for arg in argv:
-        sys.__stdout__.write(chr(27),arg, sep="", endl="")
+        sys.__stdout__.write(chr(0x1B))
+        sys.__stdout__.write(arg)
+
 
 def CSR(*argv):
     for arg in argv:
-        sys.__stdout__.write(chr(27), "[", arg, sep="", endl="")
+        ESC("[", arg)
 
 pgzrun = None
-if sys.argv[0]!="org.python":
-    try:
-        import pygame
-    except Exception as e:
-        sys.print_exception(e)
-        print("pygame cannot load")
 
-if os.path.isfile('/data/data/custom.py'):
-    execfile('/data/data/custom.py')
+if os.path.isfile('/data/data/usersite.py'):
+    execfile('/data/data/usersite.py')
 
 import aio.recycle
 # ============================================================

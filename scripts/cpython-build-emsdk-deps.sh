@@ -53,7 +53,7 @@ cd $ROOT
 # http://code.google.com/intl/en-US/speed/webp/index.html
 
 ALL="-fPIC -s USE_SDL=2 -sUSE_LIBPNG -sUSE_LIBJPEG $CPPFLAGS"
-CNF="emconfigure ./configure --prefix=$PREFIX --with-pic --disable-shared"
+CNF="emconfigure ./configure --prefix=$PREFIX --with-pic --disable-shared --host $(clang -dumpmachine)"
 
 # ncurses ncursesw
 
@@ -110,17 +110,19 @@ then
 "
 else
     #[ -d SDL_image ] || git clone https://github.com/libsdl-org/SDL_image
-    if [ -d SDL2_image-2.5.1 ]
+    if [ -d SDL2_image-2.6.1 ]
     then
         echo "
             * build SDL2_image pre release
         "  1>&2
     else
-        wget -c -q https://github.com/libsdl-org/SDL_image/releases/download/candidate-2.5.1/SDL2_image-2.5.1.tar.gz
-        tar xfz SDL2_image-2.5.1.tar.gz
+        #bad png+grayscale https://github.com/libsdl-org/SDL_image/releases/download/candidate-2.5.1/SDL2_image-2.5.1.tar.gz
+        wget -c -q https://github.com/libsdl-org/SDL_image/releases/download/release-2.6.1/SDL2_image-2.6.1.tar.gz
+
+        tar xfz SDL2_image-2.6.1.tar.gz
     fi
 
-    pushd SDL2_image-2.5.1
+    pushd SDL2_image-2.6.1
     CFLAGS=$CPOPTS EMCC_CFLAGS="$ALL" CC=emcc  $CNF \
      --disable-sdltest --disable-jpg-shared --disable-png-shared
     #--disable-tif-shared

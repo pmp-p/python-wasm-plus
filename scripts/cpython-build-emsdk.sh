@@ -18,7 +18,6 @@ export PYTHON_FOR_BUILD=${PYTHON_FOR_BUILD:-${HPY}}
 
 . ./scripts/emsdk-fetch.sh
 
-
 REBUILD_WASM=${REBUILD_WASMPY:-false}
 
 if $REBUILD || $REBUILD_WASMPY
@@ -244,10 +243,11 @@ fi
         cp -Rfv $ROOT/support/__EMSCRIPTEN__.patches/${PYBUILD}/. $PREFIX/lib/python${PYBUILD}/
 
         cp -vf build/cpython-wasm/libpython${PYBUILD}.a prebuilt/emsdk/
-        if [ -f build/cpython-wasm/Modules/expat/libexpat.a ]
-        then
-            cp build/cpython-wasm/Modules/expat/libexpat.a prebuilt/emsdk/libexpat${PYBUILD}.a
-        fi
+        for lib in $(find build/cpython-wasm/|grep lib.*.a$)
+        do
+            name=$(basename $lib .a)
+            cp $lib prebuilt/emsdk/${name}${PYBUILD}.a
+        done
         rmdir  $PREFIX/lib/python${PYBUILD}/lib-dynload
     fi
 fi
@@ -333,6 +333,15 @@ cat > $ROOT/${PYDK_PYTHON_HOST_PLATFORM}-shell.sh <<END
 export ROOT=${SDKROOT}
 export SDKROOT=${SDKROOT}
 
+export PYBUILD=\${PYBUILD:-$PYBUILD}
+export PYMAJOR=\$(echo -n \$PYBUILD|cut -d. -f1)
+export PYMINOR=\$(echo -n \$PYBUILD|cut -d. -f2)
+
+export CARGO_HOME=\${CARGO_HOME:-/opt/python-rust-sdk}
+export RUSTUP_HOME=\${RUSTUP_HOME:-/opt/python-rust-sdk}
+export PATH=\${CARGO_HOME}/bin:$PATH
+
+
 if [[ ! -z \${EMSDK+z} ]]
 then
     # emsdk_env already parsed
@@ -344,7 +353,10 @@ else
     export PKG_CONFIG_PATH="${PREFIX}/lib/pkgconfig"
 fi
 
-export PATH=${HOST_PREFIX}/bin:\$PATH
+export SYS_PYTHON=${SYS_PYTHON}
+export EMSDK_PYTHON=${SYS_PYTHON}
+
+export PATH=${HOST_PREFIX}/bin:\$PATH:${SDKROOT}/devices/emsdk/usr/bin
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
 export HOME=${SDKROOT}
 export PLATFORM_TRIPLET=${PYDK_PYTHON_HOST_PLATFORM}
@@ -367,17 +379,14 @@ END
 
 cat > $HOST_PREFIX/bin/python3-wasm <<END
 #!/bin/bash
-export PYBUILD=\${PYBUILD:-$PYBUILD}
-export PYMAJOR=\$(echo -n \$PYBUILD|cut -d. -f1)
-export PYMINOR=\$(echo -n \$PYBUILD|cut -d. -f2)
 
 . ${SDKROOT}/${PYDK_PYTHON_HOST_PLATFORM}-shell.sh
 
 # most important
-export CC=cc
+export CC=emcc
 export _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata__emscripten_debug
 
-# does not work with -mpip
+# it's just for interactive python testing of modules.
 export PYTHONSTARTUP=$ROOT/support/__EMSCRIPTEN__.py
 
 # so include dirs are good
@@ -388,7 +397,6 @@ export PYTHONHOME=$PREFIX
 
 PYTHONPATH=${HOST_PREFIX}/lib/python\${PYBUILD}/site-packages:\$PYTHONPATH
 export PYTHONPATH=${SDKROOT}/prebuilt/emsdk/${PYBUILD}:${HOST_PREFIX}/lib/python\${PYBUILD}/lib-dynload:\$PYTHONPATH
-
 
 # just in case
 export _PYTHON_HOST_PLATFORM=${PYDK_PYTHON_HOST_PLATFORM}
@@ -423,7 +431,3 @@ done
 
 unset PYTHON_FOR_BUILD
 unset EMCC_CFLAGS
-
-
-
-

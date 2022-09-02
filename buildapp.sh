@@ -49,6 +49,7 @@ else
     TMPL_DEFAULT="templates/no-worker"
 fi
 
+cp -rf ${SDKROOT}/prebuilt/emsdk/common/* ${SDKROOT}/prebuilt/emsdk/${PYBUILD}/
 
 # web application template
 TMPL=${1:-$TMPL_DEFAULT}
@@ -246,7 +247,10 @@ fi
 
 # gnu99 not c99 for EM_ASM() js calls functions.
 
+
+
 emcc -fPIC -D__PYDK__=1 -DNDEBUG $CF_SDL \
+ $PY_HARFANG \
  -c -fwrapv -Wall $CPOPTS -std=gnu99 -Werror=implicit-function-declaration -fvisibility=hidden\
  -I$ROOT/src/cpython${PYBUILD}/Include/internal \
  -IObjects -IInclude -IPython -I. \
@@ -265,15 +269,50 @@ STDLIBFS="--preload-file $PYTHONPYCACHEPREFIX/stdlib-coldstart/python${PYBUILD}@
 #  --preload-file /usr/share/terminfo/x/xterm@/usr/share/terminfo/x/xterm \
 
 
-CPY_EXTRALIB=""
-for cpylib in Modules/_decimal/libmpdec/libmpdec.a Modules/expat/libexpat.a
+for lib in mpdec expat
 do
-    [ -f $cpylib ] && CPY_EXTRALIB="$CPY_EXTRALIB $cpylib"
+    cpylib=${SDKROOT}/prebuilt/emsdk/lib${lib}${PYBUILD}.a
+    if [ -f $cpylib ]
+    then
+        CPY_EXTRALIB="$CPY_EXTRALIB $cpylib"
+    fi
 done
 
+echo CPY_EXTRALIB=$CPY_EXTRALIB
 
-# -lffi
-# -lsqlite3 for latest/tot only
+if false
+then
+    PY_HARFANG="-DPY_HARFANG=1"
+    if echo "x$PY_HARFANG"|grep -q PY_HARFANG
+    then
+        PY_HARFANG="$PY_HARFANG -sUSE_WEBGL2 -sALLOW_MEMORY_GROWTH "
+        for lib in \
+        $(find ${ROOT}/build/harfgang-wasm/extern| grep lib.*.a$|grep -v stb_vorbis)
+        do
+            PY_HARFANG="$PY_HARFANG $lib"
+        done
+
+         for lib in\
+     harfang/foundation/libfoundation.a\
+     harfang/platform/libplatform.a\
+     harfang/script/libscript.a\
+     harfang/engine/libengine.a\
+     languages/hg_python/harfang.a
+        do
+            PY_HARFANG="$PY_HARFANG ${ROOT}/build/harfgang-wasm/$lib"
+        done
+    fi
+else
+    PY_HARFANG=""
+fi
+
+if false
+then
+    PY_P3D="-DPY_P3D=1"
+else
+    PY_P3D=""
+fi
+
 
 time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  -s TOTAL_MEMORY=512MB -s ALLOW_TABLE_GROWTH \
@@ -287,6 +326,8 @@ time emcc $FINAL_OPTS $LOPTS -std=gnu99 -D__PYDK__=1 -DNDEBUG\
  --preload-file $ROOT/support/xterm@/etc/termcap \
  -o ${MODE}.js Programs/${MODE}.o ${ROOT}/prebuilt/emsdk/libpython${PYBUILD}.a \
  $CPY_EXTRALIB \
+ $PY_HARFANG \
+ $PY_P3D \
  ${ROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a $CFLDPFX $LD_SDL -lsqlite3 -lffi -ldl -lm
 
 popd

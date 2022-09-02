@@ -90,8 +90,10 @@ if false
 then
     SDL_IMAGE="-s USE_SDL_IMAGE=2 -sUSE_LIBPNG -sUSE_LIBJPEG"
 else
-    SDL_IMAGE="-I$PREFIX/include/SDL2 -s USE_SDL=2 -sUSE_SDL_TTF=2 -sUSE_LIBPNG -sUSE_LIBJPEG -lwebp"
+    SDL_IMAGE="-I$PREFIX/include/SDL2 -s USE_SDL=2 -sUSE_SDL_TTF=2 -sUSE_LIBPNG -sUSE_LIBJPEG"
 fi
+
+#  -lwebp
 
 rm -rf build/temp.wasm32-* 2>/dev/null
 
@@ -107,6 +109,7 @@ then
         do
             echo $obj
         done
+        du -hs ${ROOT}/prebuilt/emsdk/libpygame${PYBUILD}.a
     else
         exit 82
     fi

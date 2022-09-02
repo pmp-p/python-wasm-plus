@@ -35,19 +35,22 @@ echo "_PYTHON_SYSCONFIGDATA_NAME=$_PYTHON_SYSCONFIGDATA_NAME"
 export PYTHONSTARTUP=$ROOT/build/pycache/.pythonrc.py
 
 
+PYTHONPATH=$ROOT/prebuilt/emsdk/common/site-packages:$PYTHONPATH
+
 if false
 then
-    PYTHONPATH=$ROOT/devices/emsdk/usr/lib/python3.${PYMINOR}:$PYTHONPATH
-    PYTHONPATH=$ROOT/devices/$(arch)/usr/lib/python3.${PYMINOR}/site-packages:$PYTHONPATH
+    PYTHONPATH=$ROOT/devices/emsdk/usr/lib/python${PYBUILD}:$PYTHONPATH
+    PYTHONPATH=$ROOT/devices/$(arch)/usr/lib/python${PYBUILD}/site-packages:$PYTHONPATH
     export PYTHONPATH
     echo "======== SYSTEM PYTHON ============="
     export LD_LIBRARY_PATH=$ROOT/devices/$(arch)/usr/lib
-    /usr/local/bin/python3.${PYMINOR}
-    python3.${PYMINOR} -i -u -B
+    /usr/local/bin/python${PYBUILD}
+    python${PYBUILD} -i -u -B
 
 else
+
     export LD_LIBRARY_PATH=$ROOT/devices/$(arch)/usr/lib
-    export PYTHONPATH=$ROOT/devices/$(arch)/usr/lib/python3.${PYMINOR}/lib-dynload:$PYTHONPATH
-    $ROOT/devices/$(arch)/usr/bin/python3.${PYMINOR} -i -u -B
+    export PYTHONPATH=$ROOT/devices/$(arch)/usr/lib/python${PYBUILD}/lib-dynload:$PYTHONPATH
+    $ROOT/devices/$(arch)/usr/bin/python${PYBUILD} -i -u -B
 fi
 stty sane

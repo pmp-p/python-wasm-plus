@@ -64,7 +64,10 @@ self hosting:
 #include <unistd.h>
 
 extern void pygame_Inittab();
-//extern PyMODINIT_FUNC PyInit_pygame_static(void);
+
+#if defined(PY_HARFANG)
+    extern PyMODINIT_FUNC PyInit_harfang(void);
+#endif
 
 static long long embed = 0;
 
@@ -467,10 +470,14 @@ main(int argc, char **argv)
     PyImport_AppendInittab("embed_emscripten", PyInit_emscripten);
     PyImport_AppendInittab("embed_browser", PyInit_browser);
 #endif
+#if defined(PY_HARFANG)
+    PyImport_AppendInittab("harfang", PyInit_harfang);
+#endif
 
     PyImport_AppendInittab("embed", init_embed);
-    pygame_Inittab();
 
+    pygame_Inittab();
+    setenv("LC_ALL", "C.UTF-8", 1);
     setenv("TERM","xterm", 1);
     setenv("TERMINFO", "/usr/share/terminfo", 1);
     setenv("COLS","132", 1);
@@ -585,7 +592,7 @@ EM_ASM({
         //    jswasm_load("fshandler.js");
 
     } else {
-        console.log("PyMain: BrowserFS not found");
+        console.error("PyMain: BrowserFS not found");
     }
     if (0) {
         SYSCALLS.getStreamFromFD(0).tty = true;
@@ -596,10 +603,8 @@ EM_ASM({
 
 
     PyRun_SimpleString("import sys, os, json, builtins, shutil, time;");
-    //# zipimport, tomlib
 
-
-    if (1) {
+    #if 1
         // display a nice six logo python-powered in xterm.js
         #define MAX 132
         char buf[MAX];
@@ -615,11 +620,11 @@ EM_ASM({
             buf[0]=0;
         }
 
-    } else {
+    #else
         // same but with python
         // repl banner
         PyRun_SimpleString("print(open('/data/data/org.python/assets/cpython.six').read());");
-    }
+    #endif
 
     PyRun_SimpleString("print('CPython',sys.version, '\\n', file=sys.stderr);");
 
@@ -627,29 +632,27 @@ EM_ASM({
 
     // SDL2 basic init
     {
-        SDL_Init(SDL_INIT_EVERYTHING); //SDL_INIT_VIDEO | SDL_INIT_TIMER);
+        //SDL_Init(SDL_INIT_EVERYTHING); //SDL_INIT_VIDEO | SDL_INIT_TIMER);
 
-        //if (TTF_Init())
-          // fprintf(stderr, "ERROR: TTF_Init error");
+        if (TTF_Init())
+            fprintf(stderr, "ERROR: TTF_Init error");
 
         const char *target = "1";
         SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, target);
 
+/*
+        note for self : typical sdl2 init ( emscripten samples are sdl1 )
+        SDL_CreateWindow("default", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, 0);
+        window = SDL_CreateWindow("CheckKeys Test",
+                                  SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                  800, 600, 0);
+        renderer = SDL_CreateRenderer(window, -1, 0);
+        SDL_RenderPresent(renderer);
 
-/* note for self : typical sdl2 init ( emscripten samples are sdl1 )
-    SDL_CreateWindow("default", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, 0);
-    window = SDL_CreateWindow("CheckKeys Test",
-                              SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                              800, 600, 0);
-    renderer = SDL_CreateRenderer(window, -1, 0);
-    SDL_RenderPresent(renderer);
-
-    emscripten_set_keypress_callback_on_thread(target, NULL, false, &on_keyboard_event, NULL);
-    emscripten_set_keypress_callback(target, NULL, false, &on_keyboard_event);
+        emscripten_set_keypress_callback_on_thread(target, NULL, false, &on_keyboard_event, NULL);
+        emscripten_set_keypress_callback(target, NULL, false, &on_keyboard_event);
 */
-
     }
-
 
     emscripten_set_main_loop( (em_callback_func)main_iteration, 0, 1);
     return 0;
